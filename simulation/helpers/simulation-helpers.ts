@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import { expect } from 'chai';
 import { ethers } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -47,6 +49,7 @@ export async function initializeContracts(hre: HardhatRuntimeEnvironment) {
     ),
     parametersStorage: await getDeployedContract(hre, 'ParametersStorage'),
     epochStorage: await getDeployedContract(hre, 'EpochStorageV8'),
+    migratorM1V8: await getDeployedContract(hre, 'MigratorM1V8'),
   };
 }
 
@@ -652,7 +655,7 @@ export async function setupMigratorAllowances(
   }
 }
 
-export async function getV6ActiveNodesAndDelegators(
+export async function migrateV6Delegators(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   chain: string,
 ): Promise<{
@@ -672,15 +675,35 @@ export async function getV6ActiveNodesAndDelegators(
     provider,
   );
 
+  // load the network delegatos json file
+  const delegatorsFilePath = `simulation/${chain}_delegators.json`;
+  const delegatorsFile: { identity: number; delegators: string[] }[] =
+    JSON.parse(fs.readFileSync(delegatorsFilePath, 'utf8'));
+
   // Migrate mainnet delegators to the forked delegatorsInfo contract
   const maxIdentityId = await contracts.identityStorage.lastIdentityId();
   for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
+    // get delegators from the network
     const delegators = await delegatorsInfo.getDelegators(identityId);
-    const delegatorsArray = Array.from(delegators);
-    console.log(
-      `[MIGRATE V6 NODE DELEGATORS] Migrating ${delegatorsArray.length} delegators for identity ${identityId}`,
+    const delegatorsSet = new Set(
+      delegators.map((d: string) => d.toLowerCase()),
     );
-    await contracts.delegatorsInfo.migrate(delegatorsArray);
+
+    // get delegators from the file
+    const delegatorsFromFile = delegatorsFile.find(
+      (d: { identity: number }) => d.identity === identityId,
+    )?.delegators;
+    // add delegators from the file to the set for the current identityId
+    if (delegatorsFromFile) {
+      delegatorsFromFile.forEach((d: string) =>
+        delegatorsSet.add(d.toLowerCase()),
+      );
+    }
+
+    console.log(
+      `[MIGRATE V6 NODE DELEGATORS] Migrating ${delegatorsSet.size} delegators for identity ${identityId}`,
+    );
+    await contracts.delegatorsInfo.migrate(Array.from(delegatorsSet));
     const migratedDelegators =
       await contracts.delegatorsInfo.getDelegators(identityId);
     console.log(
@@ -693,6 +716,20 @@ export async function getV6ActiveNodesAndDelegators(
   }
 
   return { v6ActiveNodes, v6NodeDelegators };
+}
+
+export async function migrateDelegator(
+  hre: HardhatRuntimeEnvironment,
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  delegatorAddress: string,
+): Promise<void> {
+  const hub = await getHubContract(hre);
+  const hubOwner = await hub.owner();
+  await impersonateAccount(hre, hubOwner);
+  const signer = await hre.ethers.getSigner(hubOwner);
+  const delegatorsInfoWithSigner = contracts.delegatorsInfo.connect(signer);
+  await delegatorsInfoWithSigner.migrate([delegatorAddress]);
+  await stopImpersonatingAccount(hre, hubOwner);
 }
 
 export async function addDelegator(
@@ -749,8 +786,17 @@ export async function getDelegatorReward(
     ethers.solidityPacked(['address'], [delegator]),
   );
 
+  // Don't need to call prepareForStakeChange for finished epochs, we already called it at the epoch transition
+  if (!(await contracts.chronos.hasEpochElapsed(epoch))) {
+    await contracts.staking._prepareForStakeChange(
+      epoch,
+      identityId,
+      delegatorKey,
+    );
+  }
+
   const delegatorScore18 =
-    await contracts.stakingKPI._simulatePrepareForStakeChange(
+    await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
       epoch,
       identityId,
       delegatorKey,
@@ -842,4 +888,55 @@ export async function getOperatorRewards(
     (totalNodeRewards * feePercentageForEpoch) / 10_000n;
 
   return operatorFeeAmount;
+}
+
+export async function initializeEpochMetadata(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  chain: string,
+): Promise<
+  {
+    epoch: number;
+    startTs: number;
+    endTs: number;
+    rewardPool: string;
+  }[]
+> {
+  const epochMetadata: {
+    epoch: number;
+    startTs: number;
+    endTs: number;
+    rewardPool: string;
+  }[] = [];
+
+  const provider = new ethers.JsonRpcProvider(RPC_URLS[chain]);
+  const epochStorage = new ethers.Contract(
+    await contracts.epochStorage.getAddress(),
+    [
+      'function getEpochPool(uint256 shardId, uint256 epoch) external view returns (uint96)',
+    ],
+    provider,
+  );
+
+  const chronos = new ethers.Contract(
+    await contracts.chronos.getAddress(),
+    [
+      'function timestampForEpoch(uint256 epochNumber) external view returns (uint256)',
+    ],
+    provider,
+  );
+
+  // TODO: 5 epochs for V8 simulation, 7 epochs for v6 simulation
+  for (let epoch = 1; epoch <= 5; epoch++) {
+    const startTs = await chronos.timestampForEpoch(epoch);
+    const endTs = await chronos.timestampForEpoch(epoch + 1);
+    const rewardPool = await epochStorage.getEpochPool(1, epoch);
+    epochMetadata.push({
+      epoch,
+      startTs,
+      endTs,
+      rewardPool: rewardPool.toString(),
+    });
+  }
+
+  return epochMetadata;
 }
