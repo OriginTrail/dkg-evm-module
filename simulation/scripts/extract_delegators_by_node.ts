@@ -26,12 +26,14 @@ type NodeDelegators = {
  * Extracts and groups delegators by node identity from two data sources:
  * 1. Current delegators from ALL_NODES file
  * 2. Unmigrated delegators from separate file
+ * 3. Additional delegators from a text file
  *
  * Uses Sets for efficient deduplication, then converts to arrays for output.
  */
 function extractDelegatorsByNode(
   allNodesFilePath: string,
   unmigratedDelegatorsFilePath: string,
+  additionalDelegatorsFilePath: string,
   outputFilePath: string,
 ): void {
   try {
@@ -61,14 +63,21 @@ function extractDelegatorsByNode(
     console.log('🔄 Processing unmigrated delegators...');
     processUnmigratedDelegators(unmigratedDelegators, delegatorSetsByIdentity);
 
-    // Step 3: Convert Sets to sorted arrays and create final output
+    // Step 3: Process additional delegators
+    console.log('🔄 Processing additional delegators...');
+    processAdditionalDelegators(
+      additionalDelegatorsFilePath,
+      delegatorSetsByIdentity,
+    );
+
+    // Step 4: Convert Sets to sorted arrays and create final output
     console.log('🔄 Creating final output...');
     const finalOutput = createFinalOutput(delegatorSetsByIdentity);
 
-    // Step 4: Save output file
+    // Step 5: Save output file
     fs.writeFileSync(outputFilePath, JSON.stringify(finalOutput, null, 2));
 
-    // Step 5: Display statistics
+    // Step 6: Display statistics
     displayStatistics(finalOutput, outputFilePath);
   } catch (error) {
     console.error('❌ Error processing files:', error);
@@ -142,6 +151,52 @@ function processUnmigratedDelegators(
 }
 
 /**
+ * Processes additional delegators from a text file and adds them to all identities.
+ */
+function processAdditionalDelegators(
+  additionalDelegatorsFilePath: string,
+  delegatorSetsByIdentity: Map<number, Set<string>>,
+): void {
+  const fileContent = fs.readFileSync(additionalDelegatorsFilePath, 'utf8');
+  const lines = fileContent.split('\n');
+  const additionalDelegators = new Set<string>();
+  const addressRegex = /(0x[a-f0-9]{40})/i;
+
+  lines.forEach((line) => {
+    const match = line.match(addressRegex);
+    if (match && match[1]) {
+      additionalDelegators.add(match[1].toLowerCase());
+    }
+  });
+
+  if (additionalDelegators.size === 0) {
+    console.log('   ⚠️ No additional delegators found in the file.');
+    return;
+  }
+
+  console.log(
+    `   Found ${additionalDelegators.size} unique additional delegators to add.`,
+  );
+
+  let totalAdditions = 0;
+  delegatorSetsByIdentity.forEach((delegatorSet, identityId) => {
+    console.log(`Updating delegators for identity ${identityId}...`);
+    const sizeBefore = delegatorSet.size;
+    additionalDelegators.forEach((delegator) => {
+      delegatorSet.add(delegator);
+    });
+    const addedCount = delegatorSet.size - sizeBefore;
+    if (addedCount > 0) {
+      totalAdditions += addedCount;
+    }
+  });
+
+  console.log(
+    `   ✅ Added ${totalAdditions} new delegator assignments across all identities.`,
+  );
+}
+
+/**
  * Converts Sets to sorted arrays and creates the final output structure
  */
 function createFinalOutput(
@@ -189,12 +244,12 @@ function displayStatistics(
 if (require.main === module) {
   const args = process.argv.slice(2);
 
-  if (args.length !== 3) {
+  if (args.length !== 4) {
     console.log('📋 Delegator Extraction Script');
     console.log('===============================');
     console.log('');
     console.log(
-      'Usage: npx ts-node scripts/extract_delegators_by_node.ts <all_nodes_file> <unmigrated_delegators_file> <output_file>',
+      'Usage: npx ts-node scripts/extract_delegators_by_node.ts <all_nodes_file> <unmigrated_delegators_file> <additional_delegators_file> <output_file>',
     );
     console.log('');
     console.log('Parameters:');
@@ -204,12 +259,16 @@ if (require.main === module) {
     console.log(
       '  unmigrated_delegators_file  Path to the unmigrated_delegators.json file',
     );
+    console.log(
+      '  additional_delegators_file  Path to a text file with additional delegator addresses.',
+    );
     console.log('  output_file                 Path for the output JSON file');
     console.log('');
     console.log('Example:');
     console.log('  npx ts-node scripts/extract_delegators_by_node.ts \\');
     console.log('    /path/to/base_mainnet_ALL_NODES.json \\');
     console.log('    /path/to/base_mainnet_unmigrated_delegators.json \\');
+    console.log('    /path/to/base-mainnet.txt \\');
     console.log('    ./output/base_mainnet_delegators_by_node.json');
     console.log('');
     console.log('Output format:');
@@ -219,7 +278,12 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  const [allNodesFilePath, unmigratedDelegatorsFilePath, outputFilePath] = args;
+  const [
+    allNodesFilePath,
+    unmigratedDelegatorsFilePath,
+    additionalDelegatorsFilePath,
+    outputFilePath,
+  ] = args;
 
   // Validate input files exist
   console.log('🔍 Validating input files...');
@@ -232,6 +296,13 @@ if (require.main === module) {
   if (!fs.existsSync(unmigratedDelegatorsFilePath)) {
     console.error(
       `❌ Unmigrated delegators file not found: ${unmigratedDelegatorsFilePath}`,
+    );
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(additionalDelegatorsFilePath)) {
+    console.error(
+      `❌ Additional delegators file not found: ${additionalDelegatorsFilePath}`,
     );
     process.exit(1);
   }
@@ -249,6 +320,7 @@ if (require.main === module) {
   extractDelegatorsByNode(
     allNodesFilePath,
     unmigratedDelegatorsFilePath,
+    additionalDelegatorsFilePath,
     outputFilePath,
   );
 }
