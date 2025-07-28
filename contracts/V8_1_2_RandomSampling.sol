@@ -148,7 +148,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         nodeExistsInShardingTable(identityStorage.getIdentityId(msg.sender))
     {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
-
+        //TODO check if a node is V6 node and in the sharding table
         RandomSamplingLib.Challenge memory nodeChallenge = randomSamplingStorage.getNodeChallenge(identityId);
 
         if (nodeChallenge.activeProofPeriodStartBlock == updateAndGetActiveProofPeriodStartBlock()) {
@@ -188,7 +188,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     {
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
-
+        //TODO check if a node is V6 node and in the sharding table
         // Get node challenge
         RandomSamplingLib.Challenge memory challenge = randomSamplingStorage.getNodeChallenge(identityId);
 
