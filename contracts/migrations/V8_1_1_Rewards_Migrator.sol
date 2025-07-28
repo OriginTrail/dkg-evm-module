@@ -90,6 +90,7 @@ contract V8_1_1_Rewards_Migrator is INamed, IVersioned, ContractStatus {
         // ────────────────────────────────────────────────────────
         // Replicate Staking.stake logic (without token transfer)
         // ────────────────────────────────────────────────────────
+        // TODO: Maybe we can make _validateDelegatorEpochClaims and _prepareForStakeChange public so we don't have to copy this code
         _validateDelegatorEpochClaims(identityId, delegator);
 
         bytes32 delegatorKey = _getDelegatorKey(delegator);
@@ -100,6 +101,7 @@ contract V8_1_1_Rewards_Migrator is INamed, IVersioned, ContractStatus {
 
         uint96 totalNodeStakeBefore = stakingStorage.getNodeStake(identityId);
         uint96 totalNodeStakeAfter = totalNodeStakeBefore + addedStake;
+        // TODO: Maybe it's best to create a withdrawal request if addedStake pushes the node stake over 2m limit. Otherwise delegators might be never able to claim
         require(totalNodeStakeAfter <= parametersStorage.maximumStake(), "Max stake exceeded");
 
         // Update staking balances
