@@ -27,8 +27,8 @@ import {Chronos} from "./storage/Chronos.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
 import {RandomSamplingStorage as V8_1_2_RandomSamplingStorage} from "./storage/V8_1_2_RandomSamplingStorage.sol";
 
-contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
-    string private constant _NAME = "V8_1_2_Staking";
+contract StakingV812 is INamed, IVersioned, ContractStatus, IInitializable {
+    string private constant _NAME = "StakingV812";
     string private constant _VERSION = "1.0.1";
     uint256 public constant SCALE18 = 1e18;
     uint256 private constant EPOCH_POOL_INDEX = 1;
