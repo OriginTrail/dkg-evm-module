@@ -28,6 +28,8 @@ const deployments = JSON.parse(
 const IDENTITY_CONTRACT_ADDRESS = deployments.contracts.Identity.evmAddress;
 const MIGRATOR_CONTRACT_ADDRESS =
   deployments.contracts.MigratorM1V8.evmAddress.toLowerCase();
+const MIGRATOR_CONTRACT_ADDRESS_1 =
+  deployments.contracts.MigratorM1V8_1.evmAddress.toLowerCase();
 const STAKING_STORAGE_CONTRACT_ADDRESS =
   deployments.contracts.StakingStorage.evmAddress.toLowerCase();
 const DELEGATORS_INFO_CONTRACT_ADDRESS =
@@ -282,6 +284,14 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
   // NEW: collect rows where delegator check fails
   const deletedRows: Record<string, unknown>[] = [];
 
+  // Create a quick lookup: evmAddress(lower-case) → contractName for reliable tagging later
+  const ADDRESS_TO_CONTRACT_NAME: Record<string, string> = Object.fromEntries(
+    Object.entries(deployments.contracts).map(([name, info]: [string, any]) => [
+      (info.evmAddress as string).toLowerCase(),
+      name,
+    ]),
+  );
+
   for await (const row of csvStream(INPUT_CSV)) {
     const txHash = (row.transaction_hash || row.txHash) as string | undefined;
     if (!txHash) continue;
@@ -364,6 +374,14 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
         decodedParams = override.function_inputs;
       }
 
+      // 🔄  Final sanity: derive contract name directly from "to" address when available
+      const contractNameByAddress = tx.to
+        ? ADDRESS_TO_CONTRACT_NAME[tx.to.toLowerCase()]
+        : undefined;
+      if (contractNameByAddress) {
+        contract_name = contractNameByAddress;
+      }
+
       // Validate delegatorKey if provided in CSV
       let errorMsg = '';
       let delegatorAddress = effectiveSender;
@@ -374,6 +392,38 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
 
         if (computedKey !== delegatorKeyCsv) {
           if (tx.to && tx.to.toLowerCase() === MIGRATOR_CONTRACT_ADDRESS) {
+            try {
+              const migratorInterface = new ethers.Interface(MigratorABI);
+              const decodedMigratorData = migratorInterface.parseTransaction({
+                data: tx.data,
+              });
+
+              if (
+                decodedMigratorData &&
+                decodedMigratorData.name === 'migrateDelegatorData'
+              ) {
+                const realDelegatorAddress = decodedMigratorData.args[1];
+                const realDelegatorKey =
+                  getDelegatorKey(realDelegatorAddress).toLowerCase();
+
+                if (realDelegatorKey === delegatorKeyCsv) {
+                  delegatorAddress = realDelegatorAddress;
+                  resolutionMethod = 'Migration';
+                } else {
+                  errorMsg = `Key mismatch in migration (csv=${delegatorKeyCsv} computed=${realDelegatorKey})`;
+                }
+              } else {
+                errorMsg = `Could not decode migrator data: ${
+                  decodedMigratorData?.name ?? 'unknown function'
+                }`;
+              }
+            } catch (e: any) {
+              errorMsg = `Error decoding migrator data: ${e.message}`;
+            }
+          } else if (
+            tx.to &&
+            tx.to.toLowerCase() === MIGRATOR_CONTRACT_ADDRESS_1
+          ) {
             try {
               const migratorInterface = new ethers.Interface(MigratorABI);
               const decodedMigratorData = migratorInterface.parseTransaction({
