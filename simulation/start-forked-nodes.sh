@@ -56,8 +56,11 @@ start_forked_node() {
     echo "   Port: $port"
     echo "   Note: Will deploy fresh V8.1. contracts"
     echo ""
-    
-    npx hardhat node --fork $rpc_url --fork-block-number $fork_block --config hardhat.simulation.config.ts --port $port 
+
+    local log="hardhat-${chain_name// /_}.log"
+
+    (npx hardhat node --fork $rpc_url --fork-block-number $fork_block --config hardhat.simulation.config.ts --port $port > $log 2>&1) &
+    echo "PID $! running; follow with: tail -f $log"
 }
 
 # Parse command line argument  
