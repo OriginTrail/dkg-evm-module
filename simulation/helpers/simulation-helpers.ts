@@ -11,6 +11,7 @@ import {
   impersonateAccount,
   stopImpersonatingAccount,
 } from './blockchain-helpers';
+import { TransactionData } from './db-helpers';
 import {
   DELEGATORS_INFO_MAINNET_ADDRESSES,
   EPOCH_METADATA,
@@ -573,17 +574,6 @@ export async function setupMigratorAllowances(
           `[MIGRATOR ALLOWANCE] Waiting for approval confirmation...`,
         );
 
-        // Mine a block to confirm the approval transaction (auto-mining is disabled)
-        console.log(`[MIGRATOR ALLOWANCE] Mining block to confirm approval...`);
-        await hre.network.provider.request({
-          method: 'evm_mine',
-          params: [],
-        });
-
-        console.log(
-          `[MIGRATOR ALLOWANCE] Block mined, checking transaction status...`,
-        );
-
         // Check if transaction was included in the block
         const txStatus = await hre.ethers.provider.getTransaction(
           approveTx.hash,
@@ -939,4 +929,50 @@ export async function initializeEpochMetadata(
   }
 
   return epochMetadata;
+}
+
+export async function setupAllowances(
+  hre: HardhatRuntimeEnvironment,
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  tx: TransactionData,
+): Promise<void> {
+  if (
+    tx.contract === 'Migrator' &&
+    tx.functionName === 'migrateDelegatorData'
+  ) {
+    await setupMigratorAllowances(
+      hre,
+      contracts,
+      tx.from,
+      tx.functionInputs[0],
+    );
+  }
+
+  if (tx.contract === 'Staking' && tx.functionName === 'stake') {
+    await setupStakingAllowances(hre, contracts, tx.from, tx.functionInputs[1]);
+  }
+}
+
+export async function calculateScoresForMigratedDelegators(
+  contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  tx: TransactionData,
+): Promise<void> {
+  if (tx.contract === 'Migrator' || tx.contract === 'MigratorM1V8') {
+    const currentEpoch = await contracts.chronos.getCurrentEpoch();
+    const identityId = Number(tx.functionInputs[0]);
+    const delegator =
+      tx.contract === 'Migrator' ? tx.from : tx.functionInputs[1];
+    const delegatorKey = ethers.keccak256(
+      ethers.solidityPacked(['address'], [delegator]),
+    );
+
+    // We migrated the whole node stake in Migrator.sol contract so even delegators who migrated later are accounted for and will have their scores settled for all epochs
+    for (let epoch = 1; epoch <= currentEpoch; epoch++) {
+      await contracts.staking._prepareForStakeChange(
+        epoch,
+        identityId,
+        delegatorKey,
+      );
+    }
+  }
 }
