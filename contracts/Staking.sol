@@ -575,6 +575,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
+        stakingV812.prepareForStakeChangeV812External(epoch, identityId, delegatorKey);
+
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 reward;
 
@@ -810,6 +812,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         return currentDelegatorScore18 + scoreEarned18;
+    }
+
+    function prepareForStakeChangeExternal(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) external onlyContracts returns (uint256) {
+        return _prepareForStakeChange(epoch, identityId, delegatorKey);
     }
 
     /**

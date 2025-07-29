@@ -117,6 +117,29 @@
         "type": "address"
       }
     ],
+    "name": "claimDelegatorRewardsCombined",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
+      }
+    ],
     "name": "claimDelegatorRewardsV812",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -307,6 +330,19 @@
     "outputs": [
       {
         "internalType": "contract ShardingTableStorage",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stakingMain",
+    "outputs": [
+      {
+        "internalType": "contract Staking",
         "name": "",
         "type": "address"
       }

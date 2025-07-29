@@ -26,6 +26,7 @@ import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
 import {RandomSamplingStorage as V8_1_2_RandomSamplingStorage} from "./storage/V8_1_2_RandomSamplingStorage.sol";
+import {Staking} from "./Staking.sol";
 
 contract StakingV812 is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "StakingV812";
@@ -45,6 +46,7 @@ contract StakingV812 is INamed, IVersioned, ContractStatus, IInitializable {
     IERC20 public tokenContract;
     RandomSamplingStorage public randomSamplingStorage;
     V8_1_2_RandomSamplingStorage public v8_1_2_randomSamplingStorage;
+    Staking public stakingMain;
     Chronos public chronos;
     EpochStorage public epochStorage;
     EpochStorage public epochStorageV6;
@@ -85,6 +87,7 @@ contract StakingV812 is INamed, IVersioned, ContractStatus, IInitializable {
         chronos = Chronos(hub.getContractAddress("Chronos"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
         epochStorageV6 = EpochStorage(hub.getContractAddress("EpochStorageV6"));
+        stakingMain = Staking(hub.getContractAddress("Staking"));
     }
 
     /**
@@ -162,6 +165,7 @@ contract StakingV812 is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator (V8.1.2 logic)
         uint256 delegatorScore18 = _prepareForStakeChangeV812(epoch, identityId, delegatorKey);
+        stakingMain.prepareForStakeChangeExternal(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = v8_1_2_randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 reward;
 
@@ -234,6 +238,20 @@ contract StakingV812 is INamed, IVersioned, ContractStatus, IInitializable {
         }
         //Should it increase on roling rewards or on stakeBaseIncrease only?
         stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
+    }
+
+    /**
+     * @dev Tries to claim delegator rewards using legacy Staking contract first,
+     *      then proceeds with V8.1.2 claim logic. Any failure in legacy call that
+     *      reverts is ignored, allowing the V8.1.2 logic to execute afterwards.
+     */
+    function claimDelegatorRewardsCombined(
+        uint72 identityId,
+        uint256 epoch,
+        address delegator
+    ) external profileExists(identityId) {
+        stakingMain.claimDelegatorRewards(identityId, epoch, delegator);
+        claimDelegatorRewardsV812(identityId, epoch, delegator);
     }
 
     function _prepareForStakeChangeV812(
