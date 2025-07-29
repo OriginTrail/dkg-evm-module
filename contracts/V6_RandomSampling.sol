@@ -9,7 +9,7 @@ import {IInitializable} from "./interfaces/IInitializable.sol";
 import {RandomSamplingLib} from "./libraries/RandomSamplingLib.sol";
 import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {IdentityStorage} from "./storage/IdentityStorage.sol";
-import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
+import {V6_RandomSamplingStorage} from "./storage/V6_RandomSamplingStorage.sol";
 import {KnowledgeCollectionStorage} from "./storage/KnowledgeCollectionStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
@@ -22,13 +22,13 @@ import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {ICustodian} from "./interfaces/ICustodian.sol";
 import {HubLib} from "./libraries/HubLib.sol";
 
-contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
-    string private constant _NAME = "RandomSampling";
+contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
+    string private constant _NAME = "V6_RandomSampling";
     string private constant _VERSION = "1.0.0";
     uint256 public constant SCALE18 = 1e18;
 
     IdentityStorage public identityStorage;
-    RandomSamplingStorage public randomSamplingStorage;
+    V6_RandomSamplingStorage public v6_randomSamplingStorage;
     KnowledgeCollectionStorage public knowledgeCollectionStorage;
     StakingStorage public stakingStorage;
     ProfileStorage public profileStorage;
@@ -77,7 +77,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      */
     function initialize() public onlyHub {
         identityStorage = IdentityStorage(hub.getContractAddress("IdentityStorage"));
-        randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
+        v6_randomSamplingStorage = V6_RandomSamplingStorage(hub.getContractAddress("V6_RandomSamplingStorage"));
         knowledgeCollectionStorage = KnowledgeCollectionStorage(
             hub.getAssetStorageAddress("KnowledgeCollectionStorage")
         );
@@ -112,7 +112,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      * @return True if there is a pending duration change, false otherwise
      */
     function isPendingProofingPeriodDuration() public view returns (bool) {
-        return chronos.getCurrentEpoch() < randomSamplingStorage.getLatestProofingPeriodDurationEffectiveEpoch();
+        return chronos.getCurrentEpoch() < v6_randomSamplingStorage.getLatestProofingPeriodDurationEffectiveEpoch();
     }
 
     /**
@@ -130,9 +130,9 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Check if there's a pending change
         if (isPendingProofingPeriodDuration()) {
-            randomSamplingStorage.replacePendingProofingPeriodDuration(durationInBlocks, effectiveEpoch);
+            v6_randomSamplingStorage.replacePendingProofingPeriodDuration(durationInBlocks, effectiveEpoch);
         } else {
-            randomSamplingStorage.addProofingPeriodDuration(durationInBlocks, effectiveEpoch);
+            v6_randomSamplingStorage.addProofingPeriodDuration(durationInBlocks, effectiveEpoch);
         }
     }
 
@@ -149,7 +149,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
         //TODO check if a node is V6 node and in the sharding table
-        RandomSamplingLib.Challenge memory nodeChallenge = randomSamplingStorage.getNodeChallenge(identityId);
+        RandomSamplingLib.Challenge memory nodeChallenge = v6_randomSamplingStorage.getNodeChallenge(identityId);
 
         if (nodeChallenge.activeProofPeriodStartBlock == updateAndGetActiveProofPeriodStartBlock()) {
             // Revert if node has already solved the challenge for this period
@@ -167,7 +167,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         RandomSamplingLib.Challenge memory challenge = _generateChallenge(msg.sender);
 
         // Store the new challenge in the storage contract
-        randomSamplingStorage.setNodeChallenge(identityId, challenge);
+        v6_randomSamplingStorage.setNodeChallenge(identityId, challenge);
     }
 
     /**
@@ -190,7 +190,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
         //TODO check if a node is V6 node and in the sharding table
         // Get node challenge
-        RandomSamplingLib.Challenge memory challenge = randomSamplingStorage.getNodeChallenge(identityId);
+        RandomSamplingLib.Challenge memory challenge = v6_randomSamplingStorage.getNodeChallenge(identityId);
 
         if (challenge.solved) {
             revert("This challenge has already been solved");
@@ -213,25 +213,25 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         if (computedMerkleRoot == expectedMerkleRoot) {
             // Mark as correct submission and add points to the node
             challenge.solved = true;
-            randomSamplingStorage.setNodeChallenge(identityId, challenge);
+            v6_randomSamplingStorage.setNodeChallenge(identityId, challenge);
 
             uint256 epoch = chronos.getCurrentEpoch();
-            randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
+            v6_randomSamplingStorage.incrementEpochNodeValidProofsCount(epoch, identityId);
             uint256 score18 = calculateNodeScore(identityId);
-            randomSamplingStorage.addToNodeEpochProofPeriodScore(
+            v6_randomSamplingStorage.addToNodeEpochProofPeriodScore(
                 epoch,
                 activeProofPeriodStartBlock,
                 identityId,
                 score18
             );
-            randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score18);
-            randomSamplingStorage.addToAllNodesEpochScore(epoch, score18);
+            v6_randomSamplingStorage.addToNodeEpochScore(epoch, identityId, score18);
+            v6_randomSamplingStorage.addToAllNodesEpochScore(epoch, score18);
 
             // Calculate and add to nodeEpochScorePerStake
             uint96 totalNodeStake = stakingStorage.getNodeStake(identityId);
             if (totalNodeStake > 0) {
                 uint256 nodeScorePerStake36 = (score18 * SCALE18) / totalNodeStake;
-                randomSamplingStorage.addToNodeEpochScorePerStake(epoch, identityId, nodeScorePerStake36);
+                v6_randomSamplingStorage.addToNodeEpochScorePerStake(epoch, identityId, nodeScorePerStake36);
             }
         } else {
             revert MerkleRootMismatchError(computedMerkleRoot, expectedMerkleRoot);
@@ -314,7 +314,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         uint256 chunkId;
-        uint256 chunkByteSize = randomSamplingStorage.CHUNK_BYTE_SIZE();
+        uint256 chunkByteSize = v6_randomSamplingStorage.CHUNK_BYTE_SIZE();
         // KC with byteSize < chunkByteSize will always have chunkId = 0
         if (kcByteSize > chunkByteSize) {
             chunkId = uint256(pseudoRandomVariable) % (kcByteSize / chunkByteSize);
@@ -465,7 +465,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             revert("Active proofing period duration in blocks should not be 0");
         }
 
-        uint256 activeProofPeriodStartBlock = randomSamplingStorage.getActiveProofPeriodStartBlock();
+        uint256 activeProofPeriodStartBlock = v6_randomSamplingStorage.getActiveProofPeriodStartBlock();
 
         if (block.number > activeProofPeriodStartBlock + activeProofingPeriodDurationInBlocks - 1) {
             // Calculate how many complete periods have passed since the last active period started
@@ -476,7 +476,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
                 completePeriodsPassed *
                 activeProofingPeriodDurationInBlocks;
 
-            randomSamplingStorage.setActiveProofPeriodStartBlock(newActiveProofPeriodStartBlock);
+            v6_randomSamplingStorage.setActiveProofPeriodStartBlock(newActiveProofPeriodStartBlock);
 
             return newActiveProofPeriodStartBlock;
         }
@@ -489,7 +489,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      * @return ProofPeriodStatus struct containing start block and active status
      */
     function getActiveProofPeriodStatus() external view returns (RandomSamplingLib.ProofPeriodStatus memory) {
-        uint256 activeProofPeriodStartBlock = randomSamplingStorage.getActiveProofPeriodStartBlock();
+        uint256 activeProofPeriodStartBlock = v6_randomSamplingStorage.getActiveProofPeriodStartBlock();
         return
             RandomSamplingLib.ProofPeriodStatus(
                 activeProofPeriodStartBlock,
@@ -523,7 +523,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
      * @return Duration in blocks of the currently active proofing period
      */
     function getActiveProofingPeriodDurationInBlocks() public view returns (uint16) {
-        return randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(chronos.getCurrentEpoch());
+        return v6_randomSamplingStorage.getEpochProofingPeriodDurationInBlocks(chronos.getCurrentEpoch());
     }
 
     /**

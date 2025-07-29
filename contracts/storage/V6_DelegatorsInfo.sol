@@ -8,8 +8,8 @@ import {INamed} from "../interfaces/INamed.sol";
 import {IVersioned} from "../interfaces/IVersioned.sol";
 import {ContractStatus} from "../abstract/ContractStatus.sol";
 
-contract DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
-    string private constant _NAME = "DelegatorsInfo";
+contract V6_DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable {
+    string private constant _NAME = "V6_DelegatorsInfo";
     string private constant _VERSION = "1.0.0";
 
     // IdentityId => Delegators

@@ -11,8 +11,8 @@ import {ContractStatus} from "../abstract/ContractStatus.sol";
 import {ICustodian} from "../interfaces/ICustodian.sol";
 import {HubLib} from "../libraries/HubLib.sol";
 
-contract RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractStatus {
-    string private constant _NAME = "RandomSamplingStorage";
+contract V6_RandomSamplingStorage is INamed, IVersioned, IInitializable, ContractStatus {
+    string private constant _NAME = "V6_RandomSamplingStorage";
     string private constant _VERSION = "1.0.0";
     uint8 public constant CHUNK_BYTE_SIZE = 32;
     Chronos public chronos;
