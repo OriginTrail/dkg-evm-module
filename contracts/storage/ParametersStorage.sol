@@ -30,7 +30,6 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
     uint16 public maxOperatorFee;
 
     uint256 public v81ReleaseEpoch;
-    uint256 public v812ReleaseEpoch;
 
     constructor(address hubAddress, uint256 _v81ReleaseEpoch) HubDependent(hubAddress) {
         minimumStake = 50_000 ether;
@@ -53,7 +52,6 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         // Epoch when v8.1 was released on mainnet/testnet
         // Change if you ever redeploy delegatorsInfo contract on either network
         v81ReleaseEpoch = _v81ReleaseEpoch;
-        v812ReleaseEpoch = 0;
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -130,11 +128,5 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
         v81ReleaseEpoch = _v81ReleaseEpoch;
 
         emit ParameterChanged("v81ReleaseEpoch", _v81ReleaseEpoch);
-    }
-
-    function setV812ReleaseEpoch(uint256 _v812ReleaseEpoch) external onlyHub {
-        v812ReleaseEpoch = _v812ReleaseEpoch;
-
-        emit ParameterChanged("v812ReleaseEpoch", _v812ReleaseEpoch);
     }
 }

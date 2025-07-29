@@ -145,7 +145,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
             }
         }
 
-        if (currentEpoch > 1 && currentEpoch > parametersStorage.v812ReleaseEpoch()) {
+        if (currentEpoch > 1 && currentEpoch > v6_delegatorsInfo.v812ReleaseEpoch()) {
             // All operator fees for previous epochs must be calculated and claimed before updating the operator fee
             if (!v6_delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, currentEpoch - 1)) {
                 revert(

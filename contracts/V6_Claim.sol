@@ -138,9 +138,9 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         require(lastClaimedMain == lastClaimed + 1, "V6 store not one epoch behind main store");
 
         if (lastClaimed == 0) {
-            uint256 v6ReleaseEpoch = parametersStorage.v81ReleaseEpoch();
-            v6_delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v6ReleaseEpoch - 1);
-            lastClaimed = v6ReleaseEpoch - 1;
+            uint256 v812ReleaseEpoch = v6_delegatorsInfo.v812ReleaseEpoch();
+            v6_delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v812ReleaseEpoch - 1);
+            lastClaimed = v812ReleaseEpoch - 1;
         }
 
         if (lastClaimed == currentEpoch - 1) {
