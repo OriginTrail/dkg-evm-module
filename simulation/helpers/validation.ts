@@ -169,44 +169,43 @@ export async function verifyMainnetStakingStorageState(
     let localDelegatorStake = 0n;
 
     // Check delegator stake if delegator address provided
-    if (delegatorAddress) {
-      // Create delegator key (same as contract: keccak256(abi.encodePacked(delegator)))
-      const delegatorKey = ethers.keccak256(
-        ethers.solidityPacked(['address'], [delegatorAddress]),
-      );
 
-      onChainDelegatorStake = await onChainStakingStorage.getDelegatorStakeBase(
+    // Create delegator key (same as contract: keccak256(abi.encodePacked(delegator)))
+    const delegatorKey = ethers.keccak256(
+      ethers.solidityPacked(['address'], [delegatorAddress]),
+    );
+
+    onChainDelegatorStake = await onChainStakingStorage.getDelegatorStakeBase(
+      identityId,
+      delegatorKey,
+      { blockTag: blockNumber },
+    );
+
+    localDelegatorStake =
+      await localContracts.stakingStorage.getDelegatorStakeBase(
         identityId,
         delegatorKey,
-        { blockTag: blockNumber },
       );
 
-      localDelegatorStake =
-        await localContracts.stakingStorage.getDelegatorStakeBase(
-          identityId,
-          delegatorKey,
-        );
+    console.log(
+      `[VERIFY STATE] On-chain delegator stake: ${onChainDelegatorStake.toString()}, local delegator stake: ${localDelegatorStake.toString()}. Difference: ${ethers.formatEther(
+        onChainDelegatorStake - localDelegatorStake,
+      )} TRAC`,
+    );
 
-      console.log(
-        `[VERIFY STATE] On-chain delegator stake: ${onChainDelegatorStake.toString()}, local delegator stake: ${localDelegatorStake.toString()}. Difference: ${ethers.formatEther(
-          onChainDelegatorStake - localDelegatorStake,
-        )} TRAC`,
-      );
+    console.log(
+      `[VERIFY STATE] On-chain node stake: ${onChainNodeStake.toString()}, local node stake: ${localNodeStake.toString()}. Difference: ${ethers.formatEther(
+        onChainNodeStake - localNodeStake,
+      )} TRAC`,
+    );
 
-      console.log(
-        `[VERIFY STATE] On-chain node stake: ${onChainNodeStake.toString()}, local node stake: ${localNodeStake.toString()}. Difference: ${ethers.formatEther(
-          onChainNodeStake - localNodeStake,
-        )} TRAC`,
-      );
-
-      expect(onChainDelegatorStake).to.equal(
-        localDelegatorStake,
-        `On-chain delegator stake ${onChainDelegatorStake.toString()} should be equal to local delegator stake ${localDelegatorStake.toString()}. Difference: ${ethers.formatEther(
-          onChainDelegatorStake - localDelegatorStake,
-        )} TRAC`,
-      );
-      console.log(`[VERIFY STATE] ✅ Delegator stake matches`);
-    }
+    expect(onChainDelegatorStake).to.equal(
+      localDelegatorStake,
+      `On-chain delegator stake ${onChainDelegatorStake.toString()} should be equal to local delegator stake ${localDelegatorStake.toString()}. Difference: ${ethers.formatEther(
+        onChainDelegatorStake - localDelegatorStake,
+      )} TRAC`,
+    );
+    console.log(`[VERIFY STATE] ✅ Delegator stake matches`);
 
     expect(onChainNodeStake).to.equal(
       localNodeStake,
@@ -299,9 +298,10 @@ export async function initializeValidationVariables(
         );
     }
   } else if (
-    // TODO: add MigratorM1V8 here
-    tx.contract === 'Migrator' &&
-    tx.functionName === 'migrateDelegatorData'
+    (tx.contract === 'Migrator' &&
+      tx.functionName === 'migrateDelegatorData') ||
+    (tx.contract === 'MigratorM1V8' &&
+      tx.functionName === 'migrateDelegatorData')
   ) {
     nodeStake = BigInt(
       await contracts.stakingStorage.getNodeStake(tx.functionInputs[0]),
@@ -327,14 +327,17 @@ export async function validateDelegatorsCount(
   isNodeDelegator: boolean,
   delegatorsCount: number,
 ) {
-  // TODO: add MigratorM1V8 here
   if (
-    tx.contract === 'Migrator' &&
-    tx.functionName === 'migrateDelegatorData'
+    (tx.contract === 'Migrator' &&
+      tx.functionName === 'migrateDelegatorData') ||
+    (tx.contract === 'MigratorM1V8' &&
+      tx.functionName === 'migrateDelegatorData')
   ) {
     // Add the new address to the DelegatorsInfo contract
     const identityId = tx.functionInputs[0];
-    await addDelegator(hre, contracts, identityId, tx.from);
+    const delegator =
+      tx.contract === 'Migrator' ? tx.from : tx.functionInputs[1];
+    await addDelegator(hre, contracts, identityId, delegator);
     await _validateDelegatorsCount(contracts, identityId, delegatorsCount);
   } else if (
     tx.contract === 'Staking' &&
