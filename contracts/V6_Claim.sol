@@ -10,7 +10,7 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
-import {DelegatorsInfo as V6_DelegatorsInfo} from "./storage/V6_DelegatorsInfo.sol";
+import {V6_DelegatorsInfo} from "./storage/V6_DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";

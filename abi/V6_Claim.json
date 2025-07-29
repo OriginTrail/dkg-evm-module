@@ -140,7 +140,7 @@
         "type": "address"
       }
     ],
-    "name": "claimDelegatorRewardsV812",
+    "name": "claimDelegatorRewardsV6",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -151,19 +151,6 @@
     "outputs": [
       {
         "internalType": "contract DelegatorsInfo",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "epochStorage",
-    "outputs": [
-      {
-        "internalType": "contract EpochStorage",
         "name": "",
         "type": "address"
       }
@@ -261,7 +248,7 @@
         "type": "bytes32"
       }
     ],
-    "name": "prepareForStakeChangeV812External",
+    "name": "prepareForStakeChangeV6External",
     "outputs": [
       {
         "internalType": "uint256",
@@ -278,19 +265,6 @@
     "outputs": [
       {
         "internalType": "contract ProfileStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "randomSamplingStorage",
-    "outputs": [
-      {
-        "internalType": "contract RandomSamplingStorage",
         "name": "",
         "type": "address"
       }
@@ -391,10 +365,10 @@
   },
   {
     "inputs": [],
-    "name": "v8_1_2_delegatorsInfo",
+    "name": "v6_delegatorsInfo",
     "outputs": [
       {
-        "internalType": "contract DelegatorsInfo",
+        "internalType": "contract V6_DelegatorsInfo",
         "name": "",
         "type": "address"
       }
@@ -404,10 +378,10 @@
   },
   {
     "inputs": [],
-    "name": "v8_1_2_randomSamplingStorage",
+    "name": "v6_randomSamplingStorage",
     "outputs": [
       {
-        "internalType": "contract RandomSamplingStorage",
+        "internalType": "contract V6_RandomSamplingStorage",
         "name": "",
         "type": "address"
       }

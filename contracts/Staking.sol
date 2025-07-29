@@ -10,7 +10,7 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
-import {DelegatorsInfo as V8_1_2_DelegatorsInfo} from "./storage/V8_1_2_DelegatorsInfo.sol";
+import {V6_DelegatorsInfo} from "./storage/V6_DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
@@ -25,8 +25,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
-import {RandomSamplingStorage as V8_1_2_RandomSamplingStorage} from "./storage/V8_1_2_RandomSamplingStorage.sol";
-import {StakingV812} from "./V8_1_2_Staking.sol";
+import {V6_RandomSamplingStorage} from "./storage/V6_RandomSamplingStorage.sol";
+import {V6_Claim} from "./V6_Claim.sol";
 
 contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
@@ -42,11 +42,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
     DelegatorsInfo public delegatorsInfo;
-    V8_1_2_DelegatorsInfo public v8_1_2_delegatorsInfo;
+    V6_DelegatorsInfo public v6_delegatorsInfo;
     IERC20 public tokenContract;
     RandomSamplingStorage public randomSamplingStorage;
-    V8_1_2_RandomSamplingStorage public v8_1_2_randomSamplingStorage;
-    StakingV812 public stakingV812;
+    V6_RandomSamplingStorage public v6_randomSamplingStorage;
+    V6_Claim public v6_claim;
     Chronos public chronos;
     EpochStorage public epochStorage;
     EpochStorage public epochStorageV6;
@@ -78,16 +78,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
-        v8_1_2_delegatorsInfo = V8_1_2_DelegatorsInfo(hub.getContractAddress("V8_1_2_DelegatorsInfo"));
+        v6_delegatorsInfo = V6_DelegatorsInfo(hub.getContractAddress("V6_DelegatorsInfo"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
-        v8_1_2_randomSamplingStorage = V8_1_2_RandomSamplingStorage(
-            hub.getContractAddress("V8_1_2_RandomSamplingStorage")
-        );
+        v6_randomSamplingStorage = V6_RandomSamplingStorage(hub.getContractAddress("V6_RandomSamplingStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
         epochStorageV6 = EpochStorage(hub.getContractAddress("EpochStorageV6"));
-        stakingV812 = StakingV812(hub.getContractAddress("V8_1_2_Staking"));
+        v6_claim = V6_Claim(hub.getContractAddress("V6_Claim"));
     }
 
     /**
@@ -134,7 +132,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
-        stakingV812.prepareForStakeChangeV812External(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        v6_claim.prepareForStakeChangeV6External(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 delegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
 
@@ -192,10 +190,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Prepare for stake change on the source and destination nodes
         uint256 fromDelegatorEpochScore18 = _prepareForStakeChange(currentEpoch, fromIdentityId, delegatorKey);
-        stakingV812.prepareForStakeChangeV812External(currentEpoch, fromIdentityId, delegatorKey);
+        v6_claim.prepareForStakeChangeV6External(currentEpoch, fromIdentityId, delegatorKey);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(currentEpoch, toIdentityId, delegatorKey);
-        stakingV812.prepareForStakeChangeV812External(currentEpoch, toIdentityId, delegatorKey);
+        v6_claim.prepareForStakeChangeV6External(currentEpoch, toIdentityId, delegatorKey);
 
         uint96 fromDelegatorStakeBase = ss.getDelegatorStakeBase(fromIdentityId, delegatorKey);
 
@@ -266,7 +264,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorEpochScore18 = _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
-        stakingV812.prepareForStakeChangeV812External(currentEpoch, identityId, delegatorKey);
+        v6_claim.prepareForStakeChangeV6External(currentEpoch, identityId, delegatorKey);
 
         uint96 delegatorStakeBase = ss.getDelegatorStakeBase(identityId, delegatorKey);
         if (removedStake > delegatorStakeBase) {
@@ -350,7 +348,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
-        stakingV812.prepareForStakeChangeV812External(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        v6_claim.prepareForStakeChangeV6External(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 nodeStakeBefore = ss.getNodeStake(identityId);
         uint96 maxStake = parametersStorage.maximumStake();
@@ -418,7 +416,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
-        stakingV812.prepareForStakeChangeV812External(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        v6_claim.prepareForStakeChangeV6External(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - addedStake);
 
@@ -575,7 +573,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
-        stakingV812.prepareForStakeChangeV812External(epoch, identityId, delegatorKey);
+        v6_claim.prepareForStakeChangeV6External(epoch, identityId, delegatorKey);
 
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 reward;
@@ -684,8 +682,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         _validateDelegatorEpochClaimsForStore(
             identityId,
             delegator,
-            DelegatorsInfo(address(v8_1_2_delegatorsInfo)),
-            RandomSamplingStorage(address(v8_1_2_randomSamplingStorage))
+            DelegatorsInfo(address(v6_delegatorsInfo)),
+            RandomSamplingStorage(address(v6_randomSamplingStorage))
         );
     }
 

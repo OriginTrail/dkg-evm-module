@@ -603,19 +603,6 @@
   },
   {
     "inputs": [],
-    "name": "stakingV812",
-    "outputs": [
-      {
-        "internalType": "contract StakingV812",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "status",
     "outputs": [
       {
@@ -642,10 +629,10 @@
   },
   {
     "inputs": [],
-    "name": "v8_1_2_delegatorsInfo",
+    "name": "v6_claim",
     "outputs": [
       {
-        "internalType": "contract DelegatorsInfo",
+        "internalType": "contract V6_Claim",
         "name": "",
         "type": "address"
       }
@@ -655,10 +642,23 @@
   },
   {
     "inputs": [],
-    "name": "v8_1_2_randomSamplingStorage",
+    "name": "v6_delegatorsInfo",
     "outputs": [
       {
-        "internalType": "contract RandomSamplingStorage",
+        "internalType": "contract V6_DelegatorsInfo",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "v6_randomSamplingStorage",
+    "outputs": [
+      {
+        "internalType": "contract V6_RandomSamplingStorage",
         "name": "",
         "type": "address"
       }
