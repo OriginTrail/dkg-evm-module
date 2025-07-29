@@ -553,6 +553,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             lastClaimed = v81ReleaseEpoch - 1;
         }
 
+        // Ensure main DelegatorsInfo does not exceed V6 counterpart by more than 1 epoch
+        uint256 lastClaimedV6 = v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        require(lastClaimed <= lastClaimedV6 + 1, "DelegatorsInfo advanced too far compared to V6 store");
+
         if (lastClaimed == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
         }
@@ -618,6 +622,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         delegatorsInfo.setHasDelegatorClaimedEpochRewards(epoch, identityId, delegatorKey, true);
         uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
         delegatorsInfo.setLastClaimedEpoch(identityId, delegator, epoch);
+
+        // Post-condition: main store must be exactly one epoch ahead of V6 store
+        require(
+            delegatorsInfo.getLastClaimedEpoch(identityId, delegator) ==
+                v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator) + 1,
+            "Post-claim epochs out of sync with V6 store"
+        );
 
         // Check if this completes all required claims and reset lastStakeHeldEpoch
         uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, delegator);

@@ -10,6 +10,7 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {WhitelistStorage} from "./storage/WhitelistStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
+import {V6_DelegatorsInfo} from "./storage/V6_DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
@@ -30,6 +31,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     WhitelistStorage public whitelistStorage;
     Chronos public chronos;
     DelegatorsInfo public delegatorsInfo;
+    V6_DelegatorsInfo public v6_delegatorsInfo;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -63,6 +65,7 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
         whitelistStorage = WhitelistStorage(hub.getContractAddress("WhitelistStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
+        v6_delegatorsInfo = V6_DelegatorsInfo(hub.getContractAddress("V6_DelegatorsInfo"));
     }
 
     function name() external pure virtual override returns (string memory) {
@@ -138,6 +141,15 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
             if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, currentEpoch - 1)) {
                 revert(
                     "Cannot update operatorFee if operatorFee has not been calculated and claimed for previous epochs"
+                );
+            }
+        }
+
+        if (currentEpoch > 1 && currentEpoch > parametersStorage.v812ReleaseEpoch()) {
+            // All operator fees for previous epochs must be calculated and claimed before updating the operator fee
+            if (!v6_delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, currentEpoch - 1)) {
+                revert(
+                    "Cannot update operatorFee if operatorFee has not been calculated and claimed for v6 previous epochs"
                 );
             }
         }

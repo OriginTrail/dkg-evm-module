@@ -381,6 +381,19 @@
   },
   {
     "inputs": [],
+    "name": "v6_delegatorsInfo",
+    "outputs": [
+      {
+        "internalType": "contract V6_DelegatorsInfo",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "version",
     "outputs": [
       {

@@ -132,6 +132,11 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
         uint256 lastClaimed = v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+
+        // Ensure V6 store is exactly one epoch behind the main DelegatorsInfo store
+        uint256 lastClaimedMain = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        require(lastClaimedMain == lastClaimed + 1, "V6 store not one epoch behind main store");
+
         if (lastClaimed == 0) {
             uint256 v6ReleaseEpoch = parametersStorage.v81ReleaseEpoch();
             v6_delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v6ReleaseEpoch - 1);

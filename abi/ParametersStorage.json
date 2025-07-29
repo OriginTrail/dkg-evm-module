@@ -340,6 +340,19 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "_v812ReleaseEpoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "setV812ReleaseEpoch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "_v81ReleaseEpoch",
         "type": "uint256"
       }
@@ -365,6 +378,19 @@
   {
     "inputs": [],
     "name": "stakeWithdrawalDelay",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "v812ReleaseEpoch",
     "outputs": [
       {
         "internalType": "uint256",
