@@ -773,7 +773,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch,
         uint72 identityId,
         bytes32 delegatorKey
-    ) internal returns (uint256 delegatorEpochScore) {
+    ) public onlyContracts returns (uint256 delegatorEpochScore) {
         // 1. Current "score-per-stake"
         uint256 nodeScorePerStake36 = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
 
@@ -821,14 +821,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         return currentDelegatorScore18 + scoreEarned18;
-    }
-
-    function prepareForStakeChangeExternal(
-        uint256 epoch,
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) external onlyContracts returns (uint256) {
-        return _prepareForStakeChange(epoch, identityId, delegatorKey);
     }
 
     /**

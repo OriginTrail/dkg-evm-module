@@ -163,7 +163,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator (V6 logic)
         uint256 delegatorScore18 = _prepareForStakeChangeV6(epoch, identityId, delegatorKey);
-        stakingMain.prepareForStakeChangeExternal(epoch, identityId, delegatorKey);
+        stakingMain._prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = v6_randomSamplingStorage.getNodeEpochScore(epoch, identityId);
 
         uint256 reward;
