@@ -3,6 +3,7 @@ import fs from 'fs';
 import { expect } from 'chai';
 import hre from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import '@nomicfoundation/hardhat-ethers';
 
 import {
   getDeployedContract,
@@ -26,8 +27,6 @@ import {
 } from './helpers/simulation-constants';
 import {
   calculateScoresForActiveNodes,
-  setupStakingAllowances,
-  setupMigratorAllowances,
   initializeProofingTimestamp,
   getNodeEpochPublishingFactors,
   initializeContracts,
@@ -36,6 +35,8 @@ import {
   getDelegatorReward,
   initializeEpochMetadata,
   migrateV6Delegators,
+  setupAllowances,
+  calculateScoresForMigratedDelegators,
 } from './helpers/simulation-helpers';
 import {
   validateDelegatorsCount,
@@ -221,8 +222,6 @@ class HistoricalRewardsSimulation {
 
     await validateStartTimeAndEpochLength(this.contracts, 1736812800, 2592000);
 
-    // TODO: Migrate all delegators to new delegatorsInfo
-
     // Disable auto-mining
     // console.log('[INIT] Disabling auto-mining...');
     // await this.mining.disableAutoMining();
@@ -325,10 +324,17 @@ class HistoricalRewardsSimulation {
       await this.handleEpochTransitions(block.timestamp);
 
       // 3. Warp VM clock to this block's timestamp
-      await this.mining.setTime(block.timestamp);
-      console.log(
-        `[PROCESS BLOCK] Advanced time to ${new Date(block.timestamp * 1000).toISOString()}`,
-      );
+      // Skip setting time if processing MigratorM1V8 transactions, those blocks are too close to each other which breaks the simulation - proof periods will be calculated correctly in the end
+      if (block.txs.some((tx) => tx.contract === 'MigratorM1V8')) {
+        console.log(
+          `[PROCESS BLOCK] Skipping time advancement for block ${block.blockNumber} because it contains MigratorM1V8 transactions`,
+        );
+      } else {
+        await this.mining.setTime(block.timestamp);
+        console.log(
+          `[PROCESS BLOCK] Advanced time to ${new Date(block.timestamp * 1000).toISOString()}`,
+        );
+      }
 
       // 4. Process all transactions in the block
       let successfulTxs = 0;
@@ -533,8 +539,15 @@ class HistoricalRewardsSimulation {
       return;
     }
 
+    const sender =
+      tx.contract === 'MigratorM1V8'
+        ? HUB_OWNERS[
+            (await this.contracts.hub.getAddress()) as keyof typeof HUB_OWNERS
+          ]
+        : tx.from;
+
     console.log(
-      `[PROCESS TRANSACTION] msg.sender: ${tx.from} is calling ${tx.contract}.${tx.functionName}(${tx.functionInputs
+      `[PROCESS TRANSACTION] msg.sender: ${sender} is calling ${tx.contract}.${tx.functionName}(${tx.functionInputs
         .map((input) => JSON.stringify(input))
         .join(', ')}) - tx: ${tx.hash}`,
     );
@@ -558,36 +571,17 @@ class HistoricalRewardsSimulation {
         requestWithdrawalAmount,
       } = await initializeValidationVariables(this.hre, this.contracts, tx);
 
-      // Impersonate the original transaction sender FIRST
-      await impersonateAccount(this.hre, tx.from);
+      // Impersonate the original transaction sender or hub owner, depending on access control
+      await impersonateAccount(this.hre, sender);
 
-      // Estimate gas cost and ensure sufficient funds for this specific transaction
-      await ensureSufficientGasFunds(this.hre, tx.from);
+      // Ensure sufficient funds for this specific transaction
+      await ensureSufficientGasFunds(this.hre, sender);
 
       // Special handling for transactions that need token allowances
-      // (Must be done AFTER impersonation and gas funding)
-      // TODO: add allowances setup for MigratorM1V8
-      if (
-        tx.contract === 'Migrator' &&
-        tx.functionName === 'migrateDelegatorData'
-      ) {
-        await setupMigratorAllowances(
-          this.hre,
-          this.contracts,
-          tx.from,
-          tx.functionInputs[0],
-        );
-      } else if (tx.contract === 'Staking' && tx.functionName === 'stake') {
-        await setupStakingAllowances(
-          this.hre,
-          this.contracts,
-          tx.from,
-          tx.functionInputs[1],
-        );
-      }
+      await setupAllowances(this.hre, this.contracts, tx);
 
       // Get the signer for the transaction sender
-      const signer = await this.hre.ethers.getSigner(tx.from);
+      const signer = await this.hre.ethers.getSigner(sender);
       const contractWithSigner = contract.connect(signer);
 
       // Execute the transaction with original arguments
@@ -595,9 +589,6 @@ class HistoricalRewardsSimulation {
         const txResponse = await contractWithSigner[tx.functionName](
           ...tx.functionInputs,
         );
-
-        // Mine a block to confirm the transaction since auto-mining is disabled
-        // await this.mining.mineBlock();
 
         await txResponse.wait();
 
@@ -617,26 +608,7 @@ class HistoricalRewardsSimulation {
           delegatorsCount,
         );
 
-        // TODO: prepareForStakeChange for MigratorM1V8
-        if (
-          tx.contract === 'Migrator' &&
-          tx.functionName === 'migrateDelegatorData'
-        ) {
-          const currentEpoch = await this.contracts.chronos.getCurrentEpoch();
-          const identityId = Number(tx.functionInputs[0]);
-          const delegatorKey = this.hre.ethers.keccak256(
-            this.hre.ethers.solidityPacked(['address'], [tx.from]),
-          );
-
-          // We migrated the whole node stake in Migrator.sol contract so even delegators who migrated later are accounted for and will have their scores settled for all epochs
-          for (let epoch = 1; epoch <= currentEpoch; epoch++) {
-            await this.contracts.staking._prepareForStakeChange(
-              epoch,
-              identityId,
-              delegatorKey,
-            );
-          }
-        }
+        await calculateScoresForMigratedDelegators(this.contracts, tx);
 
         // Verify on-chain state after stake-changing transactions
         if (this.verifyMainnetState) {
@@ -658,7 +630,7 @@ class HistoricalRewardsSimulation {
         this.db.markTxAsProcessed(tx.hash, true);
 
         // Stop impersonating
-        await stopImpersonatingAccount(this.hre, tx.from);
+        await stopImpersonatingAccount(this.hre, sender);
       } catch (error) {
         // Mark as failed and record error
         this.db.markTxAsProcessed(tx.hash, false);
@@ -856,7 +828,7 @@ class HistoricalRewardsSimulation {
 
       await this.distributeRewards();
 
-      // TODO: Export V8.json, and globals.json
+      // TODO: Export csv for KPIs
       console.log('[SIMULATION END] Exporting results');
       await this.exportResults();
 
