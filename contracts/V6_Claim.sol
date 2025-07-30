@@ -109,6 +109,18 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
      * @param epochs Array of epochs to claim for (each must be valid for claiming)
      * @param delegators Array of delegator addresses (each must be a node delegator)
      */
+    function batchClaimDelegatorRewards(
+        uint72 identityId,
+        uint256[] memory epochs,
+        address[] memory delegators
+    ) external profileExists(identityId) {
+        for (uint256 i = 0; i < epochs.length; i++) {
+            for (uint256 j = 0; j < delegators.length; j++) {
+                stakingMain.claimDelegatorRewards(identityId, epochs[i], delegators[j]);
+            }
+        }
+    }
+
     function batchClaimDelegatorRewardsV6(
         uint72 identityId,
         uint256[] memory epochs,

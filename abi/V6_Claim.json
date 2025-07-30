@@ -81,6 +81,29 @@
         "type": "address[]"
       }
     ],
+    "name": "batchClaimDelegatorRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "epochs",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "delegators",
+        "type": "address[]"
+      }
+    ],
     "name": "batchClaimDelegatorRewardsV6",
     "outputs": [],
     "stateMutability": "nonpayable",
