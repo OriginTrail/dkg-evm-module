@@ -822,6 +822,15 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
+     * @notice External gateway for other Hub-registered contracts to run the same
+     *         delegator-claim validation that Staking enforces before stake
+     *         mutations. Restricted to contracts registered in the Hub.
+     */
+    function validateDelegatorEpochClaimsExternal(uint72 identityId, address delegator) external onlyContracts {
+        _validateDelegatorEpochClaims(identityId, delegator);
+    }
+
+    /**
      * @dev Internal function to manage delegator registration and status tracking
      * Adds delegator to node's delegator list if not already registered
      * Marks delegator as having ever delegated to the node (for claim validation)

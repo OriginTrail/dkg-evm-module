@@ -267,7 +267,10 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         address delegator
     ) external profileExists(identityId) {
         stakingMain.claimDelegatorRewards(identityId, epoch, delegator);
-        claimDelegatorRewardsV6(identityId, epoch, delegator);
+        // Execute V6-specific claim logic only for nodes created before the cutoff timestamp
+        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < V6_NODE_CUTOFF_TS) {
+            claimDelegatorRewardsV6(identityId, epoch, delegator);
+        }
     }
 
     function _prepareForStakeChangeV6(
