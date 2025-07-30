@@ -180,7 +180,14 @@ export async function calculateScoresForActiveNodes(
 export async function getNodeEpochPublishingFactors(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   chain: string,
-) {
+): Promise<{
+  nodeEpochPublishingFactors: {
+    [epoch: number]: { [identityId: number]: bigint };
+  };
+  nodeEpochProducedKnowledgeValuePercentages: {
+    [epoch: number]: { [identityId: number]: bigint };
+  };
+}> {
   console.log(
     `[GET NODE EPOCH PUBLISHING FACTORS] Getting node epoch publishing factors for chain ${chain}`,
   );
@@ -189,8 +196,12 @@ export async function getNodeEpochPublishingFactors(
   const nodeEpochPublishingFactors: {
     [epoch: number]: { [identityId: number]: bigint };
   } = {};
+  const nodeEpochProducedKnowledgeValuePercentages: {
+    [epoch: number]: { [identityId: number]: bigint };
+  } = {};
   epochsList.forEach((epoch) => {
     nodeEpochPublishingFactors[epoch] = {};
+    nodeEpochProducedKnowledgeValuePercentages[epoch] = {};
   });
 
   const rpc = new ethers.JsonRpcProvider(RPC_URLS[chain]);
@@ -227,12 +238,23 @@ export async function getNodeEpochPublishingFactors(
         maxNodePub,
       );
       nodeEpochPublishingFactors[epoch][identityId] = nodePublishingFactor18;
+
+      const nodeEpochProducedKnowledgeValuePercentage =
+        await mainnetEpochStorage.getNodeEpochProducedKnowledgeValuePercentage(
+          identityId,
+          epoch,
+        );
+      nodeEpochProducedKnowledgeValuePercentages[epoch][identityId] =
+        nodeEpochProducedKnowledgeValuePercentage;
     }
   }
   console.log(
     `[GET NODE EPOCH PUBLISHING FACTORS] Node epoch publishing factors found for ${epochsList.length} epochs and ${lastIdentityId} identities`,
   );
-  return nodeEpochPublishingFactors;
+  return {
+    nodeEpochPublishingFactors,
+    nodeEpochProducedKnowledgeValuePercentages,
+  };
 }
 
 export async function calculateNodePublishingFactor(

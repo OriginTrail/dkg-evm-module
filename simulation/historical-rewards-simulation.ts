@@ -75,6 +75,9 @@ class HistoricalRewardsSimulation {
   private nodeEpochPublishingFactors: {
     [key: number]: { [key: number]: bigint };
   } = {};
+  private nodeEpochProducedKnowledgeValuePercentages: {
+    [key: number]: { [key: number]: bigint };
+  } = {};
   private nodeEpochNetRewards: {
     [key: number]: { [key: number]: bigint };
   } = {};
@@ -238,10 +241,13 @@ class HistoricalRewardsSimulation {
 
     await migrateV6Delegators(this.contracts, this.chain);
 
-    this.nodeEpochPublishingFactors = await getNodeEpochPublishingFactors(
-      this.contracts,
-      this.chain,
-    );
+    const {
+      nodeEpochPublishingFactors,
+      nodeEpochProducedKnowledgeValuePercentages,
+    } = await getNodeEpochPublishingFactors(this.contracts, this.chain);
+    this.nodeEpochPublishingFactors = nodeEpochPublishingFactors;
+    this.nodeEpochProducedKnowledgeValuePercentages =
+      nodeEpochProducedKnowledgeValuePercentages;
 
     await validateStartTimeAndEpochLength(this.contracts, 1736812800, 2592000);
 
@@ -942,7 +948,7 @@ class HistoricalRewardsSimulation {
         if (epoch === 0) continue; // Skip epoch 0 as it's not a real epoch
 
         const csvRows = [
-          'node_id,avg_node_stake,node_publishing_factor,avg_node_ask,total_node_rewards',
+          'node_id,avg_node_stake,node_publishing_factor,produced_knowledge_value_percentage,avg_node_ask,total_node_rewards',
         ];
 
         for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
@@ -959,6 +965,12 @@ class HistoricalRewardsSimulation {
           // Node publishing factor
           const pubFactor =
             this.nodeEpochPublishingFactors[epoch]?.[identityId] ?? 0n;
+
+          // Node produced knowledge value percentage
+          const producedKnowledgeValuePercentage =
+            this.nodeEpochProducedKnowledgeValuePercentages[epoch]?.[
+              identityId
+            ] ?? 0n;
 
           // Avg node ask
           const totalAsk = this.nodeEpochAskSums[epoch]?.[identityId] ?? 0n;
@@ -977,6 +989,7 @@ class HistoricalRewardsSimulation {
                 nodeId,
                 this.hre.ethers.formatEther(avgNodeStake),
                 this.hre.ethers.formatEther(pubFactor),
+                this.hre.ethers.formatEther(producedKnowledgeValuePercentage),
                 this.hre.ethers.formatEther(avgNodeAsk),
                 this.hre.ethers.formatEther(totalNodeRewards),
               ].join(','),
