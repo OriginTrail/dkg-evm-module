@@ -32,7 +32,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _VERSION = "1.0.0";
     uint256 public constant SCALE18 = 1e18;
     uint256 private constant EPOCH_POOL_INDEX = 1;
-    uint256 constant LEGACY_NODE_CUTOFF_TS = 1725292800; // 03-Sep-2024 00:00:00 UTC, adjust if needed
+    uint256 constant V6_NODE_CUTOFF_TS = 1725292800; // 03-Sep-2024 00:00:00 UTC, adjust if needed
 
     Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
@@ -128,7 +128,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     ) public profileExists(identityId) {
         // Allow only nodes created before cutoff timestamp
         require(
-            profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < LEGACY_NODE_CUTOFF_TS,
+            profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < V6_NODE_CUTOFF_TS,
             "Node created after cutoff"
         );
         uint256 currentEpoch = chronos.getCurrentEpoch();
