@@ -133,14 +133,14 @@ contract Profile is INamed, IVersioned, ContractStatus, IInitializable {
     function updateOperatorFee(uint72 identityId, uint16 newOperatorFee) external onlyAdmin(identityId) {
         uint256 currentEpoch = chronos.getCurrentEpoch();
 
-        if (currentEpoch > 1) {
-            // All operator fees for previous epochs must be calculated and claimed before updating the operator fee
-            if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, currentEpoch - 1)) {
-                revert(
-                    "Cannot update operatorFee if operatorFee has not been calculated and claimed for previous epochs"
-                );
-            }
-        }
+        // if (currentEpoch > 1) {
+        //     // All operator fees for previous epochs must be calculated and claimed before updating the operator fee
+        //     if (!delegatorsInfo.isOperatorFeeClaimedForEpoch(identityId, currentEpoch - 1)) {
+        //         revert(
+        //             "Cannot update operatorFee if operatorFee has not been calculated and claimed for previous epochs"
+        //         );
+        //     }
+        // }
 
         if (newOperatorFee > 10_000) {
             revert ProfileLib.InvalidOperatorFee();

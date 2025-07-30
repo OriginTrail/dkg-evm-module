@@ -360,6 +360,9 @@ class HistoricalRewardsSimulation {
             `[PROCESS BLOCK] Could not set time to ${block.timestamp}. This is expected for blocks that are too close to each other, continuing...`,
             ProviderError,
           );
+          const currentTimestamp = await this.mining.getCurrentTimestamp();
+          await this.catchUpProofPeriods(currentTimestamp);
+          await this.handleEpochTransitions(currentTimestamp);
         }
         console.log(
           `[PROCESS BLOCK] Advanced time to ${new Date(block.timestamp * 1000).toISOString()}`,
