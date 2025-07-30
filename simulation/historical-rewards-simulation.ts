@@ -458,6 +458,9 @@ class HistoricalRewardsSimulation {
           this.nodeEpochActivePeriods[currentEpoch][node.identityId] =
             (this.nodeEpochActivePeriods[currentEpoch][node.identityId] ?? 0) +
             1;
+          console.log(
+            `[CATCH UP PROOF PERIODS] Epoch ${currentEpoch} node ${node.identityId} active period ${this.nodeEpochActivePeriods[currentEpoch][node.identityId]}: stake=${node.stake}, ask=${node.ask}`,
+          );
         }
 
         this.lastProofingTimestamp = proofingTime;
