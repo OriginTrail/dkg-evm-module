@@ -14,7 +14,6 @@ import {
 import { TransactionData } from './db-helpers';
 import {
   DELEGATORS_INFO_MAINNET_ADDRESSES,
-  EPOCH_METADATA,
   HUB_OWNERS,
   RPC_URLS,
   SIMULATION_CHAINS,
@@ -63,7 +62,7 @@ export async function calculateScoresForActiveNodes(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   proofingTimestamp: number,
   nodeEpochPublishingFactors: { [key: number]: { [key: number]: bigint } },
-): Promise<void> {
+): Promise<{ identityId: number; stake: bigint; ask: bigint }[]> {
   console.log(
     `[CALCULATE SCORES] Calculating scores for active nodes at timestamp ${proofingTimestamp}`,
   );
@@ -71,6 +70,11 @@ export async function calculateScoresForActiveNodes(
   try {
     // Get current epoch and proof period start block
     const currentEpoch = await contracts.chronos.getCurrentEpoch();
+    const activeNodesData: {
+      identityId: number;
+      stake: bigint;
+      ask: bigint;
+    }[] = [];
 
     // Get the total number of nodes to iterate through
     const maxIdentityId = await contracts.identityStorage.lastIdentityId();
@@ -105,6 +109,15 @@ export async function calculateScoresForActiveNodes(
           nodeEpochPublishingFactors[currentEpoch][identityId];
 
         if (score18 > 0) {
+          const totalNodeStake =
+            await contracts.stakingStorage.getNodeStake(identityId);
+          const nodeAsk = await contracts.profileStorage.getAsk(identityId);
+          activeNodesData.push({
+            identityId,
+            stake: totalNodeStake,
+            ask: nodeAsk,
+          });
+
           await impersonateAccount(hre, hubOwner);
           const randomSamplingStorageWithSigner =
             contracts.randomSamplingStorage.connect(hubOwnerSigner);
@@ -122,8 +135,6 @@ export async function calculateScoresForActiveNodes(
           );
 
           // Calculate and add score per stake
-          const totalNodeStake =
-            await contracts.stakingStorage.getNodeStake(identityId);
           if (totalNodeStake > 0) {
             // score18 * SCALE18 / totalNodeStake = nodeScorePerStake36
             const SCALE18 = BigInt(10 ** 18);
@@ -157,6 +168,7 @@ export async function calculateScoresForActiveNodes(
       await contracts.shardingTableStorage.nodesCount(),
       `[CALCULATE SCORES] Active nodes count ${activeNodesCount} should match the number of nodes in the sharding table ${await contracts.shardingTableStorage.nodesCount()}`,
     );
+    return activeNodesData;
   } catch (error) {
     console.error(
       `[CALCULATE SCORES] Error calculating scores for active nodes: ${error}`,
@@ -172,12 +184,13 @@ export async function getNodeEpochPublishingFactors(
   console.log(
     `[GET NODE EPOCH PUBLISHING FACTORS] Getting node epoch publishing factors for chain ${chain}`,
   );
-  const epochsList = EPOCH_METADATA[chain];
+  // TODO: Change for V6
+  const epochsList = [1, 2, 3, 4, 5];
   const nodeEpochPublishingFactors: {
     [epoch: number]: { [identityId: number]: bigint };
   } = {};
   epochsList.forEach((epoch) => {
-    nodeEpochPublishingFactors[epoch.epoch] = {};
+    nodeEpochPublishingFactors[epoch] = {};
   });
 
   const rpc = new ethers.JsonRpcProvider(RPC_URLS[chain]);

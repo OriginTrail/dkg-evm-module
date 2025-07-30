@@ -75,10 +75,22 @@ class HistoricalRewardsSimulation {
   private nodeEpochPublishingFactors: {
     [key: number]: { [key: number]: bigint };
   } = {};
+  private nodeEpochNetRewards: {
+    [key: number]: { [key: number]: bigint };
+  } = {};
   private nodeOperatorRewards: {
     [key: number]: { [key: number]: bigint };
   } = {};
   private operatorTotalRewards: { [key: number]: bigint } = {};
+  private nodeEpochStakeSums: {
+    [key: number]: { [key: number]: bigint };
+  } = {};
+  private nodeEpochAskSums: {
+    [key: number]: { [key: number]: bigint };
+  } = {};
+  private nodeEpochActivePeriods: {
+    [key: number]: { [key: number]: number };
+  } = {};
   private totalEpochNetNodeRewards: { [key: number]: bigint } = {};
   private totalEpochOperatorRewards: { [key: number]: bigint } = {};
   private epochMetadata: {
@@ -174,6 +186,17 @@ class HistoricalRewardsSimulation {
       this.totalEpochOperatorRewards[epoch] = 0n;
     }
     this.totalEpochOperatorRewards[epoch] += reward;
+  }
+
+  private setNodeEpochNetReward(
+    identityId: number,
+    epoch: number,
+    reward: bigint,
+  ): void {
+    if (!this.nodeEpochNetRewards[identityId]) {
+      this.nodeEpochNetRewards[identityId] = {};
+    }
+    this.nodeEpochNetRewards[identityId][epoch] = reward;
   }
 
   /**
@@ -390,18 +413,36 @@ class HistoricalRewardsSimulation {
 
       // If proofing time is in a new epoch, handle epoch transitions
       await this.handleEpochTransitions(proofingTime);
+      const currentEpoch = await this.contracts.chronos.getCurrentEpoch();
 
       console.log(
         `[CATCH UP PROOF PERIODS] Calculating scores for proof period ending at ${new Date(proofingTime * 1000).toISOString()}`,
       );
 
       try {
-        await calculateScoresForActiveNodes(
+        const activeNodesData = await calculateScoresForActiveNodes(
           this.hre,
           this.contracts,
           proofingTime,
           this.nodeEpochPublishingFactors,
         );
+
+        for (const node of activeNodesData) {
+          if (!this.nodeEpochStakeSums[currentEpoch]) {
+            this.nodeEpochStakeSums[currentEpoch] = {};
+            this.nodeEpochAskSums[currentEpoch] = {};
+            this.nodeEpochActivePeriods[currentEpoch] = {};
+          }
+          this.nodeEpochStakeSums[currentEpoch][node.identityId] =
+            (this.nodeEpochStakeSums[currentEpoch][node.identityId] ?? 0n) +
+            node.stake;
+          this.nodeEpochAskSums[currentEpoch][node.identityId] =
+            (this.nodeEpochAskSums[currentEpoch][node.identityId] ?? 0n) +
+            node.ask;
+          this.nodeEpochActivePeriods[currentEpoch][node.identityId] =
+            (this.nodeEpochActivePeriods[currentEpoch][node.identityId] ?? 0) +
+            1;
+        }
 
         this.lastProofingTimestamp = proofingTime;
       } catch (error) {
@@ -684,6 +725,8 @@ class HistoricalRewardsSimulation {
             rewardPool,
           );
 
+          this.setNodeEpochNetReward(identityId, epoch, netNodeRewards);
+
           this.addTotalEpochOperatorReward(epoch, operatorRewards);
           this.setNodeOperatorReward(identityId, epoch, operatorRewards);
           this.addNodeOperatorTotalReward(identityId, operatorRewards);
@@ -842,44 +885,101 @@ class HistoricalRewardsSimulation {
   async exportResults(): Promise<void> {
     console.log('[SIMULATION END] Exporting results...');
 
+    const results = {
+      nodeEpochDelegatorRewards: this.nodeEpochDelegatorRewards,
+      nodeDelegatorTotalRewards: this.nodeDelegatorTotalRewards,
+      delegatorEpochRewards: this.delegatorEpochRewards,
+      delegatorTotalRewards: this.delegatorTotalRewards,
+      nodeEpochPublishingFactors: this.nodeEpochPublishingFactors,
+      nodeOperatorRewards: this.nodeOperatorRewards,
+      operatorTotalRewards: this.operatorTotalRewards,
+      totalEpochNetNodeRewards: this.totalEpochNetNodeRewards,
+      totalEpochOperatorRewards: this.totalEpochOperatorRewards,
+    };
+
+    // Custom replacer function to handle BigInt serialization
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bigIntReplacer = (key: string, value: any) => {
+      if (typeof value === 'bigint') {
+        return value.toString();
+      }
+      return value;
+    };
+
+    const outputPath = 'v8-results.json';
+    fs.writeFileSync(outputPath, JSON.stringify(results, bigIntReplacer, 4));
+    console.log(
+      `[SIMULATION END] ✅ Results exported successfully to ${outputPath}`,
+    );
+
+    // Log some statistics about the exported data
+    const totalDelegators = Object.keys(this.delegatorTotalRewards).length;
+    const totalNodes = Object.keys(this.nodeDelegatorTotalRewards).length;
+    const totalEpochs = Object.keys(this.totalEpochNetNodeRewards).length;
+
+    console.log(`[SIMULATION END] 📊 Export summary:`);
+    console.log(`[SIMULATION END]    - Total delegators: ${totalDelegators}`);
+    console.log(`[SIMULATION END]    - Total nodes: ${totalNodes}`);
+    console.log(`[SIMULATION END]    - Total epochs: ${totalEpochs}`);
+
     try {
-      const results = {
-        nodeEpochDelegatorRewards: this.nodeEpochDelegatorRewards,
-        nodeDelegatorTotalRewards: this.nodeDelegatorTotalRewards,
-        delegatorEpochRewards: this.delegatorEpochRewards,
-        delegatorTotalRewards: this.delegatorTotalRewards,
-        nodeEpochPublishingFactors: this.nodeEpochPublishingFactors,
-        nodeOperatorRewards: this.nodeOperatorRewards,
-        operatorTotalRewards: this.operatorTotalRewards,
-        totalEpochNetNodeRewards: this.totalEpochNetNodeRewards,
-        totalEpochOperatorRewards: this.totalEpochOperatorRewards,
-      };
-
-      // Custom replacer function to handle BigInt serialization
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const bigIntReplacer = (key: string, value: any) => {
-        if (typeof value === 'bigint') {
-          return value.toString();
-        }
-        return value;
-      };
-
-      const outputPath = 'v8-results.json';
-      fs.writeFileSync(outputPath, JSON.stringify(results, bigIntReplacer, 4));
-
-      console.log(
-        `[SIMULATION END] ✅ Results exported successfully to ${outputPath}`,
+      const maxIdentityId = Number(
+        await this.contracts.identityStorage.lastIdentityId(),
       );
+      const epochs = this.epochMetadata.map((e) => e.epoch);
 
-      // Log some statistics about the exported data
-      const totalDelegators = Object.keys(this.delegatorTotalRewards).length;
-      const totalNodes = Object.keys(this.nodeDelegatorTotalRewards).length;
-      const totalEpochs = Object.keys(this.totalEpochNetNodeRewards).length;
+      for (const epoch of epochs) {
+        if (epoch === 0) continue; // Skip epoch 0 as it's not a real epoch
 
-      console.log(`[SIMULATION END] 📊 Export summary:`);
-      console.log(`[SIMULATION END]    - Total delegators: ${totalDelegators}`);
-      console.log(`[SIMULATION END]    - Total nodes: ${totalNodes}`);
-      console.log(`[SIMULATION END]    - Total epochs: ${totalEpochs}`);
+        const csvRows = [
+          'node_id,avg_node_stake,node_publishing_factor,avg_node_ask,total_node_rewards',
+        ];
+
+        for (let identityId = 1; identityId <= maxIdentityId; identityId++) {
+          const nodeId = identityId;
+          const activePeriods =
+            this.nodeEpochActivePeriods[epoch]?.[identityId] ?? 0;
+
+          if (activePeriods === 0) continue;
+
+          // Avg node stake calculation
+          const totalStake = this.nodeEpochStakeSums[epoch]?.[identityId] ?? 0n;
+          const avgNodeStake = totalStake / BigInt(activePeriods);
+
+          // Node publishing factor
+          const pubFactor =
+            this.nodeEpochPublishingFactors[epoch]?.[identityId] ?? 0n;
+
+          // Avg node ask
+          const totalAsk = this.nodeEpochAskSums[epoch]?.[identityId] ?? 0n;
+          const avgNodeAsk = totalAsk / BigInt(activePeriods);
+
+          // Total node rewards
+          const netRewards =
+            this.nodeEpochNetRewards[identityId]?.[epoch] ?? 0n;
+          const operatorRewards =
+            this.nodeOperatorRewards[identityId]?.[epoch] ?? 0n;
+          const totalNodeRewards = netRewards + operatorRewards;
+
+          if (totalNodeRewards > 0n) {
+            csvRows.push(
+              [
+                nodeId,
+                this.hre.ethers.formatEther(avgNodeStake),
+                this.hre.ethers.formatEther(pubFactor),
+                this.hre.ethers.formatEther(avgNodeAsk),
+                this.hre.ethers.formatEther(totalNodeRewards),
+              ].join(','),
+            );
+          }
+        }
+
+        const outputPath = `${this.chain}_epoch_${epoch}_rewards.csv`;
+        fs.writeFileSync(outputPath, csvRows.join('\n'));
+        console.log(
+          `[SIMULATION END] ✅ Epoch ${epoch} results exported to ${outputPath}`,
+        );
+      }
     } catch (error) {
       console.error('[SIMULATION END] ❌ Failed to export results:', error);
       throw error;
