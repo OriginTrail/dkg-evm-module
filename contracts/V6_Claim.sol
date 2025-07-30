@@ -32,6 +32,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _VERSION = "1.0.0";
     uint256 public constant SCALE18 = 1e18;
     uint256 private constant EPOCH_POOL_INDEX = 1;
+    uint256 constant LEGACY_NODE_CUTOFF_TS = 1725292800; // 03-Sep-2024 00:00:00 UTC, adjust if needed
 
     Ask public askContract;
     ShardingTableStorage public shardingTableStorage;
@@ -108,7 +109,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
      * @param epochs Array of epochs to claim for (each must be valid for claiming)
      * @param delegators Array of delegator addresses (each must be a node delegator)
      */
-    function batchClaimDelegatorRewards(
+    function batchClaimDelegatorRewardsV6(
         uint72 identityId,
         uint256[] memory epochs,
         address[] memory delegators
@@ -125,6 +126,11 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch,
         address delegator
     ) public profileExists(identityId) {
+        // Allow only nodes created before cutoff timestamp
+        require(
+            profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < LEGACY_NODE_CUTOFF_TS,
+            "Node created after cutoff"
+        );
         uint256 currentEpoch = chronos.getCurrentEpoch();
         require(epoch < currentEpoch, "Epoch not finalised");
 
@@ -135,13 +141,12 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Ensure V6 store is exactly one epoch behind the main DelegatorsInfo store
         uint256 lastClaimedMain = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-        require(lastClaimedMain == lastClaimed + 1, "V6 store not one epoch behind main store");
-
         if (lastClaimed == 0) {
             uint256 v812ReleaseEpoch = v6_delegatorsInfo.v812ReleaseEpoch();
             v6_delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v812ReleaseEpoch - 1);
             lastClaimed = v812ReleaseEpoch - 1;
         }
+        require(lastClaimedMain == lastClaimed + 1, "V6 store not one epoch behind main store");
 
         if (lastClaimed == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
@@ -163,7 +168,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator (V6 logic)
         uint256 delegatorScore18 = _prepareForStakeChangeV6(epoch, identityId, delegatorKey);
-        stakingMain._prepareForStakeChange(epoch, identityId, delegatorKey);
+        stakingMain.prepareForStakeChangeExternal(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = v6_randomSamplingStorage.getNodeEpochScore(epoch, identityId);
 
         uint256 reward;
@@ -307,6 +312,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         return currentDelegatorScore18 + scoreEarned18;
     }
 
+    // External gateway for other contracts
     function prepareForStakeChangeV6External(
         uint256 epoch,
         uint72 identityId,

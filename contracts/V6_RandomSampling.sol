@@ -22,6 +22,8 @@ import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {ICustodian} from "./interfaces/ICustodian.sol";
 import {HubLib} from "./libraries/HubLib.sol";
 
+uint256 constant LEGACY_NODE_CUTOFF_TS = 1725292800; // 03-Sep-2024 00:00:00 UTC, adjust
+
 contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "V6_RandomSampling";
     string private constant _VERSION = "1.0.0";
@@ -147,6 +149,11 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
         profileExists(identityStorage.getIdentityId(msg.sender))
         nodeExistsInShardingTable(identityStorage.getIdentityId(msg.sender))
     {
+        require(
+            profileStorage.getOperatorFeeEffectiveDateByIndex(identityStorage.getIdentityId(msg.sender), 0) <
+                LEGACY_NODE_CUTOFF_TS,
+            "Node created after cutoff"
+        );
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
         //TODO check if a node is V6 node and in the sharding table
         RandomSamplingLib.Challenge memory nodeChallenge = v6_randomSamplingStorage.getNodeChallenge(identityId);
@@ -186,6 +193,11 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
         profileExists(identityStorage.getIdentityId(msg.sender))
         nodeExistsInShardingTable(identityStorage.getIdentityId(msg.sender))
     {
+        require(
+            profileStorage.getOperatorFeeEffectiveDateByIndex(identityStorage.getIdentityId(msg.sender), 0) <
+                LEGACY_NODE_CUTOFF_TS,
+            "Node created after cutoff"
+        );
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
         //TODO check if a node is V6 node and in the sharding table

@@ -81,7 +81,7 @@
         "type": "address[]"
       }
     ],
-    "name": "batchClaimDelegatorRewards",
+    "name": "batchClaimDelegatorRewardsV6",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
