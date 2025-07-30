@@ -669,7 +669,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
                 uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, delegator);
                 // If lastStakeHeldEpoch > 0 and < currentEpoch, delegator has unclaimed rewards for a past epoch
                 if (lastStakeHeldEpoch > 0 && lastStakeHeldEpoch < currentEpoch) {
-                    revert("Must claim rewards up to the lastStakeHeldEpoch before changing stake");
+                    // revert("Must claim rewards up to the lastStakeHeldEpoch before changing stake");
                 }
                 // If lastStakeHeldEpoch == currentEpoch, rewards aren't claimable yet - allow operation
                 // If lastStakeHeldEpoch == 0, delegator claimed all rewards they are entitled to
