@@ -209,6 +209,7 @@ export async function getNodeEpochPublishingFactors(
   const epochStorageAbi = [
     'function getEpochNodeMaxProducedKnowledgeValue(uint256 epoch) external view returns (uint96)',
     'function getNodeEpochProducedKnowledgeValue(uint72 identityId, uint256 epoch) external view returns (uint96)',
+    'function getNodeEpochProducedKnowledgeValuePercentage(uint72 identityId, uint256 epoch) external view returns (uint256)',
   ];
   const mainnetEpochStorage = new ethers.Contract(
     await contracts.epochStorage.getAddress(),
