@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
-      loggingEnabled: false,
+      loggingEnabled: true,
       mining: {
         mempool: {
           order: 'fifo',
@@ -67,7 +67,7 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
-      loggingEnabled: false,
+      loggingEnabled: true,
       mining: {
         mempool: {
           order: 'fifo',
@@ -92,7 +92,7 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
-      loggingEnabled: false,
+      loggingEnabled: true,
       mining: {
         mempool: {
           order: 'fifo',
@@ -111,7 +111,7 @@ const config: HardhatUserConfig = {
       accounts: { count: 200 },
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
-      loggingEnabled: false,
+      loggingEnabled: true,
       allowUnlimitedContractSize: true,
       saveDeployments: false,
       mining: {
