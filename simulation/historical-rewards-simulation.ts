@@ -353,7 +353,14 @@ class HistoricalRewardsSimulation {
           `[PROCESS BLOCK] Skipping time advancement for block ${block.blockNumber} because it contains MigratorM1V8 transactions`,
         );
       } else {
-        await this.mining.setTime(block.timestamp);
+        try {
+          await this.mining.setTime(block.timestamp);
+        } catch (ProviderError) {
+          console.log(
+            `[PROCESS BLOCK] Could not set time to ${block.timestamp}. This is expected for blocks that are too close to each other, continuing...`,
+            ProviderError,
+          );
+        }
         console.log(
           `[PROCESS BLOCK] Advanced time to ${new Date(block.timestamp * 1000).toISOString()}`,
         );
