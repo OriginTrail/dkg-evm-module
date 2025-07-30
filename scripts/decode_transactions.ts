@@ -23,7 +23,7 @@ const { createObjectCsvWriter } = require('csv-writer');
 const ethers = require('ethers');
 
 const deployments = JSON.parse(
-  fs.readFileSync('deployments/base_mainnet_contracts.json', 'utf8'),
+  fs.readFileSync('deployments/gnosis_mainnet_contracts.json', 'utf8'),
 );
 const IDENTITY_CONTRACT_ADDRESS = deployments.contracts.Identity.evmAddress;
 const MIGRATOR_CONTRACT_ADDRESS =
