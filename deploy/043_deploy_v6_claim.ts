@@ -24,5 +24,6 @@ func.dependencies = [
   'Token',
   'V6_RandomSamplingStorage',
   'EpochStorage',
+  'ClaimV6Helper',
   'Staking',
 ];

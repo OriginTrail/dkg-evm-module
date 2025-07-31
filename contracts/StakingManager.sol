@@ -142,4 +142,6 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
             }
         }
     }
+
+    // (lazy helper removed – rewards contracts now resolved during initialize)
 }

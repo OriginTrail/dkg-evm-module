@@ -67,6 +67,19 @@
   },
   {
     "inputs": [],
+    "name": "claimV6Helper",
+    "outputs": [
+      {
+        "internalType": "contract ClaimV6Helper",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "delegatorsInfo",
     "outputs": [
       {
@@ -241,19 +254,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "v6Claim",
-    "outputs": [
-      {
-        "internalType": "contract V6_Claim",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",

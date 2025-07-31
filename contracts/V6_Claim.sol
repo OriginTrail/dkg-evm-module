@@ -28,6 +28,7 @@ import {EpochStorage as EpochStorageV6} from "./storage/EpochStorage.sol";
 import {Staking} from "./Staking.sol";
 import {V8_1_1_Rewards_Period} from "./V8_1_1_Rewards_Period.sol";
 import {V8_1_1_Rewards_Period_Storage} from "./storage/V8_1_1_Rewards_Period_Storage.sol";
+import {ClaimV6Helper} from "./ClaimV6Helper.sol";
 
 contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "V6_Claim";
@@ -48,6 +49,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     IERC20 public tokenContract;
     V6_RandomSamplingStorage public v6_randomSamplingStorage;
     Staking public stakingMain;
+    ClaimV6Helper public claimV6Helper;
     Chronos public chronos;
     EpochStorageV6 public epochStorageV6;
     V8_1_1_Rewards_Period public v8_1_1_rewards_period;
@@ -86,8 +88,28 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         chronos = Chronos(hub.getContractAddress("Chronos"));
         epochStorageV6 = EpochStorageV6(hub.getContractAddress("EpochStorageV6"));
         stakingMain = Staking(hub.getContractAddress("Staking"));
-        v8_1_1_rewards_period = V8_1_1_Rewards_Period(hub.getContractAddress("V8_1_1_Rewards_Period"));
-        v8_1_1_rewards_storage = V8_1_1_Rewards_Period_Storage(hub.getContractAddress("V8_1_1_Rewards_Period_Storage"));
+
+        claimV6Helper = ClaimV6Helper(hub.getContractAddress("ClaimV6Helper"));
+
+        address rewardsAddr;
+        try hub.getContractAddress("V8_1_1_Rewards_Period") returns (address addr2) {
+            rewardsAddr = addr2;
+        } catch {
+            rewardsAddr = address(0);
+        }
+        if (rewardsAddr != address(0)) {
+            v8_1_1_rewards_period = V8_1_1_Rewards_Period(rewardsAddr);
+        }
+
+        address storageAddr;
+        try hub.getContractAddress("V8_1_1_Rewards_Period_Storage") returns (address addr3) {
+            storageAddr = addr3;
+        } catch {
+            storageAddr = address(0);
+        }
+        if (storageAddr != address(0)) {
+            v8_1_1_rewards_storage = V8_1_1_Rewards_Period_Storage(storageAddr);
+        }
     }
 
     /**
@@ -104,39 +126,6 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
      */
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
-    }
-
-    /**
-     * @dev Claims rewards for multiple delegators across multiple epochs in batch
-     * Calls claimDelegatorRewards internally for each epoch-delegator combination
-     * Provides gas-efficient way to process multiple reward claims
-     * All standard reward claiming rules and validations apply
-     * @param identityId Node to claim rewards from (must exist)
-     * @param epochs Array of epochs to claim for (each must be valid for claiming)
-     * @param delegators Array of delegator addresses (each must be a node delegator)
-     */
-    function batchClaimDelegatorRewards(
-        uint72 identityId,
-        uint256[] memory epochs,
-        address[] memory delegators
-    ) external profileExists(identityId) {
-        for (uint256 i = 0; i < epochs.length; i++) {
-            for (uint256 j = 0; j < delegators.length; j++) {
-                stakingMain.claimDelegatorRewards(identityId, epochs[i], delegators[j]);
-            }
-        }
-    }
-
-    function batchClaimDelegatorRewardsV6(
-        uint72 identityId,
-        uint256[] memory epochs,
-        address[] memory delegators
-    ) external profileExists(identityId) {
-        for (uint256 i = 0; i < epochs.length; i++) {
-            for (uint256 j = 0; j < delegators.length; j++) {
-                claimDelegatorRewardsV6(identityId, epochs[i], delegators[j]);
-            }
-        }
     }
 
     function claimDelegatorRewardsV6(
@@ -185,7 +174,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         // settle all pending score changes for the node's delegator (V6 logic)
-        uint256 delegatorScore18 = _prepareForStakeChangeV6(epoch, identityId, delegatorKey);
+        uint256 delegatorScore18 = claimV6Helper.prepareForStakeChangeV6External(epoch, identityId, delegatorKey);
         stakingMain.prepareForStakeChangeExternal(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = v6_randomSamplingStorage.getNodeEpochScore(epoch, identityId);
 
@@ -262,101 +251,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
     }
 
-    /**
-     * @dev Tries to claim delegator rewards using legacy Staking contract first,
-     *      then proceeds with V6 claim logic. Any failure in legacy call that
-     *      reverts is ignored, allowing the V6 logic to execute afterwards.
-     */
-    function claimDelegatorRewardsCombined(
-        uint72 identityId,
-        uint256 epoch,
-        address delegator
-    ) external profileExists(identityId) {
-        stakingMain.claimDelegatorRewards(identityId, epoch, delegator);
-        // Execute V6-specific claim logic only for nodes created before the cutoff timestamp
-        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < V6_NODE_CUTOFF_TS) {
-            claimDelegatorRewardsV6(identityId, epoch, delegator);
-        }
-        // ───────────────────────────────────────────────────────────────
-        // V8.1.1 migration rewards – auto-restake when delegator is up-to-date
-        // ───────────────────────────────────────────────────────────────
-
-        uint256 currentEpoch = chronos.getCurrentEpoch();
-        uint256 previousEpoch = currentEpoch - 1;
-
-        if (
-            delegatorsInfo.getLastClaimedEpoch(identityId, delegator) == previousEpoch &&
-            v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator) == previousEpoch
-        ) {
-            (uint96 reward811, bool claimed811) = v8_1_1_rewards_storage.getReward(identityId, delegator);
-            if (reward811 > 0 && !claimed811) {
-                v8_1_1_rewards_period.increaseDelegatorStakeBase(identityId, delegator);
-            }
-        }
-    }
-
-    function _prepareForStakeChangeV6(
-        uint256 epoch,
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) internal returns (uint256 delegatorEpochScore) {
-        // 1. Current "score-per-stake"
-        uint256 nodeScorePerStake36 = v6_randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
-
-        uint256 currentDelegatorScore18 = v6_randomSamplingStorage.getEpochNodeDelegatorScore(
-            epoch,
-            identityId,
-            delegatorKey
-        );
-
-        // 2. Last index at which this delegator was settled
-        uint256 delegatorLastSettledNodeEpochScorePerStake36 = v6_randomSamplingStorage
-            .getDelegatorLastSettledNodeEpochScorePerStake(epoch, identityId, delegatorKey);
-
-        // Nothing new to settle
-        if (nodeScorePerStake36 == delegatorLastSettledNodeEpochScorePerStake36) {
-            return currentDelegatorScore18;
-        }
-
-        uint96 stakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
-
-        // If the delegator has no stake, just bump the index and exit
-        if (stakeBase == 0) {
-            v6_randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
-                epoch,
-                identityId,
-                delegatorKey,
-                nodeScorePerStake36
-            );
-            return currentDelegatorScore18;
-        }
-        // 4. Newly earned score for this delegator in the epoch
-        uint256 scorePerStakeDiff36 = nodeScorePerStake36 - delegatorLastSettledNodeEpochScorePerStake36;
-        uint256 scoreEarned18 = (uint256(stakeBase) * scorePerStakeDiff36) / SCALE18;
-
-        // 5. Persist results
-        if (scoreEarned18 > 0) {
-            v6_randomSamplingStorage.addToEpochNodeDelegatorScore(epoch, identityId, delegatorKey, scoreEarned18);
-        }
-
-        v6_randomSamplingStorage.setDelegatorLastSettledNodeEpochScorePerStake(
-            epoch,
-            identityId,
-            delegatorKey,
-            nodeScorePerStake36
-        );
-
-        return currentDelegatorScore18 + scoreEarned18;
-    }
-
-    // External gateway for other contracts
-    function prepareForStakeChangeV6External(
-        uint256 epoch,
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) external onlyContracts returns (uint256) {
-        return _prepareForStakeChangeV6(epoch, identityId, delegatorKey);
-    }
+    // prepareForStakeChange logic moved to ClaimV6Helper
 
     /**
      * @dev Internal function to manage delegator registration and status tracking
@@ -464,5 +359,18 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
      */
     function _getDelegatorKey(address delegator) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(delegator));
+    }
+
+    // (lazy helper removed)
+
+    function _ensureRewardsPeriod() internal {
+        if (address(v8_1_1_rewards_period) == address(0)) {
+            address addr = hub.getContractAddress("V8_1_1_Rewards_Period");
+            v8_1_1_rewards_period = V8_1_1_Rewards_Period(addr);
+        }
+        if (address(v8_1_1_rewards_storage) == address(0)) {
+            address addrS = hub.getContractAddress("V8_1_1_Rewards_Period_Storage");
+            v8_1_1_rewards_storage = V8_1_1_Rewards_Period_Storage(addrS);
+        }
     }
 }

@@ -64,52 +64,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "epochs",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "delegators",
-        "type": "address[]"
-      }
-    ],
-    "name": "batchClaimDelegatorRewards",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "epochs",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "delegators",
-        "type": "address[]"
-      }
-    ],
-    "name": "batchClaimDelegatorRewardsV6",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "chronos",
     "outputs": [
@@ -140,32 +94,22 @@
         "type": "address"
       }
     ],
-    "name": "claimDelegatorRewardsCombined",
+    "name": "claimDelegatorRewardsV6",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "claimV6Helper",
+    "outputs": [
       {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "delegator",
+        "internalType": "contract ClaimV6Helper",
+        "name": "",
         "type": "address"
       }
     ],
-    "name": "claimDelegatorRewardsV6",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -251,35 +195,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "delegatorKey",
-        "type": "bytes32"
-      }
-    ],
-    "name": "prepareForStakeChangeV6External",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

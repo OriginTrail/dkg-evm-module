@@ -254,6 +254,19 @@
   },
   {
     "inputs": [],
+    "name": "claimV6Helper",
+    "outputs": [
+      {
+        "internalType": "contract ClaimV6Helper",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "delegatorsInfo",
     "outputs": [
       {
@@ -268,19 +281,6 @@
   {
     "inputs": [],
     "name": "epochStorage",
-    "outputs": [
-      {
-        "internalType": "contract EpochStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "epochStorageV6",
     "outputs": [
       {
         "internalType": "contract EpochStorage",
@@ -597,19 +597,6 @@
     "outputs": [
       {
         "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "v6_claim",
-    "outputs": [
-      {
-        "internalType": "contract V6_Claim",
         "name": "",
         "type": "address"
       }

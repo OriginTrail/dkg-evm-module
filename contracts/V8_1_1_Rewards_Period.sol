@@ -14,7 +14,7 @@ import {IVersioned} from "./interfaces/IVersioned.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {Staking} from "./Staking.sol";
-import {V6_Claim} from "./V6_Claim.sol";
+import {ClaimV6Helper} from "./ClaimV6Helper.sol";
 
 /**
  * @title DelegatorRewardsMigrator
@@ -53,7 +53,7 @@ contract V8_1_1_Rewards_Period is INamed, IVersioned, ContractStatus {
 
     // Logic contracts
     Staking public stakingMain;
-    V6_Claim public v6Claim;
+    ClaimV6Helper public claimV6Helper;
 
     uint256 public constant SCALE18 = 1e18;
 
@@ -80,7 +80,7 @@ contract V8_1_1_Rewards_Period is INamed, IVersioned, ContractStatus {
 
         // Logic contracts
         stakingMain = Staking(hub.getContractAddress("Staking"));
-        v6Claim = V6_Claim(hub.getContractAddress("V6_Claim"));
+        claimV6Helper = ClaimV6Helper(hub.getContractAddress("ClaimV6Helper"));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -108,8 +108,8 @@ contract V8_1_1_Rewards_Period is INamed, IVersioned, ContractStatus {
         // Settle pending score changes in both legacy (v8) and V6 systems
         uint256 currentEpoch = chronos.getCurrentEpoch();
         stakingMain.prepareForStakeChangeExternal(currentEpoch, identityId, delegatorKey);
-        // V6 logic applies only to legacy nodes; call and let internal checks handle
-        v6Claim.prepareForStakeChangeV6External(currentEpoch, identityId, delegatorKey);
+        // V6 logic applies only to legacy nodes; call via helper and let internal checks handle
+        claimV6Helper.prepareForStakeChangeV6External(currentEpoch, identityId, delegatorKey);
 
         uint96 currentDelegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
         uint96 newDelegatorStakeBase = currentDelegatorStakeBase + addedStake;

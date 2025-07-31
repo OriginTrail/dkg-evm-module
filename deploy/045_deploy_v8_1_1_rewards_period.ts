@@ -21,5 +21,5 @@ func.dependencies = [
   'RandomSamplingStorage',
   'Chronos',
   'Staking',
-  'V6_Claim',
+  'ClaimV6Helper',
 ];
