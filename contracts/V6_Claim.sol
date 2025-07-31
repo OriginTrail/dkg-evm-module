@@ -26,6 +26,8 @@ import {V6_RandomSamplingStorage} from "./storage/V6_RandomSamplingStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {EpochStorage as EpochStorageV6} from "./storage/EpochStorage.sol";
 import {Staking} from "./Staking.sol";
+import {V8_1_1_Rewards_Period} from "./V8_1_1_Rewards_Period.sol";
+import {V8_1_1_Rewards_Period_Storage} from "./storage/V8_1_1_Rewards_Period_Storage.sol";
 
 contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "V6_Claim";
@@ -48,6 +50,8 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     Staking public stakingMain;
     Chronos public chronos;
     EpochStorageV6 public epochStorageV6;
+    V8_1_1_Rewards_Period public v8_1_1_rewards_period;
+    V8_1_1_Rewards_Period_Storage public v8_1_1_rewards_storage;
 
     // solhint-disable-next-line no-empty-blocks
     constructor(address hubAddress) ContractStatus(hubAddress) {}
@@ -82,6 +86,8 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         chronos = Chronos(hub.getContractAddress("Chronos"));
         epochStorageV6 = EpochStorageV6(hub.getContractAddress("EpochStorageV6"));
         stakingMain = Staking(hub.getContractAddress("Staking"));
+        v8_1_1_rewards_period = V8_1_1_Rewards_Period(hub.getContractAddress("V8_1_1_Rewards_Period"));
+        v8_1_1_rewards_storage = V8_1_1_Rewards_Period_Storage(hub.getContractAddress("V8_1_1_Rewards_Period_Storage"));
     }
 
     /**
@@ -270,6 +276,22 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         // Execute V6-specific claim logic only for nodes created before the cutoff timestamp
         if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < V6_NODE_CUTOFF_TS) {
             claimDelegatorRewardsV6(identityId, epoch, delegator);
+        }
+        // ───────────────────────────────────────────────────────────────
+        // V8.1.1 migration rewards – auto-restake when delegator is up-to-date
+        // ───────────────────────────────────────────────────────────────
+
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+        uint256 previousEpoch = currentEpoch - 1;
+
+        if (
+            delegatorsInfo.getLastClaimedEpoch(identityId, delegator) == previousEpoch &&
+            v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator) == previousEpoch
+        ) {
+            (uint96 reward811, bool claimed811) = v8_1_1_rewards_storage.getReward(identityId, delegator);
+            if (reward811 > 0 && !claimed811) {
+                v8_1_1_rewards_period.increaseDelegatorStakeBase(identityId, delegator);
+            }
         }
     }
 

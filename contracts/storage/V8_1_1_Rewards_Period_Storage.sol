@@ -39,7 +39,8 @@ contract V8_1_1_Rewards_Period_Storage is INamed, IVersioned, ContractStatus, II
     }
 
     function hasReward(uint72 identityId, address delegator) external view returns (bool) {
-        return _rewards[identityId][delegator].amount > 0;
+        RewardInfo memory info = _rewards[identityId][delegator];
+        return info.amount > 0 && !info.claimed;
     }
 
     // -------------- SETTER -------------------
@@ -66,10 +67,16 @@ contract V8_1_1_Rewards_Period_Storage is INamed, IVersioned, ContractStatus, II
         }
     }
 
+    /**
+     * @notice Marks reward as claimed **and** zeros the amount so that
+     *         `hasReward` will return false afterwards.
+     */
     function markClaimed(uint72 identityId, address delegator) external onlyContracts {
         RewardInfo storage info = _rewards[identityId][delegator];
         require(info.amount > 0, "Reward not found");
         require(!info.claimed, "Already claimed");
+
         info.claimed = true;
+        info.amount = 0;
     }
 }

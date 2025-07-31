@@ -38,32 +38,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "SCALE18",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "askContract",
-    "outputs": [
-      {
-        "internalType": "contract Ask",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint72",
@@ -81,7 +55,7 @@
         "type": "address[]"
       }
     ],
-    "name": "batchClaimDelegatorRewards",
+    "name": "batchClaimDelegatorRewardsCombined",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -105,6 +79,29 @@
       }
     ],
     "name": "batchClaimDelegatorRewardsV6",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "epochs",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "delegators",
+        "type": "address[]"
+      }
+    ],
+    "name": "batchClaimDelegatorRewardsV81",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -183,36 +180,10 @@
   },
   {
     "inputs": [],
-    "name": "epochStorageV6",
-    "outputs": [
-      {
-        "internalType": "contract EpochStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "hub",
     "outputs": [
       {
         "internalType": "contract Hub",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "identityStorage",
-    "outputs": [
-      {
-        "internalType": "contract IdentityStorage",
         "name": "",
         "type": "address"
       }
@@ -238,48 +209,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "parametersStorage",
-    "outputs": [
-      {
-        "internalType": "contract ParametersStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "epoch",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "delegatorKey",
-        "type": "bytes32"
-      }
-    ],
-    "name": "prepareForStakeChangeV6External",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -310,49 +239,10 @@
   },
   {
     "inputs": [],
-    "name": "shardingTableContract",
-    "outputs": [
-      {
-        "internalType": "contract ShardingTable",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "shardingTableStorage",
-    "outputs": [
-      {
-        "internalType": "contract ShardingTableStorage",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "stakingMain",
     "outputs": [
       {
         "internalType": "contract Staking",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stakingStorage",
-    "outputs": [
-      {
-        "internalType": "contract StakingStorage",
         "name": "",
         "type": "address"
       }
@@ -375,10 +265,10 @@
   },
   {
     "inputs": [],
-    "name": "tokenContract",
+    "name": "v6Claim",
     "outputs": [
       {
-        "internalType": "contract IERC20",
+        "internalType": "contract V6_Claim",
         "name": "",
         "type": "address"
       }
@@ -392,19 +282,6 @@
     "outputs": [
       {
         "internalType": "contract V6_DelegatorsInfo",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "v6_randomSamplingStorage",
-    "outputs": [
-      {
-        "internalType": "contract V6_RandomSamplingStorage",
         "name": "",
         "type": "address"
       }
