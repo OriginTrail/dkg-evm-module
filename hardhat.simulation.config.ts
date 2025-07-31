@@ -7,9 +7,7 @@ import { extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment, HardhatUserConfig } from 'hardhat/types';
 
-import { getChainConfig } from './simulation/helpers/simulation-constants';
 import { Helpers } from './utils/helpers';
-import { rpc } from './utils/network';
 import './utils/type-extensions';
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
@@ -27,81 +25,6 @@ const config: HardhatUserConfig = {
     minter: 0,
   },
   networks: {
-    // Base mainnet simulation fork
-    base_mainnet_simulation: {
-      environment: 'mainnet',
-      chainId: getChainConfig('base_mainnet').chainId,
-      url: rpc('base_mainnet'),
-      // No accounts config - use forked chain accounts directly
-      forking: {
-        url: rpc('base_mainnet'),
-        blockNumber: getChainConfig('base_mainnet').v8_0StartBlock,
-        enabled: true,
-      },
-      gas: 'auto',
-      allowUnlimitedContractSize: true,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-      loggingEnabled: true,
-      mining: {
-        mempool: {
-          order: 'fifo',
-        },
-      },
-      hardfork: 'shanghai',
-      saveDeployments: false,
-    },
-
-    // Neuroweb mainnet simulation fork
-    neuroweb_mainnet_simulation: {
-      environment: 'mainnet',
-      chainId: getChainConfig('neuroweb_mainnet').chainId,
-      url: rpc('neuroweb_mainnet'),
-      // No accounts config - use forked chain accounts directly
-      forking: {
-        url: rpc('neuroweb_mainnet'),
-        blockNumber: getChainConfig('neuroweb_mainnet').v8_0StartBlock,
-        enabled: true,
-      },
-      gas: 'auto',
-      allowUnlimitedContractSize: true,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-      loggingEnabled: true,
-      mining: {
-        mempool: {
-          order: 'fifo',
-        },
-      },
-      hardfork: 'shanghai',
-      saveDeployments: false,
-    },
-
-    // Gnosis mainnet simulation fork
-    gnosis_mainnet_simulation: {
-      environment: 'mainnet',
-      chainId: getChainConfig('gnosis_mainnet').chainId,
-      url: rpc('gnosis_mainnet'),
-      // No accounts config - use forked chain accounts directly
-      forking: {
-        url: rpc('gnosis_mainnet'),
-        blockNumber: getChainConfig('gnosis_mainnet').v8_0StartBlock,
-        enabled: true,
-      },
-      gas: 'auto',
-      allowUnlimitedContractSize: true,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-      loggingEnabled: true,
-      mining: {
-        mempool: {
-          order: 'fifo',
-        },
-      },
-      hardfork: 'shanghai',
-      saveDeployments: false,
-    },
-
     // Local hardhat network for testing simulation setup
     hardhat: {
       environment: 'mainnet',
