@@ -676,44 +676,37 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * @param delegator Address of delegator to validate
      */
     function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
-        _validateDelegatorEpochClaimsForStore(identityId, delegator, delegatorsInfo, randomSamplingStorage);
-        _validateDelegatorEpochClaimsForStore(
-            identityId,
-            delegator,
-            DelegatorsInfo(address(v6_delegatorsInfo)),
-            RandomSamplingStorage(address(v6_randomSamplingStorage))
-        );
+        _validateDelegatorEpochClaimsv81(identityId, delegator);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < claimV6Helper.v6NodeCutoffTs()) {
+            claimV6Helper.validateDelegatorEpochClaimsV6(identityId, delegator);
+        }
     }
 
-    function _validateDelegatorEpochClaimsForStore(
-        uint72 identityId,
-        address delegator,
-        DelegatorsInfo store,
-        RandomSamplingStorage rs
-    ) internal {
+    function _validateDelegatorEpochClaimsv81(uint72 identityId, address delegator) internal {
         bytes32 delegatorKey = _getDelegatorKey(delegator);
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
 
-        if (store.hasEverDelegatedToNode(identityId, delegator)) {
+        if (delegatorsInfo.hasEverDelegatedToNode(identityId, delegator)) {
             // If delegator has delegated to the node before, and has removed all their stake from the node at some point
             if (stakingStorage.getDelegatorStakeBase(identityId, delegatorKey) == 0) {
-                uint256 lastStakeHeldEpoch = store.getLastStakeHeldEpoch(identityId, delegator);
+                uint256 lastStakeHeldEpoch = delegatorsInfo.getLastStakeHeldEpoch(identityId, delegator);
                 // If lastStakeHeldEpoch > 0 and < currentEpoch, delegator has unclaimed rewards for a past epoch
                 if (lastStakeHeldEpoch > 0 && lastStakeHeldEpoch < currentEpoch) {
                     revert("Must claim rewards up to the lastStakeHeldEpoch before changing stake");
                 }
                 // If lastStakeHeldEpoch == currentEpoch, rewards aren't claimable yet - allow operation
                 // If lastStakeHeldEpoch == 0, delegator claimed all rewards they are entitled to
-                store.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+                delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
             }
         } else {
             // delegator is delegating to a node for the first time ever, set the last claimed epoch to the previous epoch
-            store.setHasEverDelegatedToNode(identityId, delegator, true);
-            store.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+            delegatorsInfo.setHasEverDelegatedToNode(identityId, delegator, true);
+            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
         }
 
-        uint256 lastClaimedEpoch = store.getLastClaimedEpoch(identityId, delegator);
+        uint256 lastClaimedEpoch = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
 
         // If delegator is up to date with claims, no validation needed
         if (lastClaimedEpoch == previousEpoch) {
@@ -727,18 +720,20 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Delegator has exactly one unclaimed epoch (previousEpoch)
         // Check if there are actually rewards to claim for that epoch
-        uint256 delegatorScore18 = rs.getEpochNodeDelegatorScore(previousEpoch, identityId, delegatorKey);
-        uint256 nodeScorePerStake36 = rs.getNodeEpochScorePerStake(previousEpoch, identityId);
-
-        uint256 delegatorLastSettledScorePerStake36 = rs.getDelegatorLastSettledNodeEpochScorePerStake(
+        uint256 delegatorScore18 = randomSamplingStorage.getEpochNodeDelegatorScore(
             previousEpoch,
             identityId,
             delegatorKey
         );
 
+        uint256 nodeScorePerStake36 = randomSamplingStorage.getNodeEpochScorePerStake(previousEpoch, identityId);
+
+        uint256 delegatorLastSettledScorePerStake36 = randomSamplingStorage
+            .getDelegatorLastSettledNodeEpochScorePerStake(previousEpoch, identityId, delegatorKey);
+
         // If no rewards exist for this delegator in the previous epoch, auto-advance their claim state
         if (delegatorScore18 == 0 && nodeScorePerStake36 == delegatorLastSettledScorePerStake36) {
-            store.setLastClaimedEpoch(identityId, delegator, previousEpoch);
+            delegatorsInfo.setLastClaimedEpoch(identityId, delegator, previousEpoch);
             return;
         }
 

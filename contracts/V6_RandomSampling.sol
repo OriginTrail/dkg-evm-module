@@ -21,8 +21,9 @@ import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {ICustodian} from "./interfaces/ICustodian.sol";
 import {HubLib} from "./libraries/HubLib.sol";
+import {ClaimV6Helper} from "./ClaimV6Helper.sol";
 
-uint256 constant V6_NODE_CUTOFF_TS = 1725292800; // 03-Sep-2024 00:00:00 UTC, adjust
+// cutoff timestamp moved to ClaimV6Helper
 
 contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "V6_RandomSampling";
@@ -40,6 +41,7 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
     DelegatorsInfo public delegatorsInfo;
     ParametersStorage public parametersStorage;
     ShardingTableStorage public shardingTableStorage;
+    ClaimV6Helper public claimV6Helper;
 
     error MerkleRootMismatchError(bytes32 computedMerkleRoot, bytes32 expectedMerkleRoot);
 
@@ -91,6 +93,7 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         parametersStorage = ParametersStorage(hub.getContractAddress("ParametersStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
+        claimV6Helper = ClaimV6Helper(hub.getContractAddress("ClaimV6Helper"));
     }
 
     /**
@@ -151,7 +154,7 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
     {
         require(
             profileStorage.getOperatorFeeEffectiveDateByIndex(identityStorage.getIdentityId(msg.sender), 0) <
-                V6_NODE_CUTOFF_TS,
+                claimV6Helper.v6NodeCutoffTs(),
             "Node created after cutoff"
         );
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
@@ -194,7 +197,7 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
     {
         require(
             profileStorage.getOperatorFeeEffectiveDateByIndex(identityStorage.getIdentityId(msg.sender), 0) <
-                V6_NODE_CUTOFF_TS,
+                claimV6Helper.v6NodeCutoffTs(),
             "Node created after cutoff"
         );
         // Get node identityId

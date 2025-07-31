@@ -113,6 +113,19 @@
   },
   {
     "inputs": [],
+    "name": "claimV6Helper",
+    "outputs": [
+      {
+        "internalType": "contract ClaimV6Helper",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "createChallenge",
     "outputs": [],
     "stateMutability": "nonpayable",

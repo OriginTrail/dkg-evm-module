@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 // ─────────────────────────────────────────────────────────────
 import {Staking} from "./Staking.sol";
 import {V6_Claim} from "./V6_Claim.sol";
+import {ClaimV6Helper} from "./ClaimV6Helper.sol";
 import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ProfileLib} from "./libraries/ProfileLib.sol";
 import {Chronos} from "./storage/Chronos.sol";
@@ -28,10 +29,9 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "StakingManager";
     string private constant _VERSION = "1.0.0";
 
-    uint256 private constant V6_NODE_CUTOFF_TS = 1725292800;
-
     Staking public stakingMain;
     V6_Claim public v6Claim;
+    ClaimV6Helper public claimV6Helper;
     ProfileStorage public profileStorage;
     Chronos public chronos;
     DelegatorsInfo public delegatorsInfo;
@@ -53,6 +53,7 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
     function initialize() external onlyHub {
         stakingMain = Staking(hub.getContractAddress("Staking"));
         v6Claim = V6_Claim(hub.getContractAddress("V6_Claim"));
+        claimV6Helper = ClaimV6Helper(hub.getContractAddress("ClaimV6Helper"));
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
@@ -87,7 +88,7 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
     ) external profileExists(identityId) {
         stakingMain.claimDelegatorRewards(identityId, epoch, delegator);
         // Execute V6-specific claim logic only for nodes created before the cutoff timestamp
-        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < V6_NODE_CUTOFF_TS) {
+        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < claimV6Helper.v6NodeCutoffTs()) {
             claimDelegatorRewardsV6(identityId, epoch, delegator);
         }
 

@@ -19,4 +19,5 @@ func.dependencies = [
   'V6_DelegatorsInfo',
   'V8_1_1_Rewards_Period_Storage',
   'V8_1_1_Rewards_Period',
+  'ClaimV6Helper',
 ];
