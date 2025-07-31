@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.20;
 
-import {StakingStorage} from "../storage/StakingStorage.sol";
-import {V8_1_1_Rewards_Migrator_Storage} from "../storage/V8_1_1_Rewards_Migrator_Storage.sol";
-import {ShardingTableStorage} from "../storage/ShardingTableStorage.sol";
-import {ParametersStorage} from "../storage/ParametersStorage.sol";
-import {Ask} from "../Ask.sol";
-import {ShardingTable} from "../ShardingTable.sol";
-import {DelegatorsInfo} from "../storage/DelegatorsInfo.sol";
-import {ContractStatus} from "../abstract/ContractStatus.sol";
-import {INamed} from "../interfaces/INamed.sol";
-import {IVersioned} from "../interfaces/IVersioned.sol";
-import {RandomSamplingStorage} from "../storage/RandomSamplingStorage.sol";
-import {Chronos} from "../storage/Chronos.sol";
-import {Staking} from "../Staking.sol";
-import {V6_Claim} from "../V6_Claim.sol";
+import {StakingStorage} from "./storage/StakingStorage.sol";
+import {V8_1_1_Rewards_Period_Storage} from "./storage/V8_1_1_Rewards_Period_Storage.sol";
+import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
+import {ParametersStorage} from "./storage/ParametersStorage.sol";
+import {Ask} from "./Ask.sol";
+import {ShardingTable} from "./ShardingTable.sol";
+import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
+import {ContractStatus} from "./abstract/ContractStatus.sol";
+import {INamed} from "./interfaces/INamed.sol";
+import {IVersioned} from "./interfaces/IVersioned.sol";
+import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
+import {Chronos} from "./storage/Chronos.sol";
+import {Staking} from "./Staking.sol";
+import {V6_Claim} from "./V6_Claim.sol";
 
 /**
  * @title DelegatorRewardsMigrator
@@ -43,7 +43,7 @@ contract V8_1_1_Rewards_Period is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "V8_1_1_Rewards_Period";
     string private constant _VERSION = "1.0.0";
 
-    V8_1_1_Rewards_Migrator_Storage public rewardsStorage;
+    V8_1_1_Rewards_Period_Storage public rewardsStorage;
     StakingStorage public stakingStorage;
     ShardingTableStorage public shardingTableStorage;
     ShardingTable public shardingTable;
@@ -68,7 +68,7 @@ contract V8_1_1_Rewards_Period is INamed, IVersioned, ContractStatus {
      *      called once by the Hub immediately after deployment.
      */
     function initialize() external onlyHub {
-        rewardsStorage = V8_1_1_Rewards_Migrator_Storage(hub.getContractAddress("V8_1_1_Rewards_Migrator_Storage"));
+        rewardsStorage = V8_1_1_Rewards_Period_Storage(hub.getContractAddress("V8_1_1_Rewards_Period_Storage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         shardingTableStorage = ShardingTableStorage(hub.getContractAddress("ShardingTableStorage"));
         shardingTable = ShardingTable(hub.getContractAddress("ShardingTable"));
