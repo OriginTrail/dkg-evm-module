@@ -34,7 +34,7 @@ import {
   getOperatorRewards,
   getDelegatorReward,
   initializeEpochMetadata,
-  migrateV6Delegators,
+  migrateDelegators,
   setupAllowances,
   calculateScoresForMigratedDelegators,
 } from './helpers/simulation-helpers';
@@ -216,9 +216,9 @@ class HistoricalRewardsSimulation {
     this.lastProofingTimestamp = await initializeProofingTimestamp(this.chain);
 
     const currentTimestamp = await this.mining.getCurrentTimestamp();
-    expect(this.lastProofingTimestamp).to.be.lessThanOrEqual(
-      currentTimestamp,
-      `[INIT] ❌ Start block timestamp ${this.lastProofingTimestamp} is greater than current timestamp ${currentTimestamp}`,
+    expect(this.lastProofingTimestamp).to.be.greaterThanOrEqual(
+      currentTimestamp - 20,
+      `[INIT] ❌ current timestamp ${currentTimestamp} is too far ahead of last proofing timestamp ${this.lastProofingTimestamp}`,
     );
 
     // Get current fork status
@@ -239,7 +239,7 @@ class HistoricalRewardsSimulation {
       this.chain,
     );
 
-    await migrateV6Delegators(this.contracts, this.chain);
+    await migrateDelegators(this.contracts, this.chain);
 
     const {
       nodeEpochPublishingFactors,

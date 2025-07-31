@@ -16,7 +16,7 @@ import {
   DELEGATORS_INFO_MAINNET_ADDRESSES,
   HUB_OWNERS,
   RPC_URLS,
-  SIMULATION_CHAINS,
+  SIMULATION_CHAINS_START_BLOCK,
 } from './simulation-constants';
 
 /**
@@ -681,7 +681,7 @@ export async function setupMigratorAllowances(
   }
 }
 
-export async function migrateV6Delegators(
+export async function migrateDelegators(
   contracts: { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   chain: string,
 ): Promise<{
@@ -778,7 +778,7 @@ export async function initializeProofingTimestamp(
 ): Promise<number> {
   // Initialize proofing timestamp
   const rpc = new ethers.JsonRpcProvider(RPC_URLS[chain]);
-  const startBlock = SIMULATION_CHAINS[chain].v8_0StartBlock;
+  const startBlock = SIMULATION_CHAINS_START_BLOCK[chain];
   const startBlockTimestamp = await rpc
     .getBlock(startBlock)
     .then((block) => block?.timestamp);
