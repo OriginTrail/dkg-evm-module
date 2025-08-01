@@ -3,28 +3,21 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await hre.helpers.deploy({
-    newContractName: 'Staking',
+    newContractName: 'StakingManager',
   });
 };
 
 export default func;
-func.tags = ['Staking'];
+func.tags = ['StakingManager'];
 func.dependencies = [
   'Hub',
-  'ShardingTable',
-  'IdentityStorage',
-  'ParametersStorage',
+  'Staking',
+  'V6_Claim',
   'ProfileStorage',
-  'ServiceAgreementStorageProxy',
-  'ShardingTableStorage',
-  'StakingStorage',
-  'NodeOperatorFeesStorage',
-  'Ask',
+  'Chronos',
   'DelegatorsInfo',
   'V6_DelegatorsInfo',
-  'V6_RandomSamplingStorage',
+  'V8_1_1_Rewards_Period_Storage',
+  'V8_1_1_Rewards_Period',
   'ClaimV6Helper',
-  'Chronos',
-  'RandomSamplingStorage',
-  'EpochStorage',
 ];
