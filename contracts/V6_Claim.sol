@@ -359,17 +359,4 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
     function _getDelegatorKey(address delegator) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(delegator));
     }
-
-    // (lazy helper removed)
-
-    function _ensureRewardsPeriod() internal {
-        if (address(v8_1_1_rewards_period) == address(0)) {
-            address addr = hub.getContractAddress("V8_1_1_Rewards_Period");
-            v8_1_1_rewards_period = V8_1_1_Rewards_Period(addr);
-        }
-        if (address(v8_1_1_rewards_storage) == address(0)) {
-            address addrS = hub.getContractAddress("V8_1_1_Rewards_Period_Storage");
-            v8_1_1_rewards_storage = V8_1_1_Rewards_Period_Storage(addrS);
-        }
-    }
 }

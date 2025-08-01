@@ -62,6 +62,9 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
         uint72 identityId,
         bytes32 delegatorKey
     ) internal returns (uint256 delegatorEpochScore) {
+        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) >= v6NodeCutoffTs) {
+            return 0;
+        }
         uint256 nodeScorePerStake36 = v6_randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
 
         uint256 currentDelegatorScore18 = v6_randomSamplingStorage.getEpochNodeDelegatorScore(
@@ -161,7 +164,7 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
      * @param delegator Delegator address
      * @param lastClaimed The lastClaimed epoch value from the main DelegatorsInfo store
      */
-    function enforceV6ClaimPointerSync(
+    function enforceOnlyOneEpochAdvance(
         uint72 identityId,
         address delegator,
         uint256 lastClaimed

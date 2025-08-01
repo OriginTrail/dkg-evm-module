@@ -22,6 +22,7 @@ import {
   Profile,
   KnowledgeCollection,
   AskStorage,
+  ClaimV6Helper,
 } from '../../typechain';
 import { createKnowledgeCollection } from '../helpers/kc-helpers';
 import { createProfile } from '../helpers/profile-helpers';
@@ -67,6 +68,7 @@ type TestContracts = {
   kc: KnowledgeCollection;
   askStorage: AskStorage;
   ask: Ask;
+  claimV6Helper: ClaimV6Helper;
 };
 
 type TestAccounts = {
@@ -383,6 +385,7 @@ async function setupTestEnvironment(): Promise<{
     ),
     askStorage: await hre.ethers.getContract<AskStorage>('AskStorage'),
     ask: await hre.ethers.getContract<Ask>('Ask'),
+    claimV6Helper: await hre.ethers.getContract<ClaimV6Helper>('ClaimV6Helper'),
   };
 
   // Get chunk size to avoid division by zero in challenge generation
@@ -457,6 +460,12 @@ async function setupTestEnvironment(): Promise<{
   };
 }
 
+type V6Delegator = {
+  address: string;
+  amount: bigint;
+};
+let v6_delegators: V6Delegator[] = [];
+
 describe(`Full complex scenario`, function () {
   let accounts: TestAccounts;
   let contracts: TestContracts;
@@ -482,6 +491,12 @@ describe(`Full complex scenario`, function () {
     nodeIds = setup.nodeIds;
     chunkSize = setup.chunkSize;
     node1Id = nodeIds.node1Id;
+
+    v6_delegators = [
+      { address: accounts.delegator1.address, amount: toTRAC(500) },
+      { address: accounts.delegator2.address, amount: toTRAC(1000) },
+      { address: accounts.delegator3.address, amount: toTRAC(1500) },
+    ];
 
     TOKEN_DECIMALS = Number(await contracts.token.decimals());
 
@@ -1876,6 +1891,24 @@ describe(`Full complex scenario`, function () {
      * STEP 19 – Delegator 3 requests withdrawal of 10 000 TRAC            *
      **********************************************************************/
     console.log('\n📤 STEP 19: Delegator3 requests withdrawal of 10 000 TRAC');
+
+    await expect(
+      contracts.staking
+        .connect(accounts.delegator3)
+        .requestWithdrawal(node1Id, TEN_K),
+    ).to.be.revertedWith(
+      'Must claim the previous epoch rewards before changing stake',
+    );
+
+    console.log(
+      '    ✅ Revert received as expected – Delegator3 must claim v6 rewards',
+    );
+
+    await contracts.staking
+      .connect(accounts.delegator3)
+      .claimDelegatorRewards(node1Id, 3, accounts.delegator3.address);
+
+    console.log('    ✅ Delegator3 claimed v6 rewards for epoch 3');
 
     /* ---------- BEFORE snapshot -------------------------------------- */
     const d3StakeBaseBefore19 =

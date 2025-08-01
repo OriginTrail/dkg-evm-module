@@ -552,7 +552,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         }
 
         // Ensure main DelegatorsInfo does not exceed V6 counterpart by more than 1 epoch (legacy nodes only)
-        claimV6Helper.enforceV6ClaimPointerSync(identityId, delegator, lastClaimed);
+        claimV6Helper.enforceOnlyOneEpochAdvance(identityId, delegator, lastClaimed);
 
         if (lastClaimed == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
