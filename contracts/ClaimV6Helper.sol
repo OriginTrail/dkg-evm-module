@@ -11,6 +11,7 @@ import {StakingStorage} from "./storage/StakingStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
 import {V6_DelegatorsInfo} from "./storage/V6_DelegatorsInfo.sol";
 import {Chronos} from "./storage/Chronos.sol";
+import {ProfileStorage} from "./storage/ProfileStorage.sol";
 
 contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "ClaimV6Helper";
@@ -23,6 +24,7 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
     DelegatorsInfo public delegatorsInfo;
     V6_DelegatorsInfo public v6_delegatorsInfo;
     Chronos public chronos;
+    ProfileStorage public profileStorage;
 
     // V6_NODE_CUTOFF timestamp; default 03-Sep-2024 UTC; Hub can update
     uint256 public v6NodeCutoffTs;
@@ -35,9 +37,10 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
         v6_delegatorsInfo = V6_DelegatorsInfo(hub.getContractAddress("V6_DelegatorsInfo"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
+        profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
-        // Default cutoff 03-Sep-2024 00:00:00 UTC
-        v6NodeCutoffTs = 1725292800;
+        // Default cutoff 02-Aug-2025 00:00:00 UTC
+        v6NodeCutoffTs = 1754092800;
     }
 
     // Hub owner can update cutoff
@@ -149,6 +152,32 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
         }
 
         revert("Must claim the previous epoch rewards before changing stake");
+    }
+
+    /**
+     * @notice Ensures that the main DelegatorsInfo store is not more than one epoch ahead of the legacy V6 store
+     *         for the given delegator. Intended to be called by Staking before claiming rewards.
+     * @param identityId The node identity ID
+     * @param delegator Delegator address
+     * @param lastClaimed The lastClaimed epoch value from the main DelegatorsInfo store
+     */
+    function enforceV6ClaimPointerSync(
+        uint72 identityId,
+        address delegator,
+        uint256 lastClaimed
+    ) external onlyContracts {
+        // Only relevant for legacy nodes (operator fee entry predates cutoff)
+        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < v6NodeCutoffTs) {
+            uint256 lastClaimedV6 = v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+
+            if (lastClaimedV6 == 0) {
+                uint256 v812Epoch = v6_delegatorsInfo.v812ReleaseEpoch();
+                v6_delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v812Epoch - 1);
+                lastClaimedV6 = v812Epoch - 1;
+            }
+
+            require(lastClaimed <= lastClaimedV6 + 1, "DelegatorsInfo advanced too far compared to V6 store");
+        }
     }
 
     // INamed & IVersioned

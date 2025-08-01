@@ -69,7 +69,7 @@ contract V6_DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable
     );
 
     constructor(address hubAddress) ContractStatus(hubAddress) {
-        v812ReleaseEpoch = 7;
+        v812ReleaseEpoch = 2;
     }
 
     function initialize() external onlyHub {}
