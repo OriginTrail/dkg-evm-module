@@ -743,16 +743,31 @@ class ComprehensiveQAService {
   async mergeCacheWithNewEvents(network, existingCache, newEvents) {
     console.log(`   📊 Merging new events with existing cache for ${network}...`);
     
-    // Get the latest block from existing cache
-    const existingNodeEvents = existingCache.nodeEvents || [];
-    const existingDelegatorEvents = existingCache.delegatorEvents || [];
-    
+    // Get the latest block from existing cache (using processed structure)
     let latestExistingBlock = 0;
-    if (existingNodeEvents.length > 0) {
-      latestExistingBlock = Math.max(...existingNodeEvents.map(e => e.blockNumber));
+    
+    // Check node events from processed structure
+    if (existingCache.nodeEventsByNode) {
+      for (const [nodeId, events] of Object.entries(existingCache.nodeEventsByNode)) {
+        for (const event of events) {
+          if (event.blockNumber > latestExistingBlock) {
+            latestExistingBlock = event.blockNumber;
+          }
+        }
+      }
     }
-    if (existingDelegatorEvents.length > 0) {
-      latestExistingBlock = Math.max(latestExistingBlock, ...existingDelegatorEvents.map(e => e.blockNumber));
+    
+    // Check delegator events from processed structure
+    if (existingCache.delegatorEventsByNode) {
+      for (const [nodeId, delegators] of Object.entries(existingCache.delegatorEventsByNode)) {
+        for (const [delegatorKey, events] of Object.entries(delegators)) {
+          for (const event of events) {
+            if (event.blockNumber > latestExistingBlock) {
+              latestExistingBlock = event.blockNumber;
+            }
+          }
+        }
+      }
     }
     
     console.log(`   📊 Latest existing block: ${latestExistingBlock.toLocaleString()}`);
@@ -763,6 +778,41 @@ class ComprehensiveQAService {
     
     console.log(`   📊 New node events: ${newNodeEvents.length} (after ${latestExistingBlock.toLocaleString()})`);
     console.log(`   📊 New delegator events: ${newDelegatorEvents.length} (after ${latestExistingBlock.toLocaleString()})`);
+    
+    // If no new events, return existing cache unchanged
+    if (newNodeEvents.length === 0 && newDelegatorEvents.length === 0) {
+      console.log(`   📊 No new events to merge, keeping existing cache unchanged`);
+      return existingCache;
+    }
+    
+    // Convert existing processed structure back to flat arrays for merging
+    const existingNodeEvents = [];
+    const existingDelegatorEvents = [];
+    
+    // Convert node events
+    for (const [nodeId, events] of Object.entries(existingCache.nodeEventsByNode || {})) {
+      for (const event of events) {
+        existingNodeEvents.push({
+          identityId: nodeId,
+          blockNumber: event.blockNumber,
+          stake: event.stake
+        });
+      }
+    }
+    
+    // Convert delegator events
+    for (const [nodeId, delegators] of Object.entries(existingCache.delegatorEventsByNode || {})) {
+      for (const [delegatorKey, events] of Object.entries(delegators)) {
+        for (const event of events) {
+          existingDelegatorEvents.push({
+            identityId: nodeId,
+            delegatorKey: delegatorKey,
+            blockNumber: event.blockNumber,
+            stakeBase: event.stakeBase
+          });
+        }
+      }
+    }
     
     // Merge events
     const mergedNodeEvents = [...existingNodeEvents, ...newNodeEvents];
