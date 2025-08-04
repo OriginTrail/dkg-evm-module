@@ -936,11 +936,13 @@ class ComprehensiveQAService {
           SELECT DISTINCT n.identity_id, n.stake FROM node_stake_updated n
           INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
           ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
+          WHERE n.stake > 0
           ORDER BY n.stake DESC
         `);
       } else {
         nodesResult = await client.query(`
           SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
+          WHERE n.stake > 0
           ORDER BY n.identity_id, n.block_number DESC
         `);
       }
@@ -1020,7 +1022,7 @@ class ComprehensiveQAService {
         SELECT DISTINCT d.identity_id, d.delegator_key FROM delegator_base_stake_updated d
         INNER JOIN (SELECT identity_id, delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated GROUP BY identity_id, delegator_key) latest 
         ON d.identity_id = latest.identity_id AND d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
-        WHERE d.stake_base >= 0 ORDER BY d.identity_id, d.delegator_key
+        WHERE d.stake_base > 0 AND EXISTS (SELECT 1 FROM node_stake_updated n WHERE n.identity_id = d.identity_id AND n.stake > 0) ORDER BY d.identity_id, d.delegator_key
       `);
       
       console.log(`[${network}] 📊 Found ${delegatorsResult.rows.length} delegators in indexer`);
@@ -1090,11 +1092,13 @@ class ComprehensiveQAService {
           SELECT DISTINCT n.identity_id, n.stake FROM node_stake_updated n
           INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
           ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
+          WHERE n.stake > 0
           ORDER BY n.stake DESC
         `);
       } else {
         nodesResult = await client.query(`
           SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
+          WHERE n.stake > 0
           ORDER BY n.identity_id, n.block_number DESC
         `);
       }
