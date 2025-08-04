@@ -1140,10 +1140,23 @@ class ComprehensiveQAService {
         
         try {
           // Calculate total delegator stake from cache
-          const contractTotalDelegatorStake = Object.values(cachedDelegatorEvents).reduce((sum, events) => {
-            const latestEvent = events.reduce((latest, event) => event.blockNumber > latest.blockNumber ? event : latest);
-            return sum + BigInt(latestEvent.stakeBase);
-          }, 0n);
+          const contractDelegatorStakes = {};
+          for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
+            // Sort events by block number to process chronologically
+            const sortedEvents = events.sort((a, b) => a.blockNumber - b.blockNumber);
+            let totalStake = 0n;
+            for (let i = 0; i < sortedEvents.length; i++) {
+              const currentStake = BigInt(sortedEvents[i].stakeBase);
+              if (i === 0) {
+                totalStake += currentStake;
+              } else {
+                const previousStake = BigInt(sortedEvents[i - 1].stakeBase);
+                totalStake += currentStake - previousStake;
+              }
+            }
+            contractDelegatorStakes[delegatorKey] = totalStake;
+          }
+          const contractTotalDelegatorStake = Object.values(contractDelegatorStakes).reduce((sum, stake) => sum + stake, 0n);
 
           // Get latest node stake from cache
           let contractNodeStake = 0n;
@@ -1159,17 +1172,18 @@ class ComprehensiveQAService {
           `, [nodeId]);
 
           // Calculate total delegator stake from indexer
-          const indexerTotalDelegatorStake = delegatorStakes.rows.reduce((sum, row) => sum + BigInt(row.stake_base), 0n);
-
-          // Get latest node stake from indexer
-          const nodeStakeResult = await client.query(`
-            SELECT stake FROM node_stake_updated 
-            WHERE identity_id = $1 
-            ORDER BY block_number DESC 
-            LIMIT 1
-          `, [nodeId]);
-
-          const indexerNodeStake = nodeStakeResult.rows.length > 0 ? BigInt(nodeStakeResult.rows[0].stake) : 0n;
+          const indexerDelegatorStakes = {};
+          for (const row of delegatorStakes.rows) {
+            const delegatorKey = row.delegator_key;
+            const currentStake = BigInt(row.stake_base);
+            if (!indexerDelegatorStakes[delegatorKey]) {
+              indexerDelegatorStakes[delegatorKey] = currentStake;
+            } else {
+              const previousStake = indexerDelegatorStakes[delegatorKey];
+              indexerDelegatorStakes[delegatorKey] += currentStake - previousStake;
+            }
+          }
+          const indexerTotalDelegatorStake = Object.values(indexerDelegatorStakes).reduce((sum, stake) => sum + stake, 0n);
 
           // Compare delegator sum with node stake
           console.log(`   📊 Node ${nodeId}:`);
