@@ -1076,32 +1076,77 @@ class ComprehensiveQAService {
         const nodeStake = BigInt(row.stake);
         
         try {
-          // Get ALL delegator stakes from indexer and calculate actual delegation amounts
+          // Get cached contract events for this node
+          const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId] || [];
+          
+          if (cachedDelegatorEvents.length === 0) {
+            console.log(`   ⚠️ Node ${nodeId}: No delegator events in cache, skipping`);
+            continue;
+          }
+          
+          // Calculate actual delegation amounts from cache data
+          const actualDelegations = {};
+          for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
+            // Sort events by block number to process chronologically
+            const sortedEvents = events.sort((a, b) => a.blockNumber - b.blockNumber);
+            
+            for (let i = 0; i < sortedEvents.length; i++) {
+              const event = sortedEvents[i];
+              const currentStake = BigInt(event.stakeBase);
+              
+              if (i === 0) {
+                // First delegation for this delegator
+                actualDelegations[delegatorKey] = currentStake;
+              } else {
+                // Subsequent delegation - calculate the difference
+                const previousStake = actualDelegations[delegatorKey];
+                const delegationAmount = currentStake - previousStake;
+                actualDelegations[delegatorKey] = currentStake; // Update to current total
+              }
+            }
+          }
+          
+          // Sum all actual delegation amounts
+          const contractTotalDelegatorStake = Object.values(actualDelegations).reduce((sum, stake) => sum + stake, 0n);
+          
+          // Get latest node stake from cache
+          const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
+          let contractNodeStake = 0n;
+          
+          if (cachedNodeEvents.length > 0) {
+            // Get the latest node event (highest block number)
+            const latestNodeEvent = cachedNodeEvents.reduce((latest, event) => 
+              event.blockNumber > latest.blockNumber ? event : latest
+            );
+            contractNodeStake = BigInt(latestNodeEvent.stake);
+          }
+          
+          // Get indexer data for comparison
           const delegatorStakes = await client.query(`
             SELECT d.delegator_key, d.stake_base, d.block_number FROM delegator_base_stake_updated d
             WHERE d.identity_id = $1
             ORDER BY d.delegator_key, d.block_number
           `, [nodeId]);
           
-          // Calculate actual delegation amounts (differences between consecutive blocks)
-          const actualDelegations = {};
+          // Calculate indexer actual delegation amounts
+          const indexerActualDelegations = {};
           for (const row of delegatorStakes.rows) {
             const delegatorKey = row.delegator_key;
             const currentStake = BigInt(row.stake_base);
             
-            if (!actualDelegations[delegatorKey]) {
+            if (!indexerActualDelegations[delegatorKey]) {
               // First delegation for this delegator
-              actualDelegations[delegatorKey] = currentStake;
+              indexerActualDelegations[delegatorKey] = currentStake;
             } else {
               // Subsequent delegation - calculate the difference
-              const previousStake = actualDelegations[delegatorKey];
+              const previousStake = indexerActualDelegations[delegatorKey];
               const delegationAmount = currentStake - previousStake;
-              actualDelegations[delegatorKey] = currentStake; // Update to current total
+              indexerActualDelegations[delegatorKey] = currentStake; // Update to current total
             }
           }
           
-          // Sum all actual delegation amounts
-          const indexerTotalDelegatorStake = Object.values(actualDelegations).reduce((sum, stake) => sum + stake, 0n);
+          // Sum indexer actual delegation amounts
+          const indexerTotalDelegatorStake = Object.values(indexerActualDelegations).reduce((sum, stake) => sum + stake, 0n);
           
           // Get latest node stake from indexer
           const nodeStakeResult = await client.query(`
@@ -1113,40 +1158,12 @@ class ComprehensiveQAService {
           
           const indexerNodeStake = nodeStakeResult.rows.length > 0 ? BigInt(nodeStakeResult.rows[0].stake) : 0n;
           
-          // Get contract node stake
-          const networkConfig = config.networks.find(n => n.name === network);
-          const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-          const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
-          
-          const stakingContract = new ethers.Contract(stakingAddress, [
-            'function getNodeStake(uint72 identityId) view returns (uint96)',
-            'function getDelegatorStake(uint72 identityId, bytes32 delegatorKey) view returns (uint96)'
-          ], provider);
-          
-          const contractNodeStake = await stakingContract.getNodeStake(nodeId);
-          
-          // Get contract delegator stakes (if any delegators exist)
-          let contractTotalDelegatorStake = 0n;
-          if (Object.keys(actualDelegations).length > 0) {
-            const contractDelegatorStakes = await Promise.all(
-              Object.keys(actualDelegations).map(async (delegatorKey) => {
-                try {
-                  return await stakingContract.getDelegatorStake(nodeId, delegatorKey);
-                } catch (error) {
-                  console.log(`   ⚠️ Node ${nodeId}: Failed to get contract delegator stake for ${delegatorKey}: ${error.message}`);
-                  return 0n;
-                }
-              })
-            );
-            contractTotalDelegatorStake = contractDelegatorStakes.reduce((sum, stake) => sum + stake, 0n);
-          }
-          
           const tolerance = 100000000000000000n; // 0.1 TRAC
           const warningTolerance = 500000000000000000n; // 0.5 TRAC
           
           console.log(`   📊 Node ${nodeId}:`);
-          console.log(`      Indexer: ${Object.keys(actualDelegations).length} delegators, sum of actual delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, latest node stake: ${this.weiToTRAC(indexerNodeStake)} TRAC`);
-          console.log(`      Contract: ${Object.keys(actualDelegations).length} delegators, sum of actual delegations: ${this.weiToTRAC(contractTotalDelegatorStake)} TRAC, latest node stake: ${this.weiToTRAC(contractNodeStake)} TRAC`);
+          console.log(`      Indexer: ${Object.keys(indexerActualDelegations).length} delegators, sum of actual delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, latest node stake: ${this.weiToTRAC(indexerNodeStake)} TRAC`);
+          console.log(`      Contract (cache): ${Object.keys(actualDelegations).length} delegators, sum of actual delegations: ${this.weiToTRAC(contractTotalDelegatorStake)} TRAC, latest node stake: ${this.weiToTRAC(contractNodeStake)} TRAC`);
           
           // Check if indexer delegator sum equals indexer node stake
           const indexerDelegatorVsNodeDifference = indexerNodeStake - indexerTotalDelegatorStake;
