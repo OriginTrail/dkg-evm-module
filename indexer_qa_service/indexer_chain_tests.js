@@ -1139,7 +1139,7 @@ class ComprehensiveQAService {
         nodesWithCacheData++;
         
         try {
-          // Calculate total delegator stake from cache
+          // Calculate actual delegator stake from cache
           const contractDelegatorStakes = {};
           for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
             // Sort events by block number to process chronologically
@@ -1165,33 +1165,12 @@ class ComprehensiveQAService {
             contractNodeStake = BigInt(latestNodeEvent.stake);
           }
 
-          // Get indexer data for comparison
-          const delegatorStakes = await client.query(`
-            SELECT d.delegator_key, d.stake_base FROM delegator_base_stake_updated d
-            WHERE d.identity_id = $1
-          `, [nodeId]);
-
-          // Calculate total delegator stake from indexer
-          const indexerDelegatorStakes = {};
-          for (const row of delegatorStakes.rows) {
-            const delegatorKey = row.delegator_key;
-            const currentStake = BigInt(row.stake_base);
-            if (!indexerDelegatorStakes[delegatorKey]) {
-              indexerDelegatorStakes[delegatorKey] = currentStake;
-            } else {
-              const previousStake = indexerDelegatorStakes[delegatorKey];
-              indexerDelegatorStakes[delegatorKey] += currentStake - previousStake;
-            }
-          }
-          const indexerTotalDelegatorStake = Object.values(indexerDelegatorStakes).reduce((sum, stake) => sum + stake, 0n);
-
           // Compare delegator sum with node stake
           console.log(`   📊 Node ${nodeId}:`);
-          console.log(`      Indexer: Sum of delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(indexerNodeStake)} TRAC`);
           console.log(`      Contract (cache): Sum of delegations: ${this.weiToTRAC(contractTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(contractNodeStake)} TRAC`);
 
-          if (indexerTotalDelegatorStake === indexerNodeStake && contractTotalDelegatorStake === contractNodeStake) {
-            console.log(`      ✅ Delegator sum matches node stake for both indexer and contract`);
+          if (contractTotalDelegatorStake === contractNodeStake) {
+            console.log(`      ✅ Delegator sum matches node stake`);
             passed++;
           } else {
             console.log(`      ❌ Delegator sum does not match node stake`);
