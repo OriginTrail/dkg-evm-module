@@ -1152,12 +1152,11 @@ class ComprehensiveQAService {
       console.log(`[${network}]    Null IDs: ${debugResult.rows[0].null_count}`);
       console.log(`[${network}]    Suspicious IDs (999999): ${debugResult.rows[0].suspicious_count}`);
       
-      // Get latest knowledge collection ID from indexer - use a better query
+      // Get latest knowledge collection ID from indexer - use COUNT instead of MAX
       const indexerResult = await client.query(`
-        SELECT MAX(id) as latest_id FROM knowledge_collection_created 
-        WHERE id != '999999' AND id IS NOT NULL
+        SELECT COUNT(*) as total_count FROM knowledge_collection_created
       `);
-      const indexerLatestId = indexerResult.rows[0]?.latest_id || 0;
+      const indexerLatestId = parseInt(indexerResult.rows[0].total_count);
       
       // Get latest knowledge collection ID from contract
       const networkConfig = config.networks.find(n => n.name === network);
@@ -1172,44 +1171,23 @@ class ComprehensiveQAService {
       
       const contractLatestId = await knowledgeContract.getLatestKnowledgeCollectionId();
       
-      console.log(`   📊 Indexer latest knowledge collection ID: ${indexerLatestId}`);
-      console.log(`   📊 Contract latest knowledge collection ID: ${contractLatestId}`);
+      console.log(`   📊 Indexer knowledge collections: ${indexerLatestId.toLocaleString()}`);
+      console.log(`   📊 Contract knowledge collections: ${contractLatestId.toLocaleString()}`);
       
-      // Check if the indexer data looks corrupted (max ID much lower than total count)
-      const totalRecords = parseInt(debugResult.rows[0].total_count);
-      const maxId = parseInt(indexerLatestId);
-      const isCorrupted = totalRecords > 1000 && maxId < totalRecords * 0.1; // If max ID is less than 10% of total records
-      
-      if (isCorrupted) {
-        console.log(`[${network}] ⚠️ Knowledge collection data appears corrupted:`);
-        console.log(`[${network}]    Total records: ${totalRecords.toLocaleString()}`);
-        console.log(`[${network}]    Max ID: ${maxId.toLocaleString()}`);
-        console.log(`[${network}]    Max ID should be close to total records, but it's only ${((maxId/totalRecords)*100).toFixed(1)}% of total`);
-        console.log(`[${network}]    This indicates placeholder data in the indexer`);
-        console.log(`[${network}]    Treating as warning instead of failure`);
-        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
-      }
-      
-      // If indexer has no valid data, treat as warning
-      if (indexerLatestId === 0) {
-        console.log(`[${network}] ⚠️ No valid knowledge collection IDs found in indexer`);
-        console.log(`[${network}]    This might indicate the indexer hasn't processed knowledge collection events yet`);
-        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
-      }
-      
+      // Compare knowledge collection counts directly (no block number comparison)
       const difference = BigInt(contractLatestId) - BigInt(indexerLatestId);
       const tolerance = 200n; // 200 warning tolerance
       
       if (difference === 0n) {
-        console.log(`   ✅ MATCH`);
+        console.log(`   ✅ Knowledge collections match: ${indexerLatestId.toLocaleString()}`);
         return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
       } else if (difference > 0 && difference <= tolerance) {
-        console.log(`   ⚠️ WARNING: Count difference exceeds tolerance (${difference} > 0)`);
-        console.log(`   📊 Difference: +${difference} knowledge collections`);
+        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerLatestId.toLocaleString()}, Contract ${contractLatestId.toLocaleString()}`);
+        console.log(`   📊 Small difference: +${difference} (within 200 count tolerance)`);
         return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
       } else {
-        console.log(`   ❌ DIFFER: Count difference exceeds tolerance`);
-        console.log(`   📊 Difference: ${difference > 0 ? '+' : ''}${difference} knowledge collections`);
+        console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerLatestId.toLocaleString()}, Contract ${contractLatestId.toLocaleString()}`);
+        console.log(`   📊 Difference: ${difference > 0 ? '+' : ''}${difference}`);
         return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
       
