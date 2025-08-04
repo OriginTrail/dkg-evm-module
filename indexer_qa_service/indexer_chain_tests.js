@@ -1015,12 +1015,12 @@ class ComprehensiveQAService {
     try {
       await client.connect();
       
-      // Get ALL delegators from indexer (including those with 0 stake)
+      // Get ALL delegators from indexer (not just those of active nodes)
       const delegatorsResult = await client.query(`
         SELECT DISTINCT d.identity_id, d.delegator_key FROM delegator_base_stake_updated d
         INNER JOIN (SELECT identity_id, delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated GROUP BY identity_id, delegator_key) latest 
         ON d.identity_id = latest.identity_id AND d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
-        ORDER BY d.identity_id, d.delegator_key
+        WHERE d.stake_base >= 0 ORDER BY d.identity_id, d.delegator_key
       `);
       
       console.log(`[${network}] 📊 Found ${delegatorsResult.rows.length} delegators in indexer`);
