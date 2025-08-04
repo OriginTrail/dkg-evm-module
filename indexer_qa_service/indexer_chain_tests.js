@@ -955,20 +955,46 @@ class ComprehensiveQAService {
       
       console.log(`   📊 Validating ${total} nodes comprehensively (all blocks)...`);
       
+      let nodesWithCacheData = 0;
+      let nodesSkipped = 0;
+      
       for (const row of nodesResult.rows) {
         const nodeId = parseInt(row.identity_id);
-        const result = await this.validateSingleNodeComprehensiveWithCache(client, network, nodeId, cache);
+        const nodeStake = BigInt(row.stake);
         
-        switch (result.type) {
-          case 'passed': passed++; break;
-          case 'failed': failed++; break;
-          case 'warning': warnings++; break;
-          case 'rpcError': rpcErrors++; break;
-          case 'skipped': break; // Don't count skipped
+        // Check if this node has cache data (same logic as node stakes)
+        const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId] || [];
+        
+        if (cachedDelegatorEvents.length === 0) {
+          console.log(`   ⚠️ Node ${nodeId}: No delegator events in cache, skipping`);
+          nodesSkipped++;
+          continue;
+        }
+        
+        nodesWithCacheData++;
+        
+        try {
+          const result = await this.validateSingleNodeComprehensiveWithCache(client, network, nodeId, cache);
+          
+          switch (result.type) {
+            case 'passed': passed++; break;
+            case 'failed': failed++; break;
+            case 'warning': warnings++; break;
+            case 'rpcError': rpcErrors++; break;
+            case 'skipped': break; // Don't count skipped
+          }
+        } catch (error) {
+          console.log(`   ⚠️ [${network}] Node ${nodeId}: Error - ${error.message}`);
+          if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+            rpcErrors++;
+          } else {
+            failed++;
+          }
         }
       }
       
       console.log(`   📊 Node Stakes Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
+      console.log(`   📊 Cache Coverage: ${nodesWithCacheData} nodes validated, ${nodesSkipped} nodes skipped (no cache data)`);
       return { passed, failed, warnings, rpcErrors, total };
       
     } catch (error) {
@@ -1009,6 +1035,9 @@ class ComprehensiveQAService {
       
       console.log(`   📊 Validating ${total} delegators comprehensively (all blocks)...`);
       
+      let delegatorsWithCacheData = 0;
+      let delegatorsSkipped = 0;
+      
       for (const row of delegatorsResult.rows) {
         const nodeId = parseInt(row.identity_id);
         const delegatorKey = row.delegator_key;
@@ -1021,9 +1050,18 @@ class ComprehensiveQAService {
           case 'rpcError': rpcErrors++; break;
           case 'skipped': break; // Don't count skipped
         }
+        
+        // Check if this delegator has cache data
+        const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId]?.[delegatorKey] || [];
+        if (cachedDelegatorEvents.length > 0) {
+          delegatorsWithCacheData++;
+        } else {
+          delegatorsSkipped++;
+        }
       }
       
       console.log(`   📊 Delegator Stakes Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
+      console.log(`   �� Cache Coverage: ${delegatorsWithCacheData} delegators validated, ${delegatorsSkipped} delegators skipped (no cache data)`);
       return { passed, failed, warnings, rpcErrors, total };
       
     } catch (error) {
@@ -1071,19 +1109,32 @@ class ComprehensiveQAService {
       
       console.log(`   📊 Validating ${total} nodes...`);
       
+      let nodesWithCacheData = 0;
+      let nodesSkipped = 0;
+      
       for (const row of nodesResult.rows) {
         const nodeId = parseInt(row.identity_id);
         const nodeStake = BigInt(row.stake);
         
+        // Check if this node has cache data before proceeding
+        const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId] || [];
+        const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
+        
+        if (cachedDelegatorEvents.length === 0) {
+          console.log(`   ⚠️ Node ${nodeId}: No delegator events in cache, skipping`);
+          nodesSkipped++;
+          continue;
+        }
+        
+        if (cachedNodeEvents.length === 0) {
+          console.log(`   ⚠️ Node ${nodeId}: No node events in cache, skipping`);
+          nodesSkipped++;
+          continue;
+        }
+        
+        nodesWithCacheData++;
+        
         try {
-          // Get cached contract events for this node
-          const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId] || [];
-          
-          if (cachedDelegatorEvents.length === 0) {
-            console.log(`   ⚠️ Node ${nodeId}: No delegator events in cache, skipping`);
-            continue;
-          }
-          
           // Calculate actual delegation amounts from cache data
           const actualDelegations = {};
           for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
@@ -1110,7 +1161,6 @@ class ComprehensiveQAService {
           const contractTotalDelegatorStake = Object.values(actualDelegations).reduce((sum, stake) => sum + stake, 0n);
           
           // Get latest node stake from cache
-          const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
           let contractNodeStake = 0n;
           
           if (cachedNodeEvents.length > 0) {
@@ -1238,6 +1288,7 @@ class ComprehensiveQAService {
       }
       
       console.log(`   📊 Delegator Sum Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
+      console.log(`   📊 Cache Coverage: ${nodesWithCacheData} nodes validated, ${nodesSkipped} nodes skipped (no cache data)`);
       return { passed, failed, warnings, rpcErrors, total };
       
     } catch (error) {
