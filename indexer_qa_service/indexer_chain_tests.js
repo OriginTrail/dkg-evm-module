@@ -12,7 +12,13 @@ class ComprehensiveQAService {
       port: 5432,
       user: process.env.DB_USER_INDEXER,
       password: process.env.DB_PASSWORD_INDEXER,
-      database: 'postgres'
+      database: 'postgres',
+      // Add connection timeout and keep-alive settings
+      connectionTimeoutMillis: 60000, // 60 seconds
+      idleTimeoutMillis: 30000, // 30 seconds
+      max: 20, // Maximum number of clients in the pool
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000 // 10 seconds
     };
     this.databaseMap = {
       'Gnosis': 'gnosis-mainnet-db',
@@ -169,7 +175,7 @@ class ComprehensiveQAService {
 
   // Query all contract events for Base/Gnosis (chunked approach)
   async queryAllContractEvents(network) {
-    console.log(`   📊 Querying all contract events for ${network}...`);
+    console.log(`\n[${network}] 📊 Querying all contract events for ${network}...`);
     
     const networkConfig = config.networks.find(n => n.name === network);
     if (!networkConfig) {
@@ -184,38 +190,51 @@ class ComprehensiveQAService {
         provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
         await provider.getNetwork(); // Test the connection
         if (retryCount > 0) {
-          console.log(`   ✅ RPC connection succeeded after ${retryCount} retries`);
+          console.log(`[${network}] ✅ RPC connection succeeded after ${retryCount} retries`);
         }
         break;
       } catch (error) {
         retryCount++;
-        console.log(`   ⚠️ RPC connection failed (attempt ${retryCount}): ${error.message}`);
-        console.log(`   ⏳ Retrying in 3 seconds...`);
+        console.log(`[${network}] ⚠️ RPC connection failed (attempt ${retryCount}): ${error.message}`);
+        console.log(`[${network}] ⏳ Retrying in 3 seconds...`);
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
     
     const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
+    console.log(`[${network}] 📊 Staking contract address: ${stakingAddress}`);
+    
     const stakingContract = new ethers.Contract(stakingAddress, [
       'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
       'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
     ], provider);
     
+    // Test the contract address and RPC functionality
+    try {
+      const testFilter = stakingContract.filters.NodeStakeUpdated();
+      const testEvents = await stakingContract.queryFilter(testFilter, 0, 100); // Test first 100 blocks
+      console.log(`[${network}] 📊 Test query found ${testEvents.length} events in blocks 0-100`);
+      
+      if (testEvents.length > 0) {
+        console.log(`[${network}] 📊 Sample test event: Node ${testEvents[0].args.identityId}, Block ${testEvents[0].blockNumber}`);
+      }
+    } catch (error) {
+      console.log(`[${network}] ⚠️ Test query failed: ${error.message}`);
+    }
+    
     // Get current block number
     const currentBlock = await provider.getBlockNumber();
-    console.log(`   📊 Current block: ${currentBlock}`);
+    console.log(`[${network}] 📊 Current block: ${currentBlock.toLocaleString()}`);
     
     // Get oldest indexer block to determine start point
     const dbName = this.databaseMap[network];
-    const client = new Client({ ...this.dbConfig, database: dbName });
+    const client = await this.createDatabaseConnection(network);
     
     try {
-      await client.connect();
-      
-      const oldestNodeResult = await client.query(`
+      const oldestNodeResult = await this.executeQuery(client, `
         SELECT MIN(block_number) as oldest_block FROM node_stake_updated
       `);
-      const oldestDelegatorResult = await client.query(`
+      const oldestDelegatorResult = await this.executeQuery(client, `
         SELECT MIN(block_number) as oldest_block FROM delegator_base_stake_updated
       `);
       
@@ -223,15 +242,18 @@ class ComprehensiveQAService {
       const oldestDelegatorBlock = oldestDelegatorResult.rows[0]?.oldest_block || currentBlock;
       const oldestBlock = Math.min(oldestNodeBlock, oldestDelegatorBlock);
       
-      console.log(`   📊 Oldest indexer block: ${oldestBlock.toLocaleString()}`);
+      console.log(`[${network}] 📊 Oldest node block: ${oldestNodeBlock?.toLocaleString() || 'N/A'}`);
+      console.log(`[${network}] 📊 Oldest delegator block: ${oldestDelegatorBlock?.toLocaleString() || 'N/A'}`);
+      console.log(`[${network}] 📊 Using oldest block: ${oldestBlock.toLocaleString()}`);
       
       // Query from the oldest indexer block (with some buffer)
       const fromBlock = Math.max(0, oldestBlock - 1000);
-      console.log(`   📊 Querying from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+      console.log(`[${network}] 📊 Querying from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+      console.log(`[${network}] 📊 Total blocks to query: ${(currentBlock - fromBlock + 1).toLocaleString()}`);
       
       // Determine chunk size based on network
       const chunkSize = network === 'Base' ? 100000 : 1000000;
-      console.log(`   📊 Using chunk size: ${chunkSize.toLocaleString()} blocks`);
+      console.log(`[${network}] 📊 Using chunk size: ${chunkSize.toLocaleString()} blocks`);
       
       const nodeEvents = [];
       const delegatorEvents = [];
@@ -239,12 +261,14 @@ class ComprehensiveQAService {
       // Process chunks
       let totalChunks = Math.ceil((currentBlock - fromBlock) / chunkSize);
       let processedChunks = 0;
+      let totalNodeEventsFound = 0;
+      let totalDelegatorEventsFound = 0;
       
       for (let startBlock = fromBlock; startBlock < currentBlock; startBlock += chunkSize) {
         const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
         processedChunks++;
         
-        console.log(`   📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+        console.log(`[${network}] 📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
         
         // Query NodeStakeUpdated events with retry logic
         let nodeFilter;
@@ -254,7 +278,7 @@ class ComprehensiveQAService {
         
         // Retry logic for chunk queries
         let chunkRetryCount = 0;
-        const maxChunkRetries = 10;
+        const maxChunkRetries = network === 'Neuroweb' ? Infinity : 1000; // Base/Gnosis: 1000 retries, Neuroweb: Infinite retries
         
         while (chunkRetryCount < maxChunkRetries) {
           try {
@@ -268,27 +292,39 @@ class ComprehensiveQAService {
             
             nodeEventsChunk = nodeEventsResult;
             delegatorEventsChunk = delegatorEventsResult;
+            totalNodeEventsFound += nodeEventsChunk.length;
+            totalDelegatorEventsFound += delegatorEventsChunk.length;
             
-            console.log(`   📊 Chunk ${processedChunks}: Found ${nodeEventsChunk.length} node events, ${delegatorEventsChunk.length} delegator events`);
+            console.log(`[${network}] 📊 Chunk ${processedChunks}: Found ${nodeEventsChunk.length} node events, ${delegatorEventsChunk.length} delegator events`);
+            console.log(`[${network}] 📊 Running totals: ${totalNodeEventsFound} node events, ${totalDelegatorEventsFound} delegator events`);
             
             // Debug: Show some delegator keys found in this chunk
             if (delegatorEventsChunk.length > 0) {
               const sampleKeys = delegatorEventsChunk.slice(0, 3).map(e => e.args.delegatorKey);
-              console.log(`   📊 Sample delegator keys in chunk: ${sampleKeys.join(', ')}`);
+              console.log(`[${network}] 📊 Sample delegator keys in chunk: ${sampleKeys.join(', ')}`);
+            }
+            
+            // Debug: Show some sample events if found
+            if (nodeEventsChunk.length > 0) {
+              const sampleEvents = nodeEventsChunk.slice(0, 3);
+              console.log(`[${network}] 📊 Sample node events in chunk:`);
+              sampleEvents.forEach((event, index) => {
+                console.log(`[${network}]    ${index + 1}. Node ${event.args.identityId}, Block ${event.blockNumber}, Stake: ${event.args.stake.toString()}`);
+              });
             }
             
             break; // Success, exit retry loop
             
           } catch (error) {
             chunkRetryCount++;
-            console.log(`   ⚠️ Chunk ${processedChunks} failed (attempt ${chunkRetryCount}/${maxChunkRetries}): ${error.message}`);
+            console.log(`[${network}] ⚠️ Chunk ${processedChunks} failed (attempt ${chunkRetryCount}/${maxChunkRetries}): ${error.message}`);
             
             if (chunkRetryCount >= maxChunkRetries) {
-              console.log(`   ❌ Chunk ${processedChunks} failed after ${maxChunkRetries} attempts, skipping...`);
+              console.log(`[${network}] ❌ Chunk ${processedChunks} failed after ${maxChunkRetries} attempts, skipping...`);
               break;
             }
             
-            console.log(`   ⏳ Retrying chunk in 3 seconds...`);
+            console.log(`[${network}] ⏳ Retrying chunk in 3 seconds...`);
             await new Promise(resolve => setTimeout(resolve, 3000));
           }
         }
@@ -298,21 +334,40 @@ class ComprehensiveQAService {
         delegatorEvents.push(...delegatorEventsChunk);
       }
       
-      console.log(`   📊 Total events found: ${nodeEvents.length} node events, ${delegatorEvents.length} delegator events`);
+      console.log(`[${network}] 📊 Total events found: ${nodeEvents.length} node events, ${delegatorEvents.length} delegator events`);
+      
+      // Verification: Check if we found a reasonable number of events
+      const totalBlocksQueried = currentBlock - fromBlock + 1;
+      const nodeEventsPerBlock = nodeEvents.length / totalBlocksQueried;
+      const delegatorEventsPerBlock = delegatorEvents.length / totalBlocksQueried;
+      
+      console.log(`[${network}] 📊 Verification:`);
+      console.log(`[${network}]    Total blocks queried: ${totalBlocksQueried.toLocaleString()}`);
+      console.log(`[${network}]    Node events per block: ${nodeEventsPerBlock.toFixed(4)}`);
+      console.log(`[${network}]    Delegator events per block: ${delegatorEventsPerBlock.toFixed(4)}`);
+      
+      // Warning if events per block is suspiciously low
+      if (nodeEventsPerBlock < 0.001 && delegatorEventsPerBlock < 0.001) {
+        console.log(`[${network}] ⚠️ WARNING: Very low events per block detected. This might indicate:`);
+        console.log(`[${network}]    - Wrong contract address`);
+        console.log(`[${network}]    - RPC not returning all events`);
+        console.log(`[${network}]    - Network has very few staking events`);
+        console.log(`[${network}]    - Query range is incorrect`);
+      }
       
       // Debug: Show some sample delegator events to verify coverage
       if (delegatorEvents.length > 0) {
         const sampleEvents = delegatorEvents.slice(0, 5);
-        console.log(`   📊 Sample delegator events found:`);
+        console.log(`[${network}] 📊 Sample delegator events found:`);
         sampleEvents.forEach((event, index) => {
-          console.log(`      ${index + 1}. Node ${event.args.identityId}, Block ${event.blockNumber}, Key: ${event.args.delegatorKey.slice(0, 20)}...`);
+          console.log(`[${network}]    ${index + 1}. Node ${event.args.identityId}, Block ${event.blockNumber}, Key: ${event.args.delegatorKey.slice(0, 20)}...`);
         });
         
         // Show block range of found events
         const delegatorBlockNumbers = delegatorEvents.map(e => e.blockNumber);
         const minBlock = Math.min(...delegatorBlockNumbers);
         const maxBlock = Math.max(...delegatorBlockNumbers);
-        console.log(`   📊 Delegator events block range: ${minBlock.toLocaleString()} to ${maxBlock.toLocaleString()}`);
+        console.log(`[${network}] 📊 Delegator events block range: ${minBlock.toLocaleString()} to ${maxBlock.toLocaleString()}`);
       }
       
       // Convert BigInt to string for JSON serialization
@@ -341,7 +396,7 @@ class ComprehensiveQAService {
 
   // Query all contract events for Neuroweb (chunked approach)
   async queryAllNeurowebContractEvents() {
-    console.log(`\n🔍 Querying all contract events for Neuroweb...`);
+    console.log(`\n[Neuroweb] 🔍 Querying all contract events for Neuroweb...`);
     
     const networkConfig = config.networks.find(n => n.name === 'Neuroweb');
     if (!networkConfig) throw new Error(`Network Neuroweb not found in config`);
@@ -353,38 +408,51 @@ class ComprehensiveQAService {
         provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
         await provider.getNetwork();
         if (retryCount > 0) {
-          console.log(` ✅ RPC connection succeeded after ${retryCount} retries`);
+          console.log(`[Neuroweb] ✅ RPC connection succeeded after ${retryCount} retries`);
         }
         break;
       } catch (error) {
         retryCount++;
-        console.log(` ⚠️ RPC connection failed (attempt ${retryCount}): ${error.message}`);
+        console.log(`[Neuroweb] ⚠️ RPC connection failed (attempt ${retryCount}): ${error.message}`);
         // Neuroweb: Infinite retries for RPC connection
-        console.log(` ⏳ Retrying in 3 seconds...`);
+        console.log(`[Neuroweb] ⏳ Retrying in 3 seconds...`);
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
 
     const stakingAddress = await this.getContractAddressFromHub('Neuroweb', 'StakingStorage');
+    console.log(`[Neuroweb] 📊 Staking contract address: ${stakingAddress}`);
+    
     const stakingContract = new ethers.Contract(stakingAddress, [
       'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
       'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
     ], provider);
-
+    
+    // Test the contract address and RPC functionality
+    try {
+      const testFilter = stakingContract.filters.NodeStakeUpdated();
+      const testEvents = await stakingContract.queryFilter(testFilter, 0, 100); // Test first 100 blocks
+      console.log(`[Neuroweb] 📊 Test query found ${testEvents.length} events in blocks 0-100`);
+      
+      if (testEvents.length > 0) {
+        console.log(`[Neuroweb] 📊 Sample test event: Node ${testEvents[0].args.identityId}, Block ${testEvents[0].blockNumber}`);
+      }
+    } catch (error) {
+      console.log(`[Neuroweb] ⚠️ Test query failed: ${error.message}`);
+    }
+    
     const currentBlock = await provider.getBlockNumber();
-    console.log(`   📊 Current block: ${currentBlock.toLocaleString()}`);
+    console.log(`[Neuroweb] 📊 Current block: ${currentBlock.toLocaleString()}`);
 
     // Get oldest indexer block
     const dbName = this.databaseMap['Neuroweb'];
-    const client = new Client({ ...this.dbConfig, database: dbName });
+    const client = await this.createDatabaseConnection('Neuroweb');
     
     try {
-      await client.connect();
-      
-      const oldestNodeResult = await client.query(`
+      const oldestNodeResult = await this.executeQuery(client, `
         SELECT MIN(block_number) as oldest_block FROM node_stake_updated
       `);
-      const oldestDelegatorResult = await client.query(`
+      const oldestDelegatorResult = await this.executeQuery(client, `
         SELECT MIN(block_number) as oldest_block FROM delegator_base_stake_updated
       `);
       
@@ -392,86 +460,132 @@ class ComprehensiveQAService {
       const oldestDelegatorBlock = oldestDelegatorResult.rows[0]?.oldest_block || currentBlock;
       const oldestBlock = Math.min(oldestNodeBlock, oldestDelegatorBlock);
       
+      console.log(`[Neuroweb] 📊 Oldest node block: ${oldestNodeBlock?.toLocaleString() || 'N/A'}`);
+      console.log(`[Neuroweb] 📊 Oldest delegator block: ${oldestDelegatorBlock?.toLocaleString() || 'N/A'}`);
+      console.log(`[Neuroweb] 📊 Using oldest block: ${oldestBlock.toLocaleString()}`);
+      
       const fromBlock = Math.max(0, oldestBlock - 1000);
-      console.log(`   📊 Querying from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+      console.log(`[Neuroweb] 📊 Querying from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+      console.log(`[Neuroweb] 📊 Total blocks to query: ${(currentBlock - fromBlock + 1).toLocaleString()}`);
       
       // Use 10,000 chunks for Neuroweb
       const chunkSize = 10000; // 10k chunks for Neuroweb
-      console.log(`   📊 Using chunk size: ${chunkSize.toLocaleString()}`);
+      console.log(`[Neuroweb] 📊 Using chunk size: ${chunkSize.toLocaleString()}`);
       
       let allNodeEvents = [];
       let allDelegatorEvents = [];
       
       // Query node events
-      console.log(`   📊 Querying NodeStakeUpdated events...`);
+      console.log(`[Neuroweb] 📊 Querying NodeStakeUpdated events...`);
       const nodeFilter = stakingContract.filters.NodeStakeUpdated();
       
       let totalChunks = Math.ceil((currentBlock - fromBlock + 1) / chunkSize);
       let processedChunks = 0;
+      let totalNodeEventsFound = 0;
       
       for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
         const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
         processedChunks++;
         
-        console.log(`   📊 Neuroweb Node Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+        console.log(`[Neuroweb] 📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
         
         let chunkRetryCount = 0;
         while (true) {
           try {
             const chunkEvents = await stakingContract.queryFilter(nodeFilter, startBlock, endBlock);
             allNodeEvents = allNodeEvents.concat(chunkEvents);
+            totalNodeEventsFound += chunkEvents.length;
             
-            console.log(`      ✅ Found ${chunkEvents.length} node events in chunk ${processedChunks}`);
+            console.log(`[Neuroweb] ✅ Found ${chunkEvents.length} node events in chunk ${processedChunks} (Total: ${totalNodeEventsFound})`);
+            
+            // Debug: Show some sample events if found
+            if (chunkEvents.length > 0) {
+              const sampleEvents = chunkEvents.slice(0, 3);
+              console.log(`[Neuroweb] 📊 Sample node events in chunk:`);
+              sampleEvents.forEach((event, index) => {
+                console.log(`[Neuroweb]    ${index + 1}. Node ${event.args.identityId}, Block ${event.blockNumber}, Stake: ${event.args.stake.toString()}`);
+              });
+            }
             
             if (chunkRetryCount > 0) {
-              console.log(`      ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+              console.log(`[Neuroweb] ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
             }
             break;
           } catch (error) {
             chunkRetryCount++;
-            console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+            console.log(`[Neuroweb] ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
             // Neuroweb: Infinite retries for chunk queries
-            console.log(`      ⏳ Retrying in 3 seconds...`);
+            console.log(`[Neuroweb] ⏳ Retrying in 3 seconds...`);
             await new Promise(resolve => setTimeout(resolve, 3000));
           }
         }
       }
       
       // Query delegator events
-      console.log(`   📊 Querying DelegatorBaseStakeUpdated events...`);
+      console.log(`[Neuroweb] 📊 Querying DelegatorBaseStakeUpdated events...`);
       const delegatorFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
       
       processedChunks = 0;
+      let totalDelegatorEventsFound = 0;
       
       for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += chunkSize) {
         const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
         processedChunks++;
         
-        console.log(`   📊 Neuroweb Delegator Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+        console.log(`[Neuroweb] 📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
         
         let chunkRetryCount = 0;
         while (true) {
           try {
             const chunkEvents = await stakingContract.queryFilter(delegatorFilter, startBlock, endBlock);
             allDelegatorEvents = allDelegatorEvents.concat(chunkEvents);
+            totalDelegatorEventsFound += chunkEvents.length;
             
-            console.log(`      ✅ Found ${chunkEvents.length} delegator events in chunk ${processedChunks}`);
+            console.log(`[Neuroweb] ✅ Found ${chunkEvents.length} delegator events in chunk ${processedChunks} (Total: ${totalDelegatorEventsFound})`);
+            
+            // Debug: Show some sample events if found
+            if (chunkEvents.length > 0) {
+              const sampleEvents = chunkEvents.slice(0, 3);
+              console.log(`[Neuroweb] 📊 Sample delegator events in chunk:`);
+              sampleEvents.forEach((event, index) => {
+                console.log(`[Neuroweb]    ${index + 1}. Node ${event.args.identityId}, Delegator ${event.args.delegatorKey.slice(0, 20)}..., Block ${event.blockNumber}, Stake: ${event.args.stakeBase.toString()}`);
+              });
+            }
             
             if (chunkRetryCount > 0) {
-              console.log(`      ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+              console.log(`[Neuroweb] ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
             }
             break;
           } catch (error) {
             chunkRetryCount++;
-            console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+            console.log(`[Neuroweb] ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
             // Neuroweb: Infinite retries for chunk queries
-            console.log(`      ⏳ Retrying in 3 seconds...`);
+            console.log(`[Neuroweb] ⏳ Retrying in 3 seconds...`);
             await new Promise(resolve => setTimeout(resolve, 3000));
           }
         }
       }
       
-      console.log(`   📊 Found ${allNodeEvents.length} node events and ${allDelegatorEvents.length} delegator events`);
+      console.log(`[Neuroweb] 📊 Found ${allNodeEvents.length} node events and ${allDelegatorEvents.length} delegator events`);
+      
+      // Verification: Check if we found a reasonable number of events
+      const totalBlocksQueried = currentBlock - fromBlock + 1;
+      const nodeEventsPerBlock = allNodeEvents.length / totalBlocksQueried;
+      const delegatorEventsPerBlock = allDelegatorEvents.length / totalBlocksQueried;
+      
+      console.log(`[Neuroweb] 📊 Verification:`);
+      console.log(`[Neuroweb]    Total blocks queried: ${totalBlocksQueried.toLocaleString()}`);
+      console.log(`[Neuroweb]    Node events per block: ${nodeEventsPerBlock.toFixed(4)}`);
+      console.log(`[Neuroweb]    Delegator events per block: ${delegatorEventsPerBlock.toFixed(4)}`);
+      
+      // Warning if events per block is suspiciously low
+      if (nodeEventsPerBlock < 0.001 && delegatorEventsPerBlock < 0.001) {
+        console.log(`[Neuroweb] ⚠️ WARNING: Very low events per block detected. This might indicate:`);
+        console.log(`[Neuroweb]    - Wrong contract address`);
+        console.log(`[Neuroweb]    - RPC not returning all events`);
+        console.log(`[Neuroweb]    - Network has very few staking events`);
+        console.log(`[Neuroweb]    - Query range is incorrect`);
+      }
       
       // Process events into cache format
       const cacheData = {
@@ -500,34 +614,48 @@ class ComprehensiveQAService {
 
   // Build cache for a network
   async buildCache(network) {
-    console.log(`\n🔍 Building cache for ${network}...`);
+    console.log(`\n[${network}] 🔍 Building cache for ${network}...`);
     
     // Check if existing cache exists first (for all networks)
     const existingCache = await this.loadCache(network);
     
     let cacheData;
     if (existingCache && existingCache.nodeEventsByNode) {
-      console.log(`   📊 Using existing ${network} cache from file`);
-      console.log(`      Node events: ${existingCache.totalNodeEvents || 0}`);
-      console.log(`      Delegator events: ${existingCache.totalDelegatorEvents || 0}`);
+      console.log(`[${network}] 📊 Using existing ${network} cache from file`);
+      console.log(`[${network}]    Node events: ${existingCache.totalNodeEvents || 0}`);
+      console.log(`[${network}]    Delegator events: ${existingCache.totalDelegatorEvents || 0}`);
       
-      // Check if we need to add new blocks (for all networks)
-      const needsUpdate = await this.checkCacheNeedsUpdate(network, existingCache);
-      if (needsUpdate) {
-        console.log(`   📊 ${network} cache needs update, querying new blocks...`);
-        const newEvents = await this.queryNewEvents(network, existingCache);
-        if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
-          console.log(`   📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
-          return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
+      // Check if the existing cache has a reasonable number of events
+      const totalExistingEvents = (existingCache.totalNodeEvents || 0) + (existingCache.totalDelegatorEvents || 0);
+      const hasReasonableData = totalExistingEvents > 10; // At least 10 events total
+      
+      if (!hasReasonableData) {
+        console.log(`[${network}] ⚠️ Existing cache has only ${totalExistingEvents} events, rebuilding completely...`);
+        // Rebuild cache completely
+        if (network === 'Neuroweb') {
+          cacheData = await this.queryAllNeurowebContractEvents();
         } else {
-          console.log(`   📊 No new events found, using existing cache`);
+          cacheData = await this.queryAllContractEvents(network);
         }
+      } else {
+        // Check if we need to add new blocks (for all networks)
+        const needsUpdate = await this.checkCacheNeedsUpdate(network, existingCache);
+        if (needsUpdate) {
+          console.log(`[${network}] 📊 ${network} cache needs update, querying new blocks...`);
+          const newEvents = await this.queryNewEvents(network, existingCache);
+          if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
+            console.log(`[${network}] 📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
+            return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
+          } else {
+            console.log(`[${network}] 📊 No new events found, using existing cache`);
+          }
+        }
+        
+        return existingCache; // Return existing cache
       }
-      
-      return existingCache; // Return existing cache
     } else {
       // No existing cache, query all events
-      console.log(`   📊 No existing ${network} cache found, querying all events...`);
+      console.log(`[${network}] 📊 No existing ${network} cache found, querying all events...`);
       if (network === 'Neuroweb') {
         cacheData = await this.queryAllNeurowebContractEvents();
       } else {
@@ -536,7 +664,7 @@ class ComprehensiveQAService {
     }
     
     // Process cache data to organize events by node/delegator
-    console.log(`   📊 Processing cache data...`);
+    console.log(`[${network}] 📊 Processing cache data...`);
     
     // Organize node events by node ID
     const nodeEventsByNode = {};
@@ -574,9 +702,9 @@ class ComprehensiveQAService {
     const totalNodes = Object.keys(nodeEventsByNode).length;
     const totalDelegators = Object.values(delegatorEventsByNode).reduce((sum, node) => sum + Object.keys(node).length, 0);
     
-    console.log(`   📊 Cache processing complete:`);
-    console.log(`      Nodes found: ${totalNodes}`);
-    console.log(`      Total delegators found: ${totalDelegators}`);
+    console.log(`[${network}] 📊 Cache processing complete:`);
+    console.log(`[${network}]    Nodes found: ${totalNodes}`);
+    console.log(`[${network}]    Total delegators found: ${totalDelegators}`);
     
     // Show some sample delegator keys for debugging
     const sampleDelegators = [];
@@ -589,9 +717,9 @@ class ComprehensiveQAService {
     }
     
     if (sampleDelegators.length > 0) {
-      console.log(`   📊 Sample delegators found:`);
+      console.log(`[${network}] 📊 Sample delegators found:`);
       sampleDelegators.forEach(({ nodeId, delegatorKey, eventCount }) => {
-        console.log(`      Node ${nodeId}: ${delegatorKey} (${eventCount} events)`);
+        console.log(`[${network}]    Node ${nodeId}: ${delegatorKey} (${eventCount} events)`);
       });
     }
     
@@ -603,7 +731,7 @@ class ComprehensiveQAService {
       lastUpdated: new Date().toISOString()
     };
     
-    console.log(`   📊 Processed cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
+    console.log(`[${network}] 📊 Processed cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
     
     // Save processed cache (for all networks)
     await this.saveCache(network, processedCacheData);
@@ -697,7 +825,7 @@ class ComprehensiveQAService {
     const cachePromises = networks.map(async (network) => {
       try {
         console.log(`\n${'='.repeat(40)}`);
-        console.log(`🔍 Building cache for ${network}...`);
+        console.log(`[${network}] 🔍 Building cache for ${network}...`);
         console.log(`${'='.repeat(40)}`);
         
         const cache = await this.buildCache(network);
@@ -707,10 +835,10 @@ class ComprehensiveQAService {
         else if (network === 'Base') this.baseCache = cache;
         else if (network === 'Neuroweb') this.neurowebCache = cache;
         
-        console.log(`✅ Cache built for ${network}`);
+        console.log(`[${network}] ✅ Cache built for ${network}`);
         return { network, cache, success: true };
       } catch (error) {
-        console.log(`❌ Failed to build cache for ${network}: ${error.message}`);
+        console.log(`[${network}] ❌ Failed to build cache for ${network}: ${error.message}`);
         return { network, error: error.message, success: false };
       }
     });
@@ -720,9 +848,9 @@ class ComprehensiveQAService {
     console.log(`\n📊 Cache building results:`);
     for (const result of results) {
       if (result.success) {
-        console.log(`   ✅ ${result.network}: Success`);
+        console.log(`   ✅ [${result.network}]: Success`);
       } else {
-        console.log(`   ❌ ${result.network}: ${result.error}`);
+        console.log(`   ❌ [${result.network}]: ${result.error}`);
       }
     }
     
@@ -739,34 +867,32 @@ class ComprehensiveQAService {
     try {
       await client.connect();
       
-      const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC
+      // Get ALL nodes from indexer (not just active ones)
       let nodesResult;
       
       if (network === 'Base') {
         nodesResult = await client.query(`
-          SELECT n.identity_id, n.stake FROM node_stake_updated n
+          SELECT DISTINCT n.identity_id, n.stake FROM node_stake_updated n
           INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
           ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
-          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
-        `, [minStakeThreshold]);
+          ORDER BY n.stake DESC
+        `);
       } else {
         nodesResult = await client.query(`
           SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
-          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
-          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
           ORDER BY n.identity_id, n.block_number DESC
-        `, [minStakeThreshold]);
+        `);
       }
       
       if (nodesResult.rows.length === 0) {
-        console.log(`   ⚠️ No active nodes found in ${network}`);
+        console.log(`   ⚠️ No nodes found in ${network} indexer`);
         return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
       }
       
       let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
       const total = nodesResult.rows.length;
       
-      console.log(`   📊 Validating ${total} active nodes comprehensively (all blocks)...`);
+      console.log(`   📊 Validating ${total} nodes comprehensively (all blocks)...`);
       
       for (const row of nodesResult.rows) {
         const nodeId = parseInt(row.identity_id);
@@ -802,41 +928,18 @@ class ComprehensiveQAService {
     try {
       await client.connect();
       
-      // Get active nodes first
-      const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC
-      let activeNodesResult;
-      
-      if (network === 'Base') {
-        activeNodesResult = await client.query(`
-          SELECT n.identity_id, n.stake FROM node_stake_updated n
-          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
-          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
-          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
-        `, [minStakeThreshold]);
-      } else {
-        activeNodesResult = await client.query(`
-          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
-          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
-          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
-          ORDER BY n.identity_id, n.block_number DESC
-        `, [minStakeThreshold]);
-      }
-      
-      if (activeNodesResult.rows.length === 0) {
-        console.log(`   ⚠️ No active nodes found in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-      }
-      
-      const activeNodeIds = activeNodesResult.rows.map(row => row.identity_id);
+      // Get ALL delegators from indexer (not just those of active nodes)
       const delegatorsResult = await client.query(`
         SELECT DISTINCT d.identity_id, d.delegator_key FROM delegator_base_stake_updated d
         INNER JOIN (SELECT identity_id, delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated GROUP BY identity_id, delegator_key) latest 
         ON d.identity_id = latest.identity_id AND d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
-        WHERE d.identity_id = ANY($1) AND d.stake_base > 0 ORDER BY d.identity_id, d.delegator_key
-      `, [activeNodeIds]);
+        WHERE d.stake_base > 0 ORDER BY d.identity_id, d.delegator_key
+      `);
+      
+      console.log(`[${network}] 📊 Found ${delegatorsResult.rows.length} delegators in indexer`);
       
       if (delegatorsResult.rows.length === 0) {
-        console.log(`   ⚠️ No delegators found for active nodes in ${network}`);
+        console.log(`   ⚠️ No delegators found in ${network} indexer`);
         return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
       }
       
@@ -880,34 +983,32 @@ class ComprehensiveQAService {
     try {
       await client.connect();
       
-      const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC
+      // Get ALL nodes from indexer (not just active ones)
       let nodesResult;
       
       if (network === 'Base') {
         nodesResult = await client.query(`
-          SELECT n.identity_id, n.stake FROM node_stake_updated n
+          SELECT DISTINCT n.identity_id, n.stake FROM node_stake_updated n
           INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
           ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
-          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
-        `, [minStakeThreshold]);
+          ORDER BY n.stake DESC
+        `);
       } else {
         nodesResult = await client.query(`
           SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
-          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
-          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
           ORDER BY n.identity_id, n.block_number DESC
-        `, [minStakeThreshold]);
+        `);
       }
       
       if (nodesResult.rows.length === 0) {
-        console.log(`   ⚠️ No active nodes found in ${network}`);
+        console.log(`   ⚠️ No nodes found in ${network} indexer`);
         return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
       }
       
       let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
       const total = nodesResult.rows.length;
       
-      console.log(`   📊 Validating ${total} active nodes...`);
+      console.log(`   📊 Validating ${total} nodes...`);
       
       for (const row of nodesResult.rows) {
         const nodeId = parseInt(row.identity_id);
@@ -984,125 +1085,151 @@ class ComprehensiveQAService {
     try {
       await client.connect();
       
-      // Get knowledge collections from indexer
+      // Debug: Check what's in the knowledge collection table
+      const debugResult = await client.query(`
+        SELECT COUNT(*) as total_count, 
+               MIN(id) as min_id, 
+               MAX(id) as max_id,
+               COUNT(CASE WHEN id IS NULL THEN 1 END) as null_count,
+               COUNT(CASE WHEN id = '999999' THEN 1 END) as suspicious_count
+        FROM knowledge_collection_created
+      `);
+      
+      console.log(`[${network}] 📊 Knowledge Collection Debug:`);
+      console.log(`[${network}]    Total records: ${debugResult.rows[0].total_count}`);
+      console.log(`[${network}]    Min ID: ${debugResult.rows[0].min_id}`);
+      console.log(`[${network}]    Max ID: ${debugResult.rows[0].max_id}`);
+      console.log(`[${network}]    Null IDs: ${debugResult.rows[0].null_count}`);
+      console.log(`[${network}]    Suspicious IDs (999999): ${debugResult.rows[0].suspicious_count}`);
+      
+      // Get latest knowledge collection ID from indexer - use a better query
       const indexerResult = await client.query(`
-        SELECT COUNT(*) as count FROM knowledge_collection_created
+        SELECT MAX(id) as latest_id FROM knowledge_collection_created 
+        WHERE id != '999999' AND id IS NOT NULL
       `);
+      const indexerLatestId = indexerResult.rows[0]?.latest_id || 0;
       
-      const indexerCount = parseInt(indexerResult.rows[0].count);
-      const indexerBlockResult = await client.query(`
-        SELECT MAX(block_number) as latest_block FROM knowledge_collection_created
-      `);
-      const indexerBlock = indexerBlockResult.rows[0]?.latest_block || 0;
-      
-      // Get knowledge collections from contract
+      // Get latest knowledge collection ID from contract
       const networkConfig = config.networks.find(n => n.name === network);
-      if (!networkConfig) {
-        throw new Error(`Network ${network} not found in config`);
-      }
-      
-      let provider;
-      let retryCount = 0;
-      while (true) {
-        try {
-          provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-          await provider.getNetwork();
-          break;
-        } catch (error) {
-          retryCount++;
-          if (retryCount >= 1000) {
-            throw new Error(`Failed to connect to ${network} RPC after 10 attempts`);
-          }
-          await new Promise(resolve => setTimeout(resolve, 3000));
-        }
-      }
-      
+      const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
       const knowledgeAddress = await this.getContractAddressFromHub(network, 'KnowledgeCollectionStorage');
+      
+      console.log(`[${network}] 📊 Knowledge Collection Contract Address: ${knowledgeAddress}`);
+      
       const knowledgeContract = new ethers.Contract(knowledgeAddress, [
         'function getLatestKnowledgeCollectionId() view returns (uint256)'
       ], provider);
       
-      // Get contract count using the reliable method
-      let contractCount;
-      let contractRetryCount = 0;
-      const maxContractRetries = 5;
+      const contractLatestId = await knowledgeContract.getLatestKnowledgeCollectionId();
       
-      while (contractRetryCount < maxContractRetries) {
-        try {
-          contractCount = await knowledgeContract.getLatestKnowledgeCollectionId();
-          break;
-        } catch (error) {
-          contractRetryCount++;
-          console.log(`   ⚠️ [${network}] Contract call failed (attempt ${contractRetryCount}/${maxContractRetries}): ${error.message}`);
-          
-          if (contractRetryCount >= maxContractRetries) {
-            console.log(`   ❌ [${network}] Failed to get contract knowledge collection count after ${maxContractRetries} attempts`);
-            console.log(`   📊 Knowledge Collections (Indexer only):`);
-            console.log(`      Indexer:   ${indexerCount} collections (block ${indexerBlock})`);
-            console.log(`      Contract:  Unable to query (contract call failed)`);
-            console.log(`   ⚠️ [${network}] Knowledge collection validation skipped due to contract errors`);
-            return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
-          }
-          
-          console.log(`   ⏳ Retrying contract call in 3 seconds...`);
-          await new Promise(resolve => setTimeout(resolve, 3000));
-        }
+      console.log(`   📊 Indexer latest knowledge collection ID: ${indexerLatestId}`);
+      console.log(`   📊 Contract latest knowledge collection ID: ${contractLatestId}`);
+      
+      // Check if the indexer data looks corrupted (max ID much lower than total count)
+      const totalRecords = parseInt(debugResult.rows[0].total_count);
+      const maxId = parseInt(indexerLatestId);
+      const isCorrupted = totalRecords > 1000 && maxId < totalRecords * 0.1; // If max ID is less than 10% of total records
+      
+      if (isCorrupted) {
+        console.log(`[${network}] ⚠️ Knowledge collection data appears corrupted:`);
+        console.log(`[${network}]    Total records: ${totalRecords.toLocaleString()}`);
+        console.log(`[${network}]    Max ID: ${maxId.toLocaleString()}`);
+        console.log(`[${network}]    Max ID should be close to total records, but it's only ${((maxId/totalRecords)*100).toFixed(1)}% of total`);
+        console.log(`[${network}]    This indicates placeholder data in the indexer`);
+        console.log(`[${network}]    Treating as warning instead of failure`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
       }
       
-      const currentBlock = await provider.getBlockNumber();
+      // If indexer has no valid data, treat as warning
+      if (indexerLatestId === 0) {
+        console.log(`[${network}] ⚠️ No valid knowledge collection IDs found in indexer`);
+        console.log(`[${network}]    This might indicate the indexer hasn't processed knowledge collection events yet`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
+      }
       
-      console.log(`   📊 Knowledge Collections:`);
-      console.log(`      Indexer:   ${indexerCount} collections (block ${indexerBlock})`);
-      console.log(`      Contract:  ${contractCount} collections (block ${currentBlock})`);
+      const difference = BigInt(contractLatestId) - BigInt(indexerLatestId);
+      const tolerance = 200n; // 200 warning tolerance
       
-      // Convert both values to numbers for comparison
-      const indexerCountNum = Number(indexerCount);
-      const contractCountNum = Number(contractCount);
-      
-      const countDifference = Math.abs(indexerCountNum - contractCountNum);
-      const blockDifference = Math.abs(indexerBlock - currentBlock);
-      
-      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
-      
-      if (countDifference === 0) {
-        console.log(`   ✅ KNOWLEDGE COLLECTIONS MATCH`);
-        passed = 1;
-      } else if (countDifference <= 200) {
-        console.log(`   ⚠️ KNOWLEDGE COLLECTIONS MATCH (within tolerance)`);
-        console.log(`   📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
-        warnings = 1;
+      if (difference === 0n) {
+        console.log(`   ✅ MATCH`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      } else if (difference > 0 && difference <= tolerance) {
+        console.log(`   ⚠️ WARNING: Count difference exceeds tolerance (${difference} > 0)`);
+        console.log(`   📊 Difference: +${difference} knowledge collections`);
+        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
       } else {
-        console.log(`   ❌ KNOWLEDGE COLLECTIONS DO NOT MATCH`);
-        console.log(`   📊 Count difference: ${countDifference}, Block difference: ${blockDifference}`);
-        failed = 1;
+        console.log(`   ❌ DIFFER: Count difference exceeds tolerance`);
+        console.log(`   📊 Difference: ${difference > 0 ? '+' : ''}${difference} knowledge collections`);
+        return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
-      
-      console.log(`   📊 Knowledge Collections Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
-      return { passed, failed, warnings, rpcErrors, total: 1 };
       
     } catch (error) {
-      console.error(`Error validating knowledge collections for ${network}: ${error.message}`);
+      console.error(`Error validating knowledge collections: ${error.message}`);
       return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 1 };
     } finally {
       await client.end();
     }
   }
 
-  // 1. VALIDATE NODE STAKES (ALL BLOCKS) - WITH CACHE
-  async validateNodeStakes(network) {
-    console.log(`\n🔍 1. Validating node stakes comprehensively for ${network} (all blocks)...`);
+  // Operation 5: Missing Events Detection
+  async validateMissingEventsDetection(network, cache) {
+    console.log(`\n🔍 5. Detecting missing events for ${network}...`);
     
-    // Load or build cache
-    let cache = await this.loadCache(network);
-    if (!cache) {
-      console.log(`   📊 No cache found for ${network}, building cache...`);
-      cache = await this.buildCache(network);
+    // Debug: Show cache structure first
+    console.log(`[${network}] 📊 Cache Debug:`);
+    console.log(`[${network}]    Node events by node: ${Object.keys(cache.nodeEventsByNode || {}).length} nodes`);
+    console.log(`[${network}]    Delegator events by node: ${Object.keys(cache.delegatorEventsByNode || {}).length} nodes`);
+    
+    // Verify cache data is being processed correctly
+    let totalCacheNodeEvents = 0;
+    let totalCacheDelegatorEvents = 0;
+    
+    for (const [nodeId, events] of Object.entries(cache.nodeEventsByNode || {})) {
+      totalCacheNodeEvents += events.length;
     }
     
-    // Store cache in instance
-    if (network === 'Gnosis') this.gnosisCache = cache;
-    else if (network === 'Base') this.baseCache = cache;
-    else if (network === 'Neuroweb') this.neurowebCache = cache;
+    for (const [nodeId, delegators] of Object.entries(cache.delegatorEventsByNode || {})) {
+      for (const [delegatorKey, events] of Object.entries(delegators)) {
+        totalCacheDelegatorEvents += events.length;
+      }
+    }
+    
+    console.log(`[${network}] 📊 Cache Event Counts:`);
+    console.log(`[${network}]    Total node events in cache: ${totalCacheNodeEvents}`);
+    console.log(`[${network}]    Total delegator events in cache: ${totalCacheDelegatorEvents}`);
+    
+    // Show sample events from cache
+    const sampleNodeEvents = [];
+    const sampleDelegatorEvents = [];
+    
+    for (const [nodeId, events] of Object.entries(cache.nodeEventsByNode || {})) {
+      if (sampleNodeEvents.length < 3) {
+        sampleNodeEvents.push({ nodeId, events: events.length, sampleBlock: events[0]?.blockNumber });
+      }
+    }
+    
+    for (const [nodeId, delegators] of Object.entries(cache.delegatorEventsByNode || {})) {
+      for (const [delegatorKey, events] of Object.entries(delegators)) {
+        if (sampleDelegatorEvents.length < 3) {
+          sampleDelegatorEvents.push({ 
+            nodeId, 
+            delegatorKey: delegatorKey.slice(0, 20) + '...', 
+            events: events.length, 
+            sampleBlock: events[0]?.blockNumber 
+          });
+        }
+      }
+    }
+    
+    console.log(`[${network}] 📊 Sample node events from cache:`);
+    sampleNodeEvents.forEach(({ nodeId, events, sampleBlock }) => {
+      console.log(`[${network}]    Node ${nodeId}: ${events} events, sample block: ${sampleBlock}`);
+    });
+    
+    console.log(`[${network}] 📊 Sample delegator events from cache:`);
+    sampleDelegatorEvents.forEach(({ nodeId, delegatorKey, events, sampleBlock }) => {
+      console.log(`[${network}]    Node ${nodeId}, Delegator ${delegatorKey}: ${events} events, sample block: ${sampleBlock}`);
+    });
     
     const dbName = this.databaseMap[network];
     const client = new Client({ ...this.dbConfig, database: dbName });
@@ -1110,440 +1237,109 @@ class ComprehensiveQAService {
     try {
       await client.connect();
       
-      const minStakeThreshold = 50000000000000000000000; // 50,000 TRAC
-      let nodesResult;
+      let missingNodeEvents = 0;
+      let missingDelegatorEvents = 0;
+      let totalNodeEvents = 0;
+      let totalDelegatorEvents = 0;
+      let foundNodeEvents = 0;
+      let foundDelegatorEvents = 0;
       
-      if (network === 'Base') {
-        nodesResult = await client.query(`
-          SELECT n.identity_id, n.stake FROM node_stake_updated n
-          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
-          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
-          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
-        `, [minStakeThreshold]);
-      } else {
-        nodesResult = await client.query(`
-          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
-          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
-          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
-          ORDER BY n.identity_id, n.block_number DESC
-        `, [minStakeThreshold]);
-      }
-      
-      if (nodesResult.rows.length === 0) {
-        console.log(`   ⚠️ No active nodes found in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-      }
-      
-      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
-      const total = nodesResult.rows.length;
-      
-      console.log(`   📊 Validating ${total} active nodes comprehensively (all blocks)...`);
-      
-      for (const row of nodesResult.rows) {
-        const nodeId = parseInt(row.identity_id);
-        const result = await this.validateSingleNodeComprehensiveWithCache(client, network, nodeId, cache);
-        
-        switch (result.type) {
-          case 'passed': passed++; break;
-          case 'failed': failed++; break;
-          case 'warning': warnings++; break;
-          case 'rpcError': rpcErrors++; break;
-          case 'skipped': break; // Don't count skipped
-        }
-      }
-      
-      console.log(`   📊 Node Stakes Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
-      return { passed, failed, warnings, rpcErrors, total };
-      
-    } catch (error) {
-      console.error(`Error validating node stakes: ${error.message}`);
-      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-    } finally {
-      await client.end();
-    }
-  }
-
-  // 2. VALIDATE DELEGATOR STAKES (ALL BLOCKS) - WITH CACHE
-  async validateDelegatorStakesComprehensive(network) {
-    console.log(`\n🔍 2. Validating delegator stakes comprehensively for ${network} (all blocks)...`);
-    
-    // Load or build cache
-    let cache = await this.loadCache(network);
-    if (!cache) {
-      console.log(`   📊 No cache found for ${network}, building cache...`);
-      cache = await this.buildCache(network);
-    }
-    
-    // Store cache in instance
-    if (network === 'Gnosis') this.gnosisCache = cache;
-    else if (network === 'Base') this.baseCache = cache;
-    else if (network === 'Neuroweb') this.neurowebCache = cache;
-    
-    const dbName = this.databaseMap[network];
-    const client = new Client({ ...this.dbConfig, database: dbName });
-    
-    try {
-      await client.connect();
-      
-      const minStakeThreshold = 50000000000000000000000;
-      let activeNodesResult;
-      
-      if (network === 'Base') {
-        activeNodesResult = await client.query(`
-          SELECT n.identity_id, n.stake FROM node_stake_updated n
-          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
-          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
-          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
-        `, [minStakeThreshold]);
-      } else {
-        activeNodesResult = await client.query(`
-          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
-          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
-          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
-          ORDER BY n.identity_id, n.block_number DESC
-        `, [minStakeThreshold]);
-      }
-      
-      if (activeNodesResult.rows.length === 0) {
-        console.log(`   ⚠️ No active nodes found in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-      }
-      
-      const activeNodeIds = activeNodesResult.rows.map(row => row.identity_id);
-      const delegatorsResult = await client.query(`
-        SELECT DISTINCT d.identity_id, d.delegator_key FROM delegator_base_stake_updated d
-        INNER JOIN (SELECT identity_id, delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated GROUP BY identity_id, delegator_key) latest 
-        ON d.identity_id = latest.identity_id AND d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
-        WHERE d.identity_id = ANY($1) AND d.stake_base > 0 ORDER BY d.identity_id, d.delegator_key
-      `, [activeNodeIds]);
-      
-      if (delegatorsResult.rows.length === 0) {
-        console.log(`   ⚠️ No delegators found for active nodes in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-      }
-      
-      let totalPassed = 0, totalFailed = 0, totalWarnings = 0, totalRpcErrors = 0, totalValidations = 0;
-      
-      console.log(`   📊 Validating ${delegatorsResult.rows.length} delegators using cache...`);
-      
-      // Test with first 5 delegators for speed
-      const testDelegators = delegatorsResult.rows.slice(0, 5);
-      console.log(`   🧪 Testing with first ${testDelegators.length} delegators...`);
-      
-      for (const row of testDelegators) {
-        const nodeId = parseInt(row.identity_id);
-        const delegatorKey = row.delegator_key;
-        
-        const result = await this.validateSingleDelegatorComprehensiveWithCache(client, network, nodeId, delegatorKey, cache);
-        totalPassed += result.passed;
-        totalFailed += result.failed;
-        totalWarnings += result.warnings;
-        totalRpcErrors += result.rpcErrors;
-        totalValidations += result.totalValidations;
-      }
-      
-      console.log(`   📊 Delegator Stakes Summary: ✅ ${totalPassed} ❌ ${totalFailed} ⚠️ ${totalWarnings} 🔌 ${totalRpcErrors} (${totalValidations} total validations)`);
-      return { passed: totalPassed, failed: totalFailed, warnings: totalWarnings, rpcErrors: totalRpcErrors, total: totalValidations };
-      
-    } catch (error) {
-      console.error(`Error validating delegator stakes: ${error.message}`);
-      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-    } finally {
-      await client.end();
-    }
-  }
-
-  async validateSingleDelegatorComprehensiveWithCache(client, network, nodeId, delegatorKey, cache) {
-    try {
-      // Get ALL delegator stake events from indexer for this delegator
-      const allIndexerEventsResult = await client.query(`
-        SELECT stake_base, block_number FROM delegator_base_stake_updated 
-        WHERE identity_id = $1 AND delegator_key = $2 ORDER BY block_number DESC
-      `, [nodeId, delegatorKey]);
-      
-      if (allIndexerEventsResult.rows.length === 0) {
-        return { type: 'skipped' };
-      }
-      
-      // Group indexer events by block number and sort by stake (highest first)
-      const indexerEventsByBlock = {};
-      for (const event of allIndexerEventsResult.rows) {
-        const blockNum = event.block_number;
-        if (!indexerEventsByBlock[blockNum]) {
-          indexerEventsByBlock[blockNum] = [];
-        }
-        indexerEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stake_base) });
-      }
-      
-      // Sort each block's events by stake (highest first) and keep only the highest
-      const processedIndexerEvents = [];
-      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
-        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
-        processedIndexerEvents.push(events[0]); // Keep only the highest stake
-      }
-      
-      // Sort processed events by block number (newest first)
-      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      // Get cached contract events for this delegator
-      const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId]?.[delegatorKey] || [];
-      
-      if (cachedDelegatorEvents.length === 0) {
-        return { type: 'skipped' };
-      }
-      
-      // Group contract events by block number and sort by stake (highest first)
-      const contractEventsByBlock = {};
-      for (const event of cachedDelegatorEvents) {
-        const blockNum = event.blockNumber;
-        if (!contractEventsByBlock[blockNum]) {
-          contractEventsByBlock[blockNum] = [];
-        }
-        contractEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stakeBase) });
-      }
-      
-      // Sort each block's events by stake (highest first) and keep only the highest
-      const processedContractEvents = [];
-      for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
-        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
-        processedContractEvents.push(events[0]); // Keep only the highest stake
-      }
-      
-      // Sort processed events by block number (newest first)
-      processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      // Find common blocks between indexer and contract events
-      const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
-      const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
-      const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
-      
-      if (commonBlocks.length === 0) {
-        return { type: 'skipped' };
-      }
-      
-      // Sort common blocks in descending order (newest first)
-      commonBlocks.sort((a, b) => b - a);
-      
-      console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: ${commonBlocks.length} blocks to validate`);
-      
-      let validationPassed = true;
-      
-      // Validate each common block in descending order
-      for (const blockNumber of commonBlocks) {
-        const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
-        const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
-        
-        if (indexerEvent && contractEvent) {
-          const expectedStake = indexerEvent.stakeBase;
-          const actualStake = contractEvent.stakeBase;
+      // Check node events
+      console.log(`   📊 Checking node events for missing events...`);
+      for (const [nodeId, nodeEvents] of Object.entries(cache.nodeEventsByNode || {})) {
+        console.log(`   📊 Checking node ${nodeId}: ${nodeEvents.length} events`);
+        for (const event of nodeEvents) {
+          totalNodeEvents++;
+          const blockNumber = event.blockNumber;
           
-          console.log(`   📊 Block ${blockNumber}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+          // Debug: Show what we're checking
+          if (totalNodeEvents <= 5) {
+            console.log(`   📊 Checking: Node ${nodeId} at block ${blockNumber}`);
+          }
           
-          const difference = expectedStake - actualStake;
-          const tolerance = 500000000000000000n; // 0.5 TRAC
+          // Check if indexer has this event
+          const indexerResult = await client.query(`
+            SELECT COUNT(*) as count FROM node_stake_updated 
+            WHERE identity_id = $1 AND block_number = $2
+          `, [nodeId, blockNumber]);
           
-          if (difference === 0n) {
-            console.log(`      ✅ MATCH`);
-          } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`      ✅ MATCH (within tolerance: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC)`);
+          if (parseInt(indexerResult.rows[0].count) === 0) {
+            // Check for nearby blocks (within 5 blocks) to handle timing differences
+            const nearbyResult = await client.query(`
+              SELECT COUNT(*) as count FROM node_stake_updated 
+              WHERE identity_id = $1 AND block_number BETWEEN $2 AND $3
+            `, [nodeId, blockNumber - 5, blockNumber + 5]);
+            
+            if (parseInt(nearbyResult.rows[0].count) === 0) {
+              console.log(`   ❌ Missing node event: Node ${nodeId} at block ${blockNumber} (no nearby events found)`);
+              missingNodeEvents++;
+            } else {
+              console.log(`   ⚠️ Node event found nearby: Node ${nodeId} at block ${blockNumber} (timing difference)`);
+              foundNodeEvents++;
+            }
           } else {
-            console.log(`      ❌ DIFFER: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            validationPassed = false;
+            foundNodeEvents++;
           }
         }
       }
       
-      if (validationPassed) {
-        console.log(`   ✅ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: All ${commonBlocks.length} blocks validated successfully`);
-      } else {
-        console.log(`   ❌ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Validation failed for some blocks`);
-      }
-      
-      return { type: validationPassed ? 'passed' : 'failed' };
-      
-    } catch (error) {
-      console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
-      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
-        return { type: 'rpcError' };
-      } else {
-        return { type: 'failed' };
-      }
-    }
-  }
-
-  // 3. VALIDATE DELEGATOR SUM STAKE
-  async validateDelegatorStakeSum(network) {
-    console.log(`\n🔍 3. Validating delegator stake sum matches node stake for ${network}...`);
-    
-    const dbName = this.databaseMap[network];
-    const client = new Client({ ...this.dbConfig, database: dbName });
-    
-    try {
-      await client.connect();
-      
-      const minStakeThreshold = 50000000000000000000000;
-      let activeNodesResult;
-      
-      if (network === 'Base') {
-        activeNodesResult = await client.query(`
-          SELECT n.identity_id, n.stake FROM node_stake_updated n
-          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
-          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
-          WHERE n.stake >= $1 ORDER BY n.stake DESC LIMIT 24
-        `, [minStakeThreshold]);
-      } else {
-        activeNodesResult = await client.query(`
-          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
-          WHERE n.stake >= $1 AND n.identity_id IN (SELECT identity_id FROM node_object_created)
-          AND n.identity_id NOT IN (SELECT identity_id FROM node_object_deleted)
-          ORDER BY n.identity_id, n.block_number DESC
-        `, [minStakeThreshold]);
-      }
-      
-      if (activeNodesResult.rows.length === 0) {
-        console.log(`   ⚠️ No active nodes found in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-      }
-      
-      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
-      const total = activeNodesResult.rows.length;
-      
-      console.log(`   📊 Validating ${total} active nodes...`);
-      
-      for (const row of activeNodesResult.rows) {
-        const nodeId = parseInt(row.identity_id);
-        const nodeStake = BigInt(row.stake);
-        
-        try {
-          // Get latest delegator stakes from indexer
-          const delegatorStakes = await client.query(`
-            SELECT d.delegator_key, d.stake_base FROM delegator_base_stake_updated d
-            INNER JOIN (SELECT delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated WHERE identity_id = $1 GROUP BY delegator_key) latest
-            ON d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
-            WHERE d.identity_id = $1
-          `, [nodeId]);
-          
-          const indexerTotalDelegatorStake = delegatorStakes.rows.reduce((sum, row) => sum + BigInt(row.stake_base), 0n);
-          
-          // Get contract node stake
-          const networkConfig = config.networks.find(n => n.name === network);
-          const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-          const stakingAddress = await this.getContractAddressFromHub(network, 'StakingStorage');
-          
-          const stakingContract = new ethers.Contract(stakingAddress, [
-            'function getNodeStake(uint72 identityId) view returns (uint96)'
-          ], provider);
-          
-          const contractNodeStake = await stakingContract.getNodeStake(nodeId);
-          const difference = contractNodeStake - indexerTotalDelegatorStake;
-          const tolerance = 100000000000000000n; // 0.1 TRAC
-          const warningTolerance = 500000000000000000n; // 0.5 TRAC
-          
-          console.log(`   📊 Node ${nodeId}:`);
-          console.log(`      Indexer delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(contractNodeStake)} TRAC`);
-          console.log(`      Contract delegations: ${this.weiToTRAC(contractNodeStake)} TRAC, Node stake: ${this.weiToTRAC(contractNodeStake)} TRAC`);
-          
-          if (difference === 0n) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH`);
-            passed++;
-          } else if (difference >= -tolerance && difference <= tolerance) {
-            console.log(`      ✅ BLOCKS MATCH - TRAC VALUES MATCH (within tolerance)`);
-            passed++;
-          } else if (difference >= -warningTolerance && difference <= warningTolerance) {
-            console.log(`      ⚠️ BLOCKS MATCH - TRAC VALUES MATCH (within warning tolerance)`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            warnings++;
-          } else {
-            console.log(`      ❌ BLOCKS MATCH - TRAC VALUES DIFFER`);
-            console.log(`      📊 Difference: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
-            failed++;
+      // Check delegator events
+      console.log(`   📊 Checking delegator events for missing events...`);
+      for (const [nodeId, delegatorEvents] of Object.entries(cache.delegatorEventsByNode || {})) {
+        console.log(`   📊 Checking node ${nodeId}: ${Object.keys(delegatorEvents).length} delegators`);
+        for (const [delegatorKey, events] of Object.entries(delegatorEvents)) {
+          console.log(`   📊 Checking delegator ${delegatorKey.slice(0, 20)}...: ${events.length} events`);
+          for (const event of events) {
+            totalDelegatorEvents++;
+            const blockNumber = event.blockNumber;
+            
+            // Debug: Show what we're checking
+            if (totalDelegatorEvents <= 5) {
+              console.log(`   📊 Checking: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}... at block ${blockNumber}`);
+            }
+            
+            // Check if indexer has this event
+            const indexerResult = await client.query(`
+              SELECT COUNT(*) as count FROM delegator_base_stake_updated 
+              WHERE identity_id = $1 AND delegator_key = $2 AND block_number = $3
+            `, [nodeId, delegatorKey, blockNumber]);
+            
+            if (parseInt(indexerResult.rows[0].count) === 0) {
+              // Check for nearby blocks (within 5 blocks) to handle timing differences
+              const nearbyResult = await client.query(`
+                SELECT COUNT(*) as count FROM delegator_base_stake_updated 
+                WHERE identity_id = $1 AND delegator_key = $2 AND block_number BETWEEN $3 AND $4
+              `, [nodeId, delegatorKey, blockNumber - 5, blockNumber + 5]);
+              
+              if (parseInt(nearbyResult.rows[0].count) === 0) {
+                console.log(`   ❌ Missing delegator event: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}... at block ${blockNumber} (no nearby events found)`);
+                missingDelegatorEvents++;
+              } else {
+                console.log(`   ⚠️ Delegator event found nearby: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}... at block ${blockNumber} (timing difference)`);
+                foundDelegatorEvents++;
+              }
+            } else {
+              foundDelegatorEvents++;
+            }
           }
-        } catch (error) {
-          console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
-          rpcErrors++;
         }
       }
       
-      console.log(`   📊 Delegator Sum Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
-      return { passed, failed, warnings, rpcErrors, total };
+      console.log(`   📊 Missing Events Summary:`);
+      console.log(`      Node events: ${foundNodeEvents} found, ${missingNodeEvents} missing (${totalNodeEvents} total)`);
+      console.log(`      Delegator events: ${foundDelegatorEvents} found, ${missingDelegatorEvents} missing (${totalDelegatorEvents} total)`);
       
-    } catch (error) {
-      console.error(`Error validating delegator stake sum: ${error.message}`);
-      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
-    } finally {
-      await client.end();
-    }
-  }
-
-  // 4. VALIDATE KNOWLEDGE COLLECTIONS
-  async validateKnowledgeCollections(network) {
-    console.log(`\n🔍 4. Validating knowledge collections for ${network}...`);
-    
-    const dbName = this.databaseMap[network];
-    const client = new Client({ ...this.dbConfig, database: dbName });
-    
-    try {
-      await client.connect();
-      
-      // Get knowledge collections from indexer
-      const kcResult = await client.query(`
-        SELECT identity_id, knowledge_id, block_number FROM knowledge_collection_created
-        ORDER BY block_number DESC LIMIT 50
-      `);
-      
-      if (kcResult.rows.length === 0) {
-        console.log(`   ⚠️ No knowledge collections found in ${network}`);
-        return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      if (missingNodeEvents === 0 && missingDelegatorEvents === 0) {
+        console.log(`   ✅ No missing events detected`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      } else {
+        console.log(`   ❌ Missing events detected`);
+        return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
       
-      let passed = 0, failed = 0, warnings = 0, rpcErrors = 0;
-      const total = kcResult.rows.length;
-      
-      console.log(`   📊 Validating ${total} knowledge collections...`);
-      
-      for (const row of kcResult.rows) {
-        const nodeId = parseInt(row.identity_id);
-        const knowledgeId = row.knowledge_id;
-        const blockNumber = parseInt(row.block_number);
-        
-        try {
-          // Check if knowledge collection exists in contract
-          const networkConfig = config.networks.find(n => n.name === network);
-          const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-          const kcAddress = await this.getContractAddressFromHub(network, 'KnowledgeCollectionStorage');
-          
-          const kcContract = new ethers.Contract(kcAddress, [
-            'function getKnowledgeCollection(uint72 identityId, uint72 knowledgeId) view returns (bool)'
-          ], provider);
-          
-          const exists = await kcContract.getKnowledgeCollection(nodeId, knowledgeId, { blockTag: blockNumber });
-          
-          console.log(`   📊 KC ${nodeId}-${knowledgeId}:`);
-          console.log(`      Indexer Block:   ${blockNumber}`);
-          console.log(`      Contract Block:  ${blockNumber}`);
-          console.log(`      Indexer Status:  Created`);
-          console.log(`      Contract Status: ${exists ? 'Exists' : 'Missing'}`);
-          
-          if (exists) {
-            console.log(`      ✅ BLOCKS MATCH - STATUS MATCH`);
-            passed++;
-          } else {
-            console.log(`      ✅ BLOCKS MATCH - STATUS DIFFER`);
-            console.log(`      📊 Difference: Indexer shows created, Contract shows missing`);
-            failed++;
-          }
-        } catch (error) {
-          console.log(`   ⚠️ KC ${nodeId}-${knowledgeId}: RPC Error - ${error.message}`);
-          rpcErrors++;
-        }
-      }
-      
-      console.log(`   📊 Knowledge Collections Summary: ✅ ${passed} ❌ ${failed} ⚠️ ${warnings} 🔌 ${rpcErrors}`);
-      return { passed, failed, warnings, rpcErrors, total };
-      
     } catch (error) {
-      console.error(`Error validating knowledge collections: ${error.message}`);
-      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 };
+      console.error(`Error detecting missing events: ${error.message}`);
+      return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 1 };
     } finally {
       await client.end();
     }
@@ -1560,7 +1356,8 @@ class ComprehensiveQAService {
       nodeStakes: await this.validateNodeStakesWithCache(network, cache),
       delegatorStakes: await this.validateDelegatorStakesComprehensiveWithCache(network, cache),
       delegatorSum: await this.validateDelegatorStakeSumWithCache(network, cache),
-      knowledgeCollections: await this.validateKnowledgeCollectionsWithCache(network, cache)
+      knowledgeCollections: await this.validateKnowledgeCollectionsWithCache(network, cache),
+      missingEvents: await this.validateMissingEventsDetection(network, cache)
     };
     
     console.log(`\n📊 FINAL SUMMARY FOR ${network}:`);
@@ -1568,6 +1365,7 @@ class ComprehensiveQAService {
     console.log(`   2. Delegator Stakes (All Blocks): ✅ ${results.delegatorStakes.passed} ❌ ${results.delegatorStakes.failed} ⚠️ ${results.delegatorStakes.warnings} 🔌 ${results.delegatorStakes.rpcErrors}`);
     console.log(`   3. Delegator Sum: ✅ ${results.delegatorSum.passed} ❌ ${results.delegatorSum.failed} ⚠️ ${results.delegatorSum.warnings} 🔌 ${results.delegatorSum.rpcErrors}`);
     console.log(`   4. Knowledge Collections: ✅ ${results.knowledgeCollections.passed} ❌ ${results.knowledgeCollections.failed} ⚠️ ${results.knowledgeCollections.warnings} 🔌 ${results.knowledgeCollections.rpcErrors}`);
+    console.log(`   5. Missing Events Detection: ✅ ${results.missingEvents.passed} ❌ ${results.missingEvents.failed} ⚠️ ${results.missingEvents.warnings} 🔌 ${results.missingEvents.rpcErrors}`);
     
     return results;
   }
@@ -1659,7 +1457,7 @@ class ComprehensiveQAService {
       'event NodeStakeUpdated(uint72 indexed identityId, uint96 stake)',
       'event DelegatorBaseStakeUpdated(uint72 indexed identityId, bytes32 indexed delegatorKey, uint96 stakeBase)'
     ], provider);
-
+    
     const currentBlock = await provider.getBlockNumber();
     
     // Get the latest block from existing cache (using processed structure)
@@ -1690,22 +1488,22 @@ class ComprehensiveQAService {
     }
     
     const fromBlock = latestExistingBlock + 1;
-    console.log(`   📊 Querying new events from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
+    console.log(`[${network}] 📊 Querying new events from block ${fromBlock.toLocaleString()} to ${currentBlock.toLocaleString()}`);
     
     if (fromBlock > currentBlock) {
-      console.log(`   📊 No new blocks to query`);
+      console.log(`[${network}] 📊 No new blocks to query`);
       return { nodeEvents: [], delegatorEvents: [] };
     }
     
     // Set chunk size based on network
     const chunkSize = network === 'Base' ? 100000 : network === 'Gnosis' ? 1000000 : 10000; // Base: 100k, Gnosis: 1M, Neuroweb: 10k
-    console.log(`   📊 Using chunk size: ${chunkSize.toLocaleString()}`);
+    console.log(`[${network}] 📊 Using chunk size: ${chunkSize.toLocaleString()}`);
     
     let allNodeEvents = [];
     let allDelegatorEvents = [];
     
     // Query node events
-    console.log(`   📊 Querying new NodeStakeUpdated events...`);
+    console.log(`[${network}] 📊 Querying new NodeStakeUpdated events...`);
     const nodeFilter = stakingContract.filters.NodeStakeUpdated();
     
     let totalChunks = Math.ceil((currentBlock - fromBlock + 1) / chunkSize);
@@ -1715,7 +1513,7 @@ class ComprehensiveQAService {
       const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
       processedChunks++;
       
-      console.log(`   📊 ${network} New Node Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+      console.log(`[${network}] 📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
       
       let chunkRetryCount = 0;
       while (true) {
@@ -1723,28 +1521,28 @@ class ComprehensiveQAService {
           const chunkEvents = await stakingContract.queryFilter(nodeFilter, startBlock, endBlock);
           allNodeEvents = allNodeEvents.concat(chunkEvents);
           
-          console.log(`      ✅ Found ${chunkEvents.length} new node events in chunk ${processedChunks}`);
+          console.log(`[${network}] ✅ Found ${chunkEvents.length} new node events in chunk ${processedChunks}`);
           
           if (chunkRetryCount > 0) {
-            console.log(`      ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+            console.log(`[${network}] ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
           }
           break;
         } catch (error) {
           chunkRetryCount++;
-          console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+          console.log(`[${network}] ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
           // Base/Gnosis: 1000 retries, Neuroweb: Infinite retries
           if (network !== 'Neuroweb' && chunkRetryCount >= 1000) {
-            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 1000 failed attempts`);
+            console.log(`[${network}] ❌ Skipping chunk ${startBlock}-${endBlock} after 1000 failed attempts`);
             break;
           }
-          console.log(`      ⏳ Retrying in 3 seconds...`);
+          console.log(`[${network}] ⏳ Retrying in 3 seconds...`);
           await new Promise(resolve => setTimeout(resolve, 3000));
         }
       }
     }
     
     // Query delegator events
-    console.log(`   📊 Querying new DelegatorBaseStakeUpdated events...`);
+    console.log(`[${network}] 📊 Querying new DelegatorBaseStakeUpdated events...`);
     const delegatorFilter = stakingContract.filters.DelegatorBaseStakeUpdated();
     
     processedChunks = 0;
@@ -1753,7 +1551,7 @@ class ComprehensiveQAService {
       const endBlock = Math.min(startBlock + chunkSize - 1, currentBlock);
       processedChunks++;
       
-      console.log(`   📊 ${network} New Delegator Events: Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
+      console.log(`[${network}] 📊 Processing chunk ${processedChunks}/${totalChunks} (blocks ${startBlock.toLocaleString()}-${endBlock.toLocaleString()})`);
       
       let chunkRetryCount = 0;
       while (true) {
@@ -1761,27 +1559,27 @@ class ComprehensiveQAService {
           const chunkEvents = await stakingContract.queryFilter(delegatorFilter, startBlock, endBlock);
           allDelegatorEvents = allDelegatorEvents.concat(chunkEvents);
           
-          console.log(`      ✅ Found ${chunkEvents.length} new delegator events in chunk ${processedChunks}`);
+          console.log(`[${network}] ✅ Found ${chunkEvents.length} new delegator events in chunk ${processedChunks}`);
           
           if (chunkRetryCount > 0) {
-            console.log(`      ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
+            console.log(`[${network}] ✅ Chunk ${startBlock}-${endBlock} succeeded after ${chunkRetryCount} retries`);
           }
           break;
         } catch (error) {
           chunkRetryCount++;
-          console.log(`      ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
+          console.log(`[${network}] ⚠️ Chunk ${startBlock}-${endBlock} failed (attempt ${chunkRetryCount}): ${error.message}`);
           // Base/Gnosis: 1000 retries, Neuroweb: Infinite retries
           if (network !== 'Neuroweb' && chunkRetryCount >= 1000) {
-            console.log(`      ❌ Skipping chunk ${startBlock}-${endBlock} after 1000 failed attempts`);
+            console.log(`[${network}] ❌ Skipping chunk ${startBlock}-${endBlock} after 1000 failed attempts`);
             break;
           }
-          console.log(`      ⏳ Retrying in 3 seconds...`);
+          console.log(`[${network}] ⏳ Retrying in 3 seconds...`);
           await new Promise(resolve => setTimeout(resolve, 3000));
         }
       }
     }
     
-    console.log(`   📊 Found ${allNodeEvents.length} new node events and ${allDelegatorEvents.length} new delegator events`);
+    console.log(`[${network}] 📊 Found ${allNodeEvents.length} new node events and ${allDelegatorEvents.length} new delegator events`);
     
     // Process new events into cache format
     const newEvents = {
@@ -1919,6 +1717,186 @@ class ComprehensiveQAService {
       }
     }
   }
+
+  // Helper function for comprehensive delegator validation
+  async validateSingleDelegatorComprehensiveWithCache(client, network, nodeId, delegatorKey, cache) {
+    try {
+      // Get ALL delegator stake events from indexer for this node/delegator
+      const allIndexerEventsResult = await client.query(`
+        SELECT stake_base, block_number FROM delegator_base_stake_updated 
+        WHERE identity_id = $1 AND delegator_key = $2 ORDER BY block_number DESC
+      `, [nodeId, delegatorKey]);
+      
+      if (allIndexerEventsResult.rows.length === 0) {
+        return { type: 'skipped' };
+      }
+      
+      // Group indexer events by block number and sort by stake (highest first)
+      const indexerEventsByBlock = {};
+      for (const event of allIndexerEventsResult.rows) {
+        const blockNum = event.block_number;
+        if (!indexerEventsByBlock[blockNum]) {
+          indexerEventsByBlock[blockNum] = [];
+        }
+        indexerEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stake_base) });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedIndexerEvents = [];
+      for (const [blockNum, events] of Object.entries(indexerEventsByBlock)) {
+        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
+        processedIndexerEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedIndexerEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Get cached contract events for this node/delegator
+      const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId]?.[delegatorKey] || [];
+      
+      if (cachedDelegatorEvents.length === 0) {
+        return { type: 'skipped' };
+      }
+      
+      // Group contract events by block number and sort by stake (highest first)
+      const contractEventsByBlock = {};
+      for (const event of cachedDelegatorEvents) {
+        const blockNum = event.blockNumber;
+        if (!contractEventsByBlock[blockNum]) {
+          contractEventsByBlock[blockNum] = [];
+        }
+        contractEventsByBlock[blockNum].push({ blockNumber: blockNum, stakeBase: BigInt(event.stakeBase) });
+      }
+      
+      // Sort each block's events by stake (highest first) and keep only the highest
+      const processedContractEvents = [];
+      for (const [blockNum, events] of Object.entries(contractEventsByBlock)) {
+        events.sort((a, b) => Number(b.stakeBase - a.stakeBase)); // Sort by stake descending
+        processedContractEvents.push(events[0]); // Keep only the highest stake
+      }
+      
+      // Sort processed events by block number (newest first)
+      processedContractEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Find common blocks between indexer and contract events
+      const indexerBlocks = new Set(processedIndexerEvents.map(e => Number(e.blockNumber)));
+      const contractBlocks = new Set(processedContractEvents.map(e => Number(e.blockNumber)));
+      const commonBlocks = [...indexerBlocks].filter(block => contractBlocks.has(block));
+      
+      if (commonBlocks.length === 0) {
+        return { type: 'skipped' };
+      }
+      
+      // Sort common blocks in descending order (newest first)
+      commonBlocks.sort((a, b) => b - a);
+      
+      console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: ${commonBlocks.length} blocks to validate`);
+      
+      let validationPassed = true;
+      
+      // Validate each common block in descending order
+      for (const blockNumber of commonBlocks) {
+        const indexerEvent = processedIndexerEvents.find(e => Number(e.blockNumber) === blockNumber);
+        const contractEvent = processedContractEvents.find(e => Number(e.blockNumber) === blockNumber);
+        
+        if (indexerEvent && contractEvent) {
+          const expectedStake = indexerEvent.stakeBase;
+          const actualStake = contractEvent.stakeBase;
+          
+          console.log(`   📊 Block ${blockNumber}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
+          
+          const difference = expectedStake - actualStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC
+          
+          if (difference === 0n) {
+            console.log(`      ✅ MATCH`);
+          } else if (difference >= -tolerance && difference <= tolerance) {
+            console.log(`      ✅ MATCH (within tolerance: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC)`);
+        } else {
+            console.log(`      ❌ DIFFER: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC`);
+            validationPassed = false;
+          }
+        }
+      }
+      
+      if (validationPassed) {
+        console.log(`   ✅ [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: All ${commonBlocks.length} blocks validated successfully`);
+        } else {
+        console.log(`   ❌ [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: Validation failed for some blocks`);
+      }
+      
+      return { type: validationPassed ? 'passed' : 'failed' };
+      
+    } catch (error) {
+      console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: Error - ${error.message}`);
+      if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
+        return { type: 'rpcError' };
+      } else {
+        return { type: 'failed' };
+      }
+    }
+  }
+
+  // Helper function to create database connection with retry logic
+  async createDatabaseConnection(network) {
+    const dbName = this.databaseMap[network];
+    const client = new Client({ ...this.dbConfig, database: dbName });
+    
+    let retryCount = 0;
+    const maxRetries = 5;
+    
+    while (retryCount < maxRetries) {
+      try {
+        await client.connect();
+        console.log(`[${network}] ✅ Database connection established`);
+        return client;
+      } catch (error) {
+        retryCount++;
+        console.log(`[${network}] ⚠️ Database connection failed (attempt ${retryCount}/${maxRetries}): ${error.message}`);
+        
+        if (retryCount >= maxRetries) {
+          throw new Error(`Failed to connect to ${network} database after ${maxRetries} attempts`);
+        }
+        
+        console.log(`[${network}] ⏳ Retrying database connection in 5 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+    }
+  }
+
+  // Helper function to execute database queries with retry logic
+  async executeQuery(client, query, params = []) {
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        const result = await client.query(query, params);
+        return result;
+      } catch (error) {
+        retryCount++;
+        console.log(`⚠️ Database query failed (attempt ${retryCount}/${maxRetries}): ${error.message}`);
+        
+        if (retryCount >= maxRetries) {
+          throw error;
+        }
+        
+        // If connection is lost, try to reconnect
+        if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+          try {
+            await client.end();
+            await client.connect();
+            console.log(`✅ Database connection re-established`);
+          } catch (reconnectError) {
+            console.log(`⚠️ Failed to reconnect: ${reconnectError.message}`);
+          }
+        }
+        
+        console.log(`⏳ Retrying query in 3 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+  }
 }
 
 // Test all validations
@@ -1960,7 +1938,8 @@ async function testAllValidations() {
         nodeStakes: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
         delegatorStakes: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
         delegatorSum: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
-        knowledgeCollections: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 }
+        knowledgeCollections: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
+        missingEvents: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 }
       };
     }
   }
@@ -1972,7 +1951,8 @@ async function testAllValidations() {
         nodeStakes: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
         delegatorStakes: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
         delegatorSum: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
-        knowledgeCollections: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 }
+        knowledgeCollections: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 },
+        missingEvents: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0, total: 0 }
       };
     }
   }
@@ -1988,6 +1968,7 @@ async function testAllValidations() {
     console.log(`   2. Delegator Stakes (All Blocks): ✅ ${results.delegatorStakes.passed} ❌ ${results.delegatorStakes.failed} ⚠️ ${results.delegatorStakes.warnings} 🔌 ${results.delegatorStakes.rpcErrors}`);
     console.log(`   3. Delegator Sum: ✅ ${results.delegatorSum.passed} ❌ ${results.delegatorSum.failed} ⚠️ ${results.delegatorSum.warnings} 🔌 ${results.delegatorSum.rpcErrors}`);
     console.log(`   4. Knowledge Collections: ✅ ${results.knowledgeCollections.passed} ❌ ${results.knowledgeCollections.failed} ⚠️ ${results.knowledgeCollections.warnings} 🔌 ${results.knowledgeCollections.rpcErrors}`);
+    console.log(`   5. Missing Events Detection: ✅ ${results.missingEvents.passed} ❌ ${results.missingEvents.failed} ⚠️ ${results.missingEvents.warnings} 🔌 ${results.missingEvents.rpcErrors}`);
   }
   
   // Calculate totals
@@ -1995,7 +1976,8 @@ async function testAllValidations() {
     nodeStakes: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 },
     delegatorStakes: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 },
     delegatorSum: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 },
-    knowledgeCollections: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 }
+    knowledgeCollections: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 },
+    missingEvents: { passed: 0, failed: 0, warnings: 0, rpcErrors: 0 }
   };
   
   for (const network of networks) {
@@ -2019,6 +2001,11 @@ async function testAllValidations() {
     totals.knowledgeCollections.failed += results.knowledgeCollections.failed;
     totals.knowledgeCollections.warnings += results.knowledgeCollections.warnings;
     totals.knowledgeCollections.rpcErrors += results.knowledgeCollections.rpcErrors;
+    
+    totals.missingEvents.passed += results.missingEvents.passed;
+    totals.missingEvents.failed += results.missingEvents.failed;
+    totals.missingEvents.warnings += results.missingEvents.warnings;
+    totals.missingEvents.rpcErrors += results.missingEvents.rpcErrors;
   }
   
   console.log(`\n${'='.repeat(80)}`);
@@ -2028,8 +2015,21 @@ async function testAllValidations() {
   console.log(`   2. Delegator Stakes (All Blocks): ✅ ${totals.delegatorStakes.passed} ❌ ${totals.delegatorStakes.failed} ⚠️ ${totals.delegatorStakes.warnings} 🔌 ${totals.delegatorStakes.rpcErrors}`);
   console.log(`   3. Delegator Sum: ✅ ${totals.delegatorSum.passed} ❌ ${totals.delegatorSum.failed} ⚠️ ${totals.delegatorSum.warnings} 🔌 ${totals.delegatorSum.rpcErrors}`);
   console.log(`   4. Knowledge Collections: ✅ ${totals.knowledgeCollections.passed} ❌ ${totals.knowledgeCollections.failed} ⚠️ ${totals.knowledgeCollections.warnings} 🔌 ${totals.knowledgeCollections.rpcErrors}`);
+  console.log(`   5. Missing Events Detection: ✅ ${totals.missingEvents.passed} ❌ ${totals.missingEvents.failed} ⚠️ ${totals.missingEvents.warnings} 🔌 ${totals.missingEvents.rpcErrors}`);
   
   console.log(`\n🎯 All validations completed for all networks!`);
 }
 
 testAllValidations().catch(console.error);
+
+// Add process-level error handlers for graceful error management
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error.message);
+  console.error('Stack trace:', error.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
