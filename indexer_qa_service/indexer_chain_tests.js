@@ -1173,7 +1173,9 @@ class ComprehensiveQAService {
             console.log(`      ✅ Delegator sum matches node stake`);
             passed++;
           } else {
+            const difference = contractTotalDelegatorStake - contractNodeStake;
             console.log(`      ❌ Delegator sum does not match node stake`);
+            console.log(`      📊 Difference: ${this.weiToTRAC(difference)} TRAC`);
             failed++;
           }
         } catch (error) {
