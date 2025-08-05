@@ -1139,46 +1139,38 @@ class ComprehensiveQAService {
         nodesWithCacheData++;
         
         try {
-          // Calculate actual delegator stake from cache
-          const contractDelegatorStakes = {};
-          for (const [delegatorKey, events] of Object.entries(cachedDelegatorEvents)) {
-            // Sort events by block number to process chronologically
-            const sortedEvents = events.sort((a, b) => a.blockNumber - b.blockNumber);
-            let totalStake = 0n;
-            console.log(`   📊 Debug: Delegator ${delegatorKey}`);
-            for (let i = 0; i < sortedEvents.length; i++) {
-              const currentStake = BigInt(sortedEvents[i].stakeBase);
-              if (i === 0) {
-                totalStake = currentStake; // Take the entire stake for the first event
-                console.log(`      Initial stake: ${this.weiToTRAC(currentStake)} TRAC`);
-              } else {
-                const previousStake = BigInt(sortedEvents[i - 1].stakeBase);
-                const difference = currentStake - previousStake;
-                totalStake += difference; // Add the difference for subsequent events
-                console.log(`      Stake change: ${this.weiToTRAC(difference)} TRAC (Current: ${this.weiToTRAC(currentStake)} TRAC, Previous: ${this.weiToTRAC(previousStake)} TRAC)`);
-              }
-            }
-            contractDelegatorStakes[delegatorKey] = totalStake;
-            console.log(`      Total stake for delegator: ${this.weiToTRAC(totalStake)} TRAC`);
-          }
-          const contractTotalDelegatorStake = Object.values(contractDelegatorStakes).reduce((sum, stake) => sum + stake, 0n);
+          // Fetch latest delegator stakes from indexer
+          const delegatorStakes = await client.query(`
+            SELECT d.delegator_key, d.stake_base FROM delegator_base_stake_updated d
+            INNER JOIN (
+              SELECT delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated
+              WHERE identity_id = $1
+              GROUP BY delegator_key
+            ) latest ON d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
+          `, [nodeId]);
 
-          // Get latest node stake from cache
-          let contractNodeStake = 0n;
-          if (cachedNodeEvents.length > 0) {
-            const latestNodeEvent = cachedNodeEvents.reduce((latest, event) => event.blockNumber > latest.blockNumber ? event : latest);
-            contractNodeStake = BigInt(latestNodeEvent.stake);
-          }
+          // Sum the latest stakes for all delegators
+          const indexerTotalDelegatorStake = delegatorStakes.rows.reduce((sum, row) => sum + BigInt(row.stake_base), 0n);
+
+          // Get the latest node stake from indexer
+          const nodeStakeResult = await client.query(`
+            SELECT stake FROM node_stake_updated 
+            WHERE identity_id = $1 
+            ORDER BY block_number DESC 
+            LIMIT 1
+          `, [nodeId]);
+
+          const indexerNodeStake = nodeStakeResult.rows.length > 0 ? BigInt(nodeStakeResult.rows[0].stake) : 0n;
 
           // Compare delegator sum with node stake
           console.log(`   📊 Node ${nodeId}:`);
-          console.log(`      Contract (cache): Sum of delegations: ${this.weiToTRAC(contractTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(contractNodeStake)} TRAC`);
+          console.log(`      Indexer: Sum of delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(indexerNodeStake)} TRAC`);
 
-          const difference = contractTotalDelegatorStake - contractNodeStake;
-          if (difference === 0n || (difference > -500000000000000000n && difference < 500000000000000000n)) { // 0.5 TRAC
-            console.log(`      ✅ Delegator sum matches node stake (within tolerance)`);
+          if (indexerTotalDelegatorStake === indexerNodeStake) {
+            console.log(`      ✅ Delegator sum matches node stake`);
             passed++;
           } else {
+            const difference = indexerTotalDelegatorStake - indexerNodeStake;
             console.log(`      ❌ Delegator sum does not match node stake`);
             console.log(`      📊 Difference: ${this.weiToTRAC(difference)} TRAC`);
             failed++;
