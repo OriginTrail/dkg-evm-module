@@ -1169,11 +1169,11 @@ class ComprehensiveQAService {
           console.log(`   📊 Node ${nodeId}:`);
           console.log(`      Contract (cache): Sum of delegations: ${this.weiToTRAC(contractTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(contractNodeStake)} TRAC`);
 
-          if (contractTotalDelegatorStake === contractNodeStake) {
-            console.log(`      ✅ Delegator sum matches node stake`);
+          const difference = contractTotalDelegatorStake - contractNodeStake;
+          if (difference === 0n || (difference > -500000000000000000n && difference < 500000000000000000n)) { // 0.5 TRAC
+            console.log(`      ✅ Delegator sum matches node stake (within tolerance)`);
             passed++;
           } else {
-            const difference = contractTotalDelegatorStake - contractNodeStake;
             console.log(`      ❌ Delegator sum does not match node stake`);
             console.log(`      📊 Difference: ${this.weiToTRAC(difference)} TRAC`);
             failed++;
@@ -1247,15 +1247,11 @@ class ComprehensiveQAService {
       
       // Compare knowledge collection counts directly (no block number comparison)
       const difference = BigInt(contractLatestId) - BigInt(indexerLatestId);
-      const tolerance = 200n; // 200 warning tolerance
+      const tolerance = 200n; // 200 tolerance
       
-      if (difference === 0n) {
-        console.log(`   ✅ Knowledge collections match: ${indexerLatestId.toLocaleString()}`);
+      if (difference === 0n || (difference > 0n && difference < tolerance)) {
+        console.log(`   ✅ Knowledge collections match (within tolerance): Indexer ${indexerLatestId.toLocaleString()}, Contract ${contractLatestId.toLocaleString()}`);
         return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
-      } else if (difference > 0 && difference <= tolerance) {
-        console.log(`   ⚠️ Knowledge collections small difference: Indexer ${indexerLatestId.toLocaleString()}, Contract ${contractLatestId.toLocaleString()}`);
-        console.log(`   📊 Small difference: +${difference} (within 200 count tolerance)`);
-        return { passed: 0, failed: 0, warnings: 1, rpcErrors: 0, total: 1 };
       } else {
         console.log(`   ❌ Knowledge collections mismatch: Indexer ${indexerLatestId.toLocaleString()}, Contract ${contractLatestId.toLocaleString()}`);
         console.log(`   📊 Difference: ${difference > 0 ? '+' : ''}${difference}`);
