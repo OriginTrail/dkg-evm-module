@@ -1120,64 +1120,42 @@ class ComprehensiveQAService {
         const nodeId = parseInt(row.identity_id);
         const nodeStake = BigInt(row.stake);
         
-        // Check if this node has cache data before proceeding
-        const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId] || [];
-        const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
+        // Remove cache checks to ensure only indexer data is used
+        // const cachedDelegatorEvents = cache.delegatorEventsByNode?.[nodeId] || [];
+        // const cachedNodeEvents = cache.nodeEventsByNode?.[nodeId] || [];
         
-        if (cachedDelegatorEvents.length === 0) {
-          console.log(`   ⚠️ Node ${nodeId}: No delegator events in cache, skipping`);
-          nodesSkipped++;
-          continue;
-        }
-        
-        if (cachedNodeEvents.length === 0) {
-          console.log(`   ⚠️ Node ${nodeId}: No node events in cache, skipping`);
-          nodesSkipped++;
-          continue;
-        }
-        
-        nodesWithCacheData++;
-        
-        try {
-          // Fetch latest delegator stakes from indexer
-          const delegatorStakes = await client.query(`
-            SELECT DISTINCT ON (delegator_key) *
-            FROM delegator_base_stake_updated 
-            WHERE identity_id = $1
-            ORDER BY delegator_key, block_number DESC
-          `, [nodeId]);
+        // Fetch latest delegator stakes from indexer
+        const delegatorStakes = await client.query(`
+          SELECT DISTINCT ON (delegator_key) *
+          FROM delegator_base_stake_updated 
+          WHERE identity_id = $1
+          ORDER BY delegator_key, block_number DESC
+        `, [nodeId]);
 
-          // Sum the latest stakes for all delegators
-          const indexerTotalDelegatorStake = delegatorStakes.rows.reduce((sum, row) => sum + BigInt(row.stake_base), 0n);
+        // Sum the latest stakes for all delegators
+        const indexerTotalDelegatorStake = delegatorStakes.rows.reduce((sum, row) => sum + BigInt(row.stake_base), 0n);
 
-          // Get the latest node stake from indexer
-          const nodeStakeResult = await client.query(`
-            SELECT stake FROM node_stake_updated 
-            WHERE identity_id = $1 
-            ORDER BY block_number DESC 
-            LIMIT 1
-          `, [nodeId]);
+        // Get the latest node stake from indexer
+        const nodeStakeResult = await client.query(`
+          SELECT stake FROM node_stake_updated 
+          WHERE identity_id = $1 
+          ORDER BY block_number DESC 
+          LIMIT 1
+        `, [nodeId]);
 
-          const indexerNodeStake = nodeStakeResult.rows.length > 0 ? BigInt(nodeStakeResult.rows[0].stake) : 0n;
+        const indexerNodeStake = nodeStakeResult.rows.length > 0 ? BigInt(nodeStakeResult.rows[0].stake) : 0n;
 
-          // Compare delegator sum with node stake
-          console.log(`   📊 Node ${nodeId}:`);
-          console.log(`      Indexer: Sum of delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(indexerNodeStake)} TRAC`);
+        // Compare delegator sum with node stake
+        const difference = indexerTotalDelegatorStake - indexerNodeStake;
+        const tolerance = 500000000000000000n; // 0.5 TRAC in wei
 
-          const difference = indexerTotalDelegatorStake - indexerNodeStake;
-          const tolerance = 500000000000000000n; // 0.5 TRAC in wei
-
-          if (difference === 0n || (difference > -tolerance && difference < tolerance)) {
-            console.log(`      ✅ Delegator sum matches node stake (within tolerance)`);
-            passed++;
-          } else {
-            console.log(`      ❌ Delegator sum does not match node stake`);
-            console.log(`      📊 Difference: ${this.weiToTRAC(difference)} TRAC`);
-            failed++;
-          }
-        } catch (error) {
-          console.log(`   ⚠️ Node ${nodeId}: RPC Error - ${error.message}`);
-          rpcErrors++;
+        if (difference === 0n || (difference > -tolerance && difference < tolerance)) {
+          console.log(`      ✅ Delegator sum matches node stake (within tolerance)`);
+          passed++;
+        } else {
+          console.log(`      ❌ Delegator sum does not match node stake`);
+          console.log(`      📊 Difference: ${this.weiToTRAC(difference)} TRAC`);
+          failed++;
         }
       }
       
