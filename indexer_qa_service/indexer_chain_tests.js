@@ -1148,10 +1148,10 @@ class ComprehensiveQAService {
             for (let i = 0; i < sortedEvents.length; i++) {
               const currentStake = BigInt(sortedEvents[i].stakeBase);
               if (i === 0) {
-                totalStake += currentStake;
+                totalStake = currentStake; // Take the entire stake for the first event
               } else {
                 const previousStake = BigInt(sortedEvents[i - 1].stakeBase);
-                totalStake += currentStake - previousStake; // Handle both staking and unstaking
+                totalStake += currentStake - previousStake; // Add the difference for subsequent events
               }
             }
             contractDelegatorStakes[delegatorKey] = totalStake;
