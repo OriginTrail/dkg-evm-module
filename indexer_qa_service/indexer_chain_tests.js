@@ -1141,12 +1141,10 @@ class ComprehensiveQAService {
         try {
           // Fetch latest delegator stakes from indexer
           const delegatorStakes = await client.query(`
-            SELECT d.delegator_key, d.stake_base FROM delegator_base_stake_updated d
-            INNER JOIN (
-              SELECT delegator_key, MAX(block_number) as max_block FROM delegator_base_stake_updated
-              WHERE identity_id = $1
-              GROUP BY delegator_key
-            ) latest ON d.delegator_key = latest.delegator_key AND d.block_number = latest.max_block
+            SELECT DISTINCT ON (delegator_key) *
+            FROM delegator_base_stake_updated 
+            WHERE identity_id = $1
+            ORDER BY delegator_key, block_number DESC
           `, [nodeId]);
 
           // Sum the latest stakes for all delegators
