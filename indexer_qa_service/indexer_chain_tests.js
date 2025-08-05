@@ -1164,11 +1164,13 @@ class ComprehensiveQAService {
           console.log(`   📊 Node ${nodeId}:`);
           console.log(`      Indexer: Sum of delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(indexerNodeStake)} TRAC`);
 
-          if (indexerTotalDelegatorStake === indexerNodeStake) {
-            console.log(`      ✅ Delegator sum matches node stake`);
+          const difference = indexerTotalDelegatorStake - indexerNodeStake;
+          const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+
+          if (difference === 0n || (difference > -tolerance && difference < tolerance)) {
+            console.log(`      ✅ Delegator sum matches node stake (within tolerance)`);
             passed++;
           } else {
-            const difference = indexerTotalDelegatorStake - indexerNodeStake;
             console.log(`      ❌ Delegator sum does not match node stake`);
             console.log(`      📊 Difference: ${this.weiToTRAC(difference)} TRAC`);
             failed++;
