@@ -616,14 +616,7 @@ class ComprehensiveQAService {
   async buildCache(network) {
     console.log(`\n[${network}] 🔍 Building cache for ${network}...`);
     
-    // Check if we're in CI environment (Jenkins)
-    const isCI = process.env.CI || process.env.JENKINS_URL;
-    
-    if (isCI) {
-      console.log(`[${network}] 📊 Running in CI environment, checking workspace cache first...`);
-    }
-    
-    // Check if existing cache exists first (for all networks)
+    // Always load cache from GitHub or another specified source
     const existingCache = await this.loadCache(network);
     
     let cacheData;
@@ -631,123 +624,40 @@ class ComprehensiveQAService {
       console.log(`[${network}] 📊 Using existing ${network} cache from file`);
       console.log(`[${network}]    Node events: ${existingCache.totalNodeEvents || 0}`);
       console.log(`[${network}]    Delegator events: ${existingCache.totalDelegatorEvents || 0}`);
-      
-      // In CI, always check for updates to get fresh data
-      if (isCI) {
-        console.log(`[${network}] 📊 CI environment: Checking for cache updates...`);
-        const needsUpdate = await this.checkCacheNeedsUpdate(network, existingCache);
-        if (needsUpdate) {
-          console.log(`[${network}] 📊 ${network} cache needs update, querying new blocks...`);
-          const newEvents = await this.queryNewEvents(network, existingCache);
-          if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
-            console.log(`[${network}] 📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
-            return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
-          } else {
-            console.log(`[${network}] 📊 No new events found, using existing cache`);
-          }
+    }
+    
+    // In CI, always check for updates to get fresh data
+    if (process.env.CI || process.env.JENKINS_URL) {
+      console.log(`[${network}] 📊 CI environment: Checking for cache updates...`);
+      const needsUpdate = await this.checkCacheNeedsUpdate(network, existingCache);
+      if (needsUpdate) {
+        console.log(`[${network}] 📊 ${network} cache needs update, querying new blocks...`);
+        const newEvents = await this.queryNewEvents(network, existingCache);
+        if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
+          console.log(`[${network}] 📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
+          return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
         } else {
-          console.log(`[${network}] 📊 Cache is up to date`);
+          console.log(`[${network}] 📊 No new events found, using existing cache`);
         }
       } else {
-        // Local development: Check if we need to add new blocks
-        const needsUpdate = await this.checkCacheNeedsUpdate(network, existingCache);
-        if (needsUpdate) {
-          console.log(`[${network}] 📊 ${network} cache needs update, querying new blocks...`);
-          const newEvents = await this.queryNewEvents(network, existingCache);
-          if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
-            console.log(`[${network}] 📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
-            return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
-          } else {
-            console.log(`[${network}] 📊 No new events found, using existing cache`);
-          }
-        }
+        console.log(`[${network}] 📊 Cache is up to date`);
       }
-      
-      return existingCache; // Return existing cache
     } else {
-      // No existing cache, query all events
-      console.log(`[${network}] 📊 No existing ${network} cache found, querying all events...`);
-      if (network === 'Neuroweb') {
-        cacheData = await this.queryAllNeurowebContractEvents();
-      } else {
-        cacheData = await this.queryAllContractEvents(network);
+      // Local development: Check if we need to add new blocks
+      const needsUpdate = await this.checkCacheNeedsUpdate(network, existingCache);
+      if (needsUpdate) {
+        console.log(`[${network}] 📊 ${network} cache needs update, querying new blocks...`);
+        const newEvents = await this.queryNewEvents(network, existingCache);
+        if (newEvents.nodeEvents.length > 0 || newEvents.delegatorEvents.length > 0) {
+          console.log(`[${network}] 📊 Found ${newEvents.nodeEvents.length} new node events and ${newEvents.delegatorEvents.length} new delegator events`);
+          return await this.mergeCacheWithNewEvents(network, existingCache, newEvents);
+        } else {
+          console.log(`[${network}] 📊 No new events found, using existing cache`);
+        }
       }
     }
     
-    // Process cache data to organize events by node/delegator
-    console.log(`[${network}] 📊 Processing cache data...`);
-    
-    // Organize node events by node ID
-    const nodeEventsByNode = {};
-    for (const event of cacheData.nodeEvents) {
-      const nodeId = event.identityId;
-      if (!nodeEventsByNode[nodeId]) {
-        nodeEventsByNode[nodeId] = [];
-      }
-      nodeEventsByNode[nodeId].push({
-        blockNumber: event.blockNumber,
-        stake: event.stake
-      });
-    }
-    
-    // Organize delegator events by node ID and delegator key
-    const delegatorEventsByNode = {};
-    for (const event of cacheData.delegatorEvents) {
-      const nodeId = event.identityId;
-      const delegatorKey = event.delegatorKey;
-      
-      if (!delegatorEventsByNode[nodeId]) {
-        delegatorEventsByNode[nodeId] = {};
-      }
-      if (!delegatorEventsByNode[nodeId][delegatorKey]) {
-        delegatorEventsByNode[nodeId][delegatorKey] = [];
-      }
-      
-      delegatorEventsByNode[nodeId][delegatorKey].push({
-        blockNumber: event.blockNumber,
-        stakeBase: event.stakeBase
-      });
-    }
-    
-    // Debug: Show some statistics about what was found
-    const totalNodes = Object.keys(nodeEventsByNode).length;
-    const totalDelegators = Object.values(delegatorEventsByNode).reduce((sum, node) => sum + Object.keys(node).length, 0);
-    
-    console.log(`[${network}] 📊 Cache processing complete:`);
-    console.log(`[${network}]    Nodes found: ${totalNodes}`);
-    console.log(`[${network}]    Total delegators found: ${totalDelegators}`);
-    
-    // Show some sample delegator keys for debugging
-    const sampleDelegators = [];
-    for (const [nodeId, delegators] of Object.entries(delegatorEventsByNode)) {
-      for (const [delegatorKey, events] of Object.entries(delegators)) {
-        sampleDelegators.push({ nodeId, delegatorKey, eventCount: events.length });
-        if (sampleDelegators.length >= 10) break;
-      }
-      if (sampleDelegators.length >= 10) break;
-    }
-    
-    if (sampleDelegators.length > 0) {
-      console.log(`[${network}] 📊 Sample delegators found:`);
-      sampleDelegators.forEach(({ nodeId, delegatorKey, eventCount }) => {
-        console.log(`[${network}]    Node ${nodeId}: ${delegatorKey} (${eventCount} events)`);
-      });
-    }
-    
-    const processedCacheData = {
-      nodeEventsByNode,
-      delegatorEventsByNode,
-      totalNodeEvents: cacheData.nodeEvents.length,
-      totalDelegatorEvents: cacheData.delegatorEvents.length,
-      lastUpdated: new Date().toISOString()
-    };
-    
-    console.log(`[${network}] 📊 Processed cache: ${Object.keys(nodeEventsByNode).length} nodes, ${Object.keys(delegatorEventsByNode).length} nodes with delegators`);
-    
-    // Save processed cache (for all networks)
-    await this.saveCache(network, processedCacheData);
-    
-    return processedCacheData;
+    return existingCache; // Return existing cache
   }
 
   // Merge new events with existing cache (for all networks)
