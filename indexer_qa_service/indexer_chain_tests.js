@@ -1151,7 +1151,7 @@ class ComprehensiveQAService {
                 totalStake += currentStake;
               } else {
                 const previousStake = BigInt(sortedEvents[i - 1].stakeBase);
-                totalStake += currentStake - previousStake;
+                totalStake += currentStake - previousStake; // Handle both staking and unstaking
               }
             }
             contractDelegatorStakes[delegatorKey] = totalStake;
