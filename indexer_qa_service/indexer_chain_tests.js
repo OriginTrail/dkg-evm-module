@@ -1145,6 +1145,10 @@ class ComprehensiveQAService {
 
         const indexerNodeStake = nodeStakeResult.rows.length > 0 ? BigInt(nodeStakeResult.rows[0].stake) : 0n;
 
+        // Log the node being tested and the stakes
+        console.log(`   📊 Node ${nodeId}:`);
+        console.log(`      Indexer: Sum of delegations: ${this.weiToTRAC(indexerTotalDelegatorStake)} TRAC, Node stake: ${this.weiToTRAC(indexerNodeStake)} TRAC`);
+
         // Compare delegator sum with node stake
         const difference = indexerTotalDelegatorStake - indexerNodeStake;
         const tolerance = 500000000000000000n; // 0.5 TRAC in wei
