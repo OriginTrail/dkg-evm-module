@@ -1145,16 +1145,21 @@ class ComprehensiveQAService {
             // Sort events by block number to process chronologically
             const sortedEvents = events.sort((a, b) => a.blockNumber - b.blockNumber);
             let totalStake = 0n;
+            console.log(`   📊 Debug: Delegator ${delegatorKey}`);
             for (let i = 0; i < sortedEvents.length; i++) {
               const currentStake = BigInt(sortedEvents[i].stakeBase);
               if (i === 0) {
                 totalStake = currentStake; // Take the entire stake for the first event
+                console.log(`      Initial stake: ${this.weiToTRAC(currentStake)} TRAC`);
               } else {
                 const previousStake = BigInt(sortedEvents[i - 1].stakeBase);
-                totalStake += currentStake - previousStake; // Add the difference for subsequent events
+                const difference = currentStake - previousStake;
+                totalStake += difference; // Add the difference for subsequent events
+                console.log(`      Stake change: ${this.weiToTRAC(difference)} TRAC (Current: ${this.weiToTRAC(currentStake)} TRAC, Previous: ${this.weiToTRAC(previousStake)} TRAC)`);
               }
             }
             contractDelegatorStakes[delegatorKey] = totalStake;
+            console.log(`      Total stake for delegator: ${this.weiToTRAC(totalStake)} TRAC`);
           }
           const contractTotalDelegatorStake = Object.values(contractDelegatorStakes).reduce((sum, stake) => sum + stake, 0n);
 
