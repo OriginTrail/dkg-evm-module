@@ -548,7 +548,7 @@ class ComprehensiveQAService {
               const sampleEvents = chunkEvents.slice(0, 3);
               console.log(`[Neuroweb] 📊 Sample delegator events in chunk:`);
               sampleEvents.forEach((event, index) => {
-                console.log(`[Neuroweb]    ${index + 1}. Node ${event.args.identityId}, Delegator ${event.args.delegatorKey.slice(0, 20)}..., Block ${event.blockNumber}, Stake: ${event.args.stakeBase.toString()}`);
+                console.log(`[Neuroweb]    ${index + 1}. Node ${event.args.identityId}, Delegator ${event.args.delegatorKey}, Block ${event.blockNumber}, Stake: ${event.args.stakeBase.toString()}`);
               });
             }
             
@@ -1272,14 +1272,14 @@ class ComprehensiveQAService {
       for (const [nodeId, delegatorEvents] of Object.entries(cache.delegatorEventsByNode || {})) {
         console.log(`   📊 Checking node ${nodeId}: ${Object.keys(delegatorEvents).length} delegators`);
         for (const [delegatorKey, events] of Object.entries(delegatorEvents)) {
-          console.log(`   📊 Checking delegator ${delegatorKey.slice(0, 20)}...: ${events.length} events`);
+          console.log(`   📊 Checking delegator ${delegatorKey}: ${events.length} events`);
           for (const event of events) {
             totalDelegatorEvents++;
             const blockNumber = event.blockNumber;
             
             // Debug: Show what we're checking
             if (totalDelegatorEvents <= 5) {
-              console.log(`   📊 Checking: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}... at block ${blockNumber}`);
+              console.log(`   📊 Checking: Node ${nodeId}, Delegator ${delegatorKey} at block ${blockNumber}`);
             }
             
             // Check if indexer has this event
@@ -1296,10 +1296,10 @@ class ComprehensiveQAService {
               `, [nodeId, delegatorKey, blockNumber - 5, blockNumber + 5]);
               
               if (parseInt(nearbyResult.rows[0].count) === 0) {
-                console.log(`   ❌ Missing delegator event: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}... at block ${blockNumber} (no nearby events found)`);
+                console.log(`   ❌ Missing delegator event: Node ${nodeId}, Delegator ${delegatorKey} at block ${blockNumber} (no nearby events found)`);
                 missingDelegatorEvents++;
               } else {
-                console.log(`   ⚠️ Delegator event found nearby: Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}... at block ${blockNumber} (timing difference)`);
+                console.log(`   ⚠️ Delegator event found nearby: Node ${nodeId}, Delegator ${delegatorKey} at block ${blockNumber} (timing difference)`);
                 foundDelegatorEvents++;
               }
             } else {
@@ -1774,7 +1774,7 @@ class ComprehensiveQAService {
       // Sort common blocks in descending order (newest first)
       commonBlocks.sort((a, b) => b - a);
       
-      console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: ${commonBlocks.length} blocks to validate`);
+      console.log(`🔍 [${network}] Node ${nodeId}, Delegator ${delegatorKey}: ${commonBlocks.length} blocks to validate`);
       
       let validationPassed = true;
       
@@ -1804,15 +1804,15 @@ class ComprehensiveQAService {
       }
       
       if (validationPassed) {
-        console.log(`   ✅ [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: All ${commonBlocks.length} blocks validated successfully`);
+        console.log(`   ✅ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: All ${commonBlocks.length} blocks validated successfully`);
         } else {
-        console.log(`   ❌ [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: Validation failed for some blocks`);
+        console.log(`   ❌ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Validation failed for some blocks`);
       }
       
       return { type: validationPassed ? 'passed' : 'failed' };
       
     } catch (error) {
-      console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey.slice(0, 20)}...: Error - ${error.message}`);
+      console.log(`   ⚠️ [${network}] Node ${nodeId}, Delegator ${delegatorKey}: Error - ${error.message}`);
       if (error.message.includes('RPC') || error.message.includes('network') || error.message.includes('connection')) {
         return { type: 'rpcError' };
       } else {
