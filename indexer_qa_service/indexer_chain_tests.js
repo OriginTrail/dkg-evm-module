@@ -141,7 +141,7 @@ class ComprehensiveQAService {
           if (sampleDelegators.length > 0) {
             console.log(`      Sample delegators in cache:`);
             sampleDelegators.forEach(({ nodeId, delegatorKey, eventCount }) => {
-              console.log(`         Node ${nodeId}: ${delegatorKey.slice(0, 20)}... (${eventCount} events)`);
+              console.log(`         Node ${nodeId}: ${delegatorKey} (${eventCount} events)`);
             });
           }
         }
@@ -300,8 +300,8 @@ class ComprehensiveQAService {
             
             // Debug: Show some delegator keys found in this chunk
             if (delegatorEventsChunk.length > 0) {
-              const sampleKeys = delegatorEventsChunk.slice(0, 3).map(e => e.args.delegatorKey);
-              console.log(`[${network}] 📊 Sample delegator keys in chunk: ${sampleKeys.join(', ')}`);
+                const sampleKeys = delegatorEventsChunk.map(e => e.args.delegatorKey); // Log all keys
+                console.log(`[${network}] 📊 Sample delegator keys in chunk: ${sampleKeys.join(', ')}`);
             }
             
             // Debug: Show some sample events if found
