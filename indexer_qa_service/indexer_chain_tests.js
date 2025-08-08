@@ -1120,7 +1120,7 @@ class ComprehensiveQAService {
 
         // Compare delegator sum with node stake
         const difference = indexerTotalDelegatorStake - indexerNodeStake;
-        const tolerance = 500000000000000000n; // 0.5 TRAC in wei
+        const tolerance = 20n; // 20 WEI tolerance (0.000000000000000020 TRAC)
 
         if (difference === 0n || (difference > -tolerance && difference < tolerance)) {
           console.log(`      ✅ Delegator sum matches node stake (within tolerance)`);
@@ -1195,7 +1195,7 @@ class ComprehensiveQAService {
       
       // Compare knowledge collection counts directly (no block number comparison)
       const difference = BigInt(contractLatestId) - BigInt(indexerLatestId);
-      const tolerance = 200n; // 200 tolerance
+      const tolerance = 20n; // 20 WEI tolerance
       
       if (difference === 0n || (difference > 0n && difference < tolerance)) {
         console.log(`   ✅ Knowledge collections match (within tolerance): Indexer ${indexerLatestId.toLocaleString()}, Contract ${contractLatestId.toLocaleString()}`);
@@ -1730,10 +1730,10 @@ class ComprehensiveQAService {
           console.log(`   📊 Block ${blockNumber}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
           
           const difference = expectedStake - actualStake;
-          const tolerance = 500000000000000000n; // 0.5 TRAC
+          const tolerance = 20n; // 20 WEI tolerance
           
           if (difference === 0n) {
-            console.log(`      ✅ MATCH`);
+            console.log(`      ✅ EXACT MATCH`);
           } else if (difference >= -tolerance && difference <= tolerance) {
             console.log(`      ✅ MATCH (within tolerance: ${difference > 0 ? '+' : ''}${this.weiToTRAC(difference > 0 ? difference : -difference)} TRAC)`);
           } else {
@@ -1849,7 +1849,7 @@ class ComprehensiveQAService {
           console.log(`   📊 Block ${blockNumber}: Indexer ${this.weiToTRAC(expectedStake)} TRAC, Contract ${this.weiToTRAC(actualStake)} TRAC`);
           
           const difference = expectedStake - actualStake;
-          const tolerance = 500000000000000000n; // 0.5 TRAC
+          const tolerance = 20n; // 20 WEI tolerance
           
           if (difference === 0n) {
             console.log(`      ✅ MATCH`);
