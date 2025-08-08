@@ -1413,9 +1413,15 @@ class ComprehensiveQAService {
       // Step 6: Generate report
       console.log(`   📊 Step 6: Generating report...`);
       
+      // Calculate scan range for summary
+      const scanRange = {
+        from: indexerEvents.length > 0 ? Math.min(...indexerEvents.map(e => e.blockNumber)) : 0,
+        to: indexerEvents.length > 0 ? Math.max(...indexerEvents.map(e => e.blockNumber)) : 0
+      };
+      
       const summary = {
         network,
-        scannedBlocks: toBlock - fromBlock + 1,
+        scannedBlocks: scanRange.to - scanRange.from + 1,
         onchainEvents: onchainEvents.length,
         indexerEvents: indexerEvents.length,
         missingEvents: missingEvents.length,
