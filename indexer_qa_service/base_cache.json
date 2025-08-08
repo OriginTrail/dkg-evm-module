@@ -286,6 +286,11 @@
       "stake": "55655698124473258715803"
     },
     {
+      "identityId": "3",
+      "blockNumber": 33727696,
+      "stake": "55592919033917668211348"
+    },
+    {
       "identityId": "4",
       "blockNumber": 32292630,
       "stake": "28880407714843750000"
@@ -1074,6 +1079,11 @@
       "identityId": "22",
       "blockNumber": 33598618,
       "stake": "106488555397050291359129"
+    },
+    {
+      "identityId": "22",
+      "blockNumber": 33727661,
+      "stake": "106425870804598012708561"
     },
     {
       "identityId": "26",
@@ -2586,6 +2596,16 @@
       "stake": "1591621006058558188346380"
     },
     {
+      "identityId": "33",
+      "blockNumber": 33727661,
+      "stake": "1591683690651010466996948"
+    },
+    {
+      "identityId": "33",
+      "blockNumber": 33734139,
+      "stake": "1591744648127946782130957"
+    },
+    {
       "identityId": "35",
       "blockNumber": 33027763,
       "stake": "1000000000000000000"
@@ -2809,6 +2829,11 @@
       "identityId": "36",
       "blockNumber": 33641915,
       "stake": "397065903586181850587848"
+    },
+    {
+      "identityId": "36",
+      "blockNumber": 33727696,
+      "stake": "397128682676737441092303"
     },
     {
       "identityId": "37",
@@ -4291,29 +4316,9 @@
       "stake": "1999999826464038883095182"
     },
     {
-      "blockNumber": 33727661,
-      "identityId": "22",
-      "stake": "106425870804598012708561"
-    },
-    {
-      "blockNumber": 33727661,
+      "blockNumber": 33860648,
       "identityId": "33",
-      "stake": "1591683690651010466996948"
-    },
-    {
-      "blockNumber": 33727696,
-      "identityId": "3",
-      "stake": "55592919033917668211348"
-    },
-    {
-      "blockNumber": 33727696,
-      "identityId": "36",
-      "stake": "397128682676737441092303"
-    },
-    {
-      "blockNumber": 33734139,
-      "identityId": "33",
-      "stake": "1591744648127946782130957"
+      "stake": "1591767648127946782130957"
     }
   ],
   "delegatorEvents": [
@@ -4532,6 +4537,12 @@
       "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
       "blockNumber": 32938343,
       "stakeBase": "62779090555590504455"
+    },
+    {
+      "identityId": "3",
+      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
+      "blockNumber": 33727696,
+      "stakeBase": "0"
     },
     {
       "identityId": "3",
@@ -5330,6 +5341,12 @@
       "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
       "blockNumber": 32938510,
       "stakeBase": "62684592452278650568"
+    },
+    {
+      "identityId": "22",
+      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
+      "blockNumber": 33727661,
+      "stakeBase": "0"
     },
     {
       "identityId": "22",
@@ -6947,6 +6964,12 @@
     },
     {
       "identityId": "33",
+      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
+      "blockNumber": 33727661,
+      "stakeBase": "125491741445025927612"
+    },
+    {
+      "identityId": "33",
       "delegatorKey": "0x2f5d2e66c17488dba718b66f0232648951068095cc47a1307c56afee61dc4601",
       "blockNumber": 24797367,
       "stakeBase": "151243008969346606297"
@@ -7408,6 +7431,12 @@
       "stakeBase": "872866380000000000000"
     },
     {
+      "identityId": "33",
+      "delegatorKey": "0x25eca7f69315e182767ed34a476400cf046d91610fb7a353467854841fb97204",
+      "blockNumber": 33734139,
+      "stakeBase": "60957476936315134009"
+    },
+    {
       "identityId": "35",
       "delegatorKey": "0x286813d2d68b0c10968af01ae80cb2d44eafd5ba9b0a4f1735d3ecf2337961e6",
       "blockNumber": 33027763,
@@ -7706,6 +7735,12 @@
       "delegatorKey": "0x681936c65e417dcade02526434a83ca2ff246e1416e8ce1567050df519b98f96",
       "blockNumber": 33641915,
       "stakeBase": "1953805040000000000000"
+    },
+    {
+      "identityId": "36",
+      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
+      "blockNumber": 33727696,
+      "stakeBase": "62779090555590504455"
     },
     {
       "identityId": "37",
@@ -9544,34 +9579,10 @@
       "stakeBase": "190000000000000000000"
     },
     {
-      "blockNumber": 33727661,
-      "identityId": "22",
-      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
-      "stakeBase": "0"
-    },
-    {
-      "blockNumber": 33727661,
-      "identityId": "33",
-      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
-      "stakeBase": "125491741445025927612"
-    },
-    {
-      "blockNumber": 33727696,
-      "identityId": "3",
-      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
-      "stakeBase": "0"
-    },
-    {
-      "blockNumber": 33727696,
-      "identityId": "36",
-      "delegatorKey": "0xb77b996856ddff03ab40f4a5b3ff018eb1e32364e43773a2d16fcf24dfef863c",
-      "stakeBase": "62779090555590504455"
-    },
-    {
-      "blockNumber": 33734139,
+      "blockNumber": 33860648,
       "identityId": "33",
       "delegatorKey": "0x25eca7f69315e182767ed34a476400cf046d91610fb7a353467854841fb97204",
-      "stakeBase": "60957476936315134009"
+      "stakeBase": "83957476936315134009"
     }
   ],
   "nodeEventsByNode": {
@@ -11709,6 +11720,10 @@
       {
         "blockNumber": 33734139,
         "stake": "1591744648127946782130957"
+      },
+      {
+        "blockNumber": 33860648,
+        "stake": "1591767648127946782130957"
       }
     ],
     "35": [
@@ -15710,6 +15725,10 @@
         {
           "blockNumber": 33734139,
           "stakeBase": "60957476936315134009"
+        },
+        {
+          "blockNumber": 33860648,
+          "stakeBase": "83957476936315134009"
         }
       ]
     },
@@ -17406,7 +17425,7 @@
       ]
     }
   },
-  "totalNodeEvents": 863,
-  "totalDelegatorEvents": 876,
-  "lastUpdated": "2025-08-05T15:02:23.092Z"
+  "totalNodeEvents": 864,
+  "totalDelegatorEvents": 877,
+  "lastUpdated": "2025-08-08T11:23:59.058Z"
 }
