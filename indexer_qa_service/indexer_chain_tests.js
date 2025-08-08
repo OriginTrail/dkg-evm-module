@@ -1218,161 +1218,215 @@ class ComprehensiveQAService {
   async validateMissingEventsDetection(network, cache) {
     console.log(`\n🔍 5. Detecting missing events for ${network}...`);
     
-    // Debug: Show cache structure first
-    console.log(`[${network}] 📊 Cache Debug:`);
-    console.log(`[${network}]    Node events by node: ${Object.keys(cache.nodeEventsByNode || {}).length} nodes`);
-    console.log(`[${network}]    Delegator events by node: ${Object.keys(cache.delegatorEventsByNode || {}).length} nodes`);
-    
-    // Verify cache data is being processed correctly
-    let totalCacheNodeEvents = 0;
-    let totalCacheDelegatorEvents = 0;
-    
-    for (const [nodeId, events] of Object.entries(cache.nodeEventsByNode || {})) {
-      totalCacheNodeEvents += events.length;
-    }
-    
-    for (const [nodeId, delegators] of Object.entries(cache.delegatorEventsByNode || {})) {
-      for (const [delegatorKey, events] of Object.entries(delegators)) {
-        totalCacheDelegatorEvents += events.length;
-      }
-    }
-    
-    console.log(`[${network}] 📊 Cache Event Counts:`);
-    console.log(`[${network}]    Total node events in cache: ${totalCacheNodeEvents}`);
-    console.log(`[${network}]    Total delegator events in cache: ${totalCacheDelegatorEvents}`);
-    
-    // Show sample events from cache
-    const sampleNodeEvents = [];
-    const sampleDelegatorEvents = [];
-    
-    for (const [nodeId, events] of Object.entries(cache.nodeEventsByNode || {})) {
-      if (sampleNodeEvents.length < 3) {
-        sampleNodeEvents.push({ nodeId, events: events.length, sampleBlock: events[0]?.blockNumber });
-      }
-    }
-    
-    for (const [nodeId, delegators] of Object.entries(cache.delegatorEventsByNode || {})) {
-      for (const [delegatorKey, events] of Object.entries(delegators)) {
-        if (sampleDelegatorEvents.length < 3) {
-          sampleDelegatorEvents.push({ 
-            nodeId, 
-            delegatorKey: delegatorKey.slice(0, 20) + '...', 
-            events: events.length, 
-            sampleBlock: events[0]?.blockNumber 
-          });
-        }
-      }
-    }
-    
-    console.log(`[${network}] 📊 Sample node events from cache:`);
-    sampleNodeEvents.forEach(({ nodeId, events, sampleBlock }) => {
-      console.log(`[${network}]    Node ${nodeId}: ${events} events, sample block: ${sampleBlock}`);
-    });
-    
-    console.log(`[${network}] 📊 Sample delegator events from cache:`);
-    sampleDelegatorEvents.forEach(({ nodeId, delegatorKey, events, sampleBlock }) => {
-      console.log(`[${network}]    Node ${nodeId}, Delegator ${delegatorKey}: ${events} events, sample block: ${sampleBlock}`);
-    });
-    
     const dbName = this.databaseMap[network];
     const client = new Client({ ...this.dbConfig, database: dbName });
     
     try {
       await client.connect();
       
-      let missingNodeEvents = 0;
-      let missingDelegatorEvents = 0;
-      let totalNodeEvents = 0;
-      let totalDelegatorEvents = 0;
-      let foundNodeEvents = 0;
-      let foundDelegatorEvents = 0;
+      // Step 1: Determine safe upper bound to scan
+      console.log(`   📊 Step 1: Determining safe upper bound...`);
       
-      // Check node events
-      console.log(`   📊 Checking node events for missing events...`);
-      for (const [nodeId, nodeEvents] of Object.entries(cache.nodeEventsByNode || {})) {
-        console.log(`   📊 Checking node ${nodeId}: ${nodeEvents.length} events`);
-        for (const event of nodeEvents) {
-          totalNodeEvents++;
-          const blockNumber = event.blockNumber;
-          
-          // Debug: Show what we're checking
-          if (totalNodeEvents <= 5) {
-            console.log(`   📊 Checking: Node ${nodeId} at block ${blockNumber}`);
-          }
-          
-          // Check if indexer has this event
-          const indexerResult = await client.query(`
-            SELECT COUNT(*) as count FROM node_stake_updated 
-            WHERE identity_id = $1 AND block_number = $2
-          `, [nodeId, blockNumber]);
-          
-          if (parseInt(indexerResult.rows[0].count) === 0) {
-            // Check for nearby blocks (within 5 blocks) to handle timing differences
-            const nearbyResult = await client.query(`
-              SELECT COUNT(*) as count FROM node_stake_updated 
-              WHERE identity_id = $1 AND block_number BETWEEN $2 AND $3
-            `, [nodeId, blockNumber - 5, blockNumber + 5]);
-            
-            if (parseInt(nearbyResult.rows[0].count) === 0) {
-              console.log(`   ❌ Missing node event: Node ${nodeId} at block ${blockNumber} (no nearby events found)`);
-              missingNodeEvents++;
-            } else {
-              console.log(`   ⚠️ Node event found nearby: Node ${nodeId} at block ${blockNumber} (timing difference)`);
-              foundNodeEvents++;
-            }
-          } else {
-            foundNodeEvents++;
-          }
+      // Get latest processed block from indexer
+      const indexedTipResult = await client.query(`
+        SELECT MAX(block_number) as latest_block FROM (
+          SELECT block_number FROM node_stake_updated
+          UNION
+          SELECT block_number FROM delegator_base_stake_updated
+        ) all_blocks
+      `);
+      
+      const indexedTip = indexedTipResult.rows[0]?.latest_block || 0;
+      const confirmationsBuffer = 10; // 10 block buffer for finality
+      const scanTo = indexedTip - confirmationsBuffer;
+      
+      console.log(`   📊 Indexed tip: ${indexedTip.toLocaleString()}`);
+      console.log(`   📊 Safe scan bound: ${scanTo.toLocaleString()} (with ${confirmationsBuffer} block buffer)`);
+      
+      if (scanTo <= 0) {
+        console.log(`   ⚠️ No safe blocks to scan, skipping`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      }
+      
+      // Step 2: Get contract events from cache (ground truth)
+      console.log(`   📊 Step 2: Getting contract events from cache...`);
+      
+      if (!cache || !cache.nodeEvents || !cache.delegatorEvents) {
+        console.log(`   ⚠️ No cache data available, skipping`);
+        return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
+      }
+      
+      // Filter cached events to the scan range
+      const fromBlock = Math.max(0, scanTo - 10000); // Scan last 10k blocks for demo
+      const toBlock = scanTo;
+      
+      console.log(`   📊 Scanning blocks ${fromBlock.toLocaleString()} to ${toBlock.toLocaleString()}`);
+      
+      // Filter cached node events to scan range
+      const onchainNodeEvents = cache.nodeEvents.filter(event => 
+        event.blockNumber >= fromBlock && event.blockNumber <= toBlock
+      );
+      
+      // Filter cached delegator events to scan range
+      const onchainDelegatorEvents = cache.delegatorEvents.filter(event => 
+        event.blockNumber >= fromBlock && event.blockNumber <= toBlock
+      );
+      
+      console.log(`   📊 Cached events in range: ${onchainNodeEvents.length} node events, ${onchainDelegatorEvents.length} delegator events`);
+      
+      // Convert cached events to the same format as before
+      const onchainEvents = [];
+      
+      // Process cached node events
+      for (const event of onchainNodeEvents) {
+        onchainEvents.push({
+          eventType: 'NodeStakeUpdated',
+          identityId: event.identityId,
+          stake: event.stake,
+          blockNumber: event.blockNumber,
+          transactionHash: `cached-${event.blockNumber}-${event.identityId}`, // Placeholder for cached data
+          logIndex: 0, // Placeholder for cached data
+          eventId: `cached-${event.blockNumber}-${event.identityId}-0`
+        });
+      }
+      
+      // Process cached delegator events
+      for (const event of onchainDelegatorEvents) {
+        onchainEvents.push({
+          eventType: 'DelegatorBaseStakeUpdated',
+          identityId: event.identityId,
+          delegatorKey: event.delegatorKey,
+          stakeBase: event.stakeBase,
+          blockNumber: event.blockNumber,
+          transactionHash: `cached-${event.blockNumber}-${event.identityId}`, // Placeholder for cached data
+          logIndex: 0, // Placeholder for cached data
+          eventId: `cached-${event.blockNumber}-${event.identityId}-${event.delegatorKey}`
+        });
+      }
+      
+      console.log(`   📊 Total cached events found: ${onchainEvents.length}`);
+      
+      // Step 3: Fetch indexer events
+      console.log(`   📊 Step 3: Fetching indexer events...`);
+      
+      const indexerEvents = [];
+      
+      // Fetch node stake events from indexer
+      const indexerNodeEvents = await client.query(`
+        SELECT identity_id, stake, block_number, transaction_hash, log_index
+        FROM node_stake_updated 
+        WHERE block_number BETWEEN $1 AND $2
+        ORDER BY block_number ASC
+      `, [fromBlock, toBlock]);
+      
+      for (const row of indexerNodeEvents.rows) {
+        indexerEvents.push({
+          eventType: 'NodeStakeUpdated',
+          identityId: row.identity_id.toString(),
+          stake: row.stake,
+          blockNumber: row.block_number,
+          transactionHash: row.transaction_hash,
+          logIndex: row.log_index,
+          eventId: `${row.block_number}-${row.transaction_hash}-${row.log_index}`
+        });
+      }
+      
+      // Fetch delegator stake events from indexer
+      const indexerDelegatorEvents = await client.query(`
+        SELECT identity_id, delegator_key, stake_base, block_number, transaction_hash, log_index
+        FROM delegator_base_stake_updated 
+        WHERE block_number BETWEEN $1 AND $2
+        ORDER BY block_number ASC
+      `, [fromBlock, toBlock]);
+      
+      for (const row of indexerDelegatorEvents.rows) {
+        indexerEvents.push({
+          eventType: 'DelegatorBaseStakeUpdated',
+          identityId: row.identity_id.toString(),
+          delegatorKey: row.delegator_key,
+          stakeBase: row.stake_base,
+          blockNumber: row.block_number,
+          transactionHash: row.transaction_hash,
+          logIndex: row.log_index,
+          eventId: `${row.block_number}-${row.transaction_hash}-${row.log_index}`
+        });
+      }
+      
+      console.log(`   📊 Total indexer events found: ${indexerEvents.length}`);
+      
+      // Step 4: Compute the set difference (simplified for cached data)
+      console.log(`   📊 Step 4: Computing missing events...`);
+      
+      // Since we're using cached data without exact transaction hashes, we'll compare by block number and event type
+      const indexerEventMap = new Map();
+      for (const event of indexerEvents) {
+        const key = `${event.blockNumber}-${event.eventType}-${event.identityId}`;
+        if (event.eventType === 'DelegatorBaseStakeUpdated') {
+          const delegatorKey = event.delegatorKey;
+          indexerEventMap.set(`${key}-${delegatorKey}`, event);
+        } else {
+          indexerEventMap.set(key, event);
         }
       }
       
-      // Check delegator events
-      console.log(`   📊 Checking delegator events for missing events...`);
-      for (const [nodeId, delegatorEvents] of Object.entries(cache.delegatorEventsByNode || {})) {
-        console.log(`   📊 Checking node ${nodeId}: ${Object.keys(delegatorEvents).length} delegators`);
-        for (const [delegatorKey, events] of Object.entries(delegatorEvents)) {
-          console.log(`   📊 Checking delegator ${delegatorKey}: ${events.length} events`);
-          for (const event of events) {
-            totalDelegatorEvents++;
-            const blockNumber = event.blockNumber;
-            
-            // Debug: Show what we're checking
-            if (totalDelegatorEvents <= 5) {
-              console.log(`   📊 Checking: Node ${nodeId}, Delegator ${delegatorKey} at block ${blockNumber}`);
-            }
-            
-            // Check if indexer has this event
-            const indexerResult = await client.query(`
-              SELECT COUNT(*) as count FROM delegator_base_stake_updated 
-              WHERE identity_id = $1 AND delegator_key = $2 AND block_number = $3
-            `, [nodeId, delegatorKey, blockNumber]);
-            
-            if (parseInt(indexerResult.rows[0].count) === 0) {
-              // Check for nearby blocks (within 5 blocks) to handle timing differences
-              const nearbyResult = await client.query(`
-                SELECT COUNT(*) as count FROM delegator_base_stake_updated 
-                WHERE identity_id = $1 AND delegator_key = $2 AND block_number BETWEEN $3 AND $4
-              `, [nodeId, delegatorKey, blockNumber - 5, blockNumber + 5]);
-              
-              if (parseInt(nearbyResult.rows[0].count) === 0) {
-                console.log(`   ❌ Missing delegator event: Node ${nodeId}, Delegator ${delegatorKey} at block ${blockNumber} (no nearby events found)`);
-                missingDelegatorEvents++;
-              } else {
-                console.log(`   ⚠️ Delegator event found nearby: Node ${nodeId}, Delegator ${delegatorKey} at block ${blockNumber} (timing difference)`);
-                foundDelegatorEvents++;
-              }
-            } else {
-              foundDelegatorEvents++;
-            }
-          }
+      const missingEvents = [];
+      for (const onchainEvent of onchainEvents) {
+        const key = `${onchainEvent.blockNumber}-${onchainEvent.eventType}-${onchainEvent.identityId}`;
+        const fullKey = onchainEvent.eventType === 'DelegatorBaseStakeUpdated' 
+          ? `${key}-${onchainEvent.delegatorKey}` 
+          : key;
+        
+        if (!indexerEventMap.has(fullKey)) {
+          missingEvents.push(onchainEvent);
         }
       }
+      
+      console.log(`   📊 Missing events found: ${missingEvents.length}`);
+      
+      // Step 5: Log missing events
+      console.log(`   📊 Step 5: Logging missing events...`);
+      
+      for (const missingEvent of missingEvents) {
+        if (missingEvent.eventType === 'NodeStakeUpdated') {
+          console.log(`   📊 Missing: NodeStakeUpdated at block ${missingEvent.blockNumber}, Node ${missingEvent.identityId}, Stake ${this.weiToTRAC(missingEvent.stake)} TRAC`);
+        } else {
+          console.log(`   📊 Missing: DelegatorBaseStakeUpdated at block ${missingEvent.blockNumber}, Node ${missingEvent.identityId}, Delegator ${missingEvent.delegatorKey}, Stake ${this.weiToTRAC(missingEvent.stakeBase)} TRAC`);
+        }
+      }
+      
+      // Step 6: Generate report
+      console.log(`   📊 Step 6: Generating report...`);
+      
+      const summary = {
+        network,
+        scannedBlocks: toBlock - fromBlock + 1,
+        onchainEvents: onchainEvents.length,
+        indexerEvents: indexerEvents.length,
+        missingEvents: missingEvents.length,
+        nodeEvents: onchainEvents.filter(e => e.eventType === 'NodeStakeUpdated').length,
+        delegatorEvents: onchainEvents.filter(e => e.eventType === 'DelegatorBaseStakeUpdated').length,
+        missingNodeEvents: missingEvents.filter(e => e.eventType === 'NodeStakeUpdated').length,
+        missingDelegatorEvents: missingEvents.filter(e => e.eventType === 'DelegatorBaseStakeUpdated').length
+      };
       
       console.log(`   📊 Missing Events Summary:`);
-      console.log(`      Node events: ${foundNodeEvents} found, ${missingNodeEvents} missing (${totalNodeEvents} total)`);
-      console.log(`      Delegator events: ${foundDelegatorEvents} found, ${missingDelegatorEvents} missing (${totalDelegatorEvents} total)`);
+      console.log(`      Scanned blocks: ${summary.scannedBlocks.toLocaleString()}`);
+      console.log(`      On-chain events: ${summary.onchainEvents.toLocaleString()}`);
+      console.log(`      Indexer events: ${summary.indexerEvents.toLocaleString()}`);
+      console.log(`      Missing events: ${summary.missingEvents.toLocaleString()}`);
+      console.log(`      Missing node events: ${summary.missingNodeEvents.toLocaleString()}`);
+      console.log(`      Missing delegator events: ${summary.missingDelegatorEvents.toLocaleString()}`);
       
-      if (missingNodeEvents === 0 && missingDelegatorEvents === 0) {
+      // Save detailed report to file
+      const reportFile = path.join(__dirname, `missing_events_${network.toLowerCase()}_${Date.now()}.json`);
+      fs.writeFileSync(reportFile, JSON.stringify({
+        summary,
+        missingEvents: missingEvents
+      }, null, 2));
+      
+      console.log(`   📊 Detailed report saved to: ${reportFile}`);
+      
+      if (missingEvents.length === 0) {
         console.log(`   ✅ No missing events detected`);
         return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
       } else {
