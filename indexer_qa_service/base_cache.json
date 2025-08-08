@@ -2606,6 +2606,11 @@
       "stake": "1591744648127946782130957"
     },
     {
+      "identityId": "33",
+      "blockNumber": 33860648,
+      "stake": "1591767648127946782130957"
+    },
+    {
       "identityId": "35",
       "blockNumber": 33027763,
       "stake": "1000000000000000000"
@@ -4316,9 +4321,9 @@
       "stake": "1999999826464038883095182"
     },
     {
-      "blockNumber": 33860648,
-      "identityId": "33",
-      "stake": "1591767648127946782130957"
+      "blockNumber": 33931845,
+      "identityId": "37",
+      "stake": "1999998301562550948429806"
     }
   ],
   "delegatorEvents": [
@@ -7437,6 +7442,12 @@
       "stakeBase": "60957476936315134009"
     },
     {
+      "identityId": "33",
+      "delegatorKey": "0x25eca7f69315e182767ed34a476400cf046d91610fb7a353467854841fb97204",
+      "blockNumber": 33860648,
+      "stakeBase": "83957476936315134009"
+    },
+    {
       "identityId": "35",
       "delegatorKey": "0x286813d2d68b0c10968af01ae80cb2d44eafd5ba9b0a4f1735d3ecf2337961e6",
       "blockNumber": 33027763,
@@ -9579,10 +9590,10 @@
       "stakeBase": "190000000000000000000"
     },
     {
-      "blockNumber": 33860648,
-      "identityId": "33",
-      "delegatorKey": "0x25eca7f69315e182767ed34a476400cf046d91610fb7a353467854841fb97204",
-      "stakeBase": "83957476936315134009"
+      "blockNumber": 33931845,
+      "identityId": "37",
+      "delegatorKey": "0xa09ee785d2e60453a4919122ce4a3477653103c91205879c0d9f702181f8ac35",
+      "stakeBase": "0"
     }
   ],
   "nodeEventsByNode": {
@@ -12298,6 +12309,10 @@
       {
         "blockNumber": 33558488,
         "stake": "2000000000000000000000000"
+      },
+      {
+        "blockNumber": 33931845,
+        "stake": "1999998301562550948429806"
       }
     ],
     "38": [
@@ -16277,6 +16292,10 @@
         {
           "blockNumber": 32938977,
           "stakeBase": "1698437449051570194"
+        },
+        {
+          "blockNumber": 33931845,
+          "stakeBase": "0"
         }
       ],
       "0x3ed06306e49f6ef553d3c819a25806f9557f900cbef6af0a2003de5e78166a5e": [
@@ -17425,7 +17444,7 @@
       ]
     }
   },
-  "totalNodeEvents": 864,
-  "totalDelegatorEvents": 877,
-  "lastUpdated": "2025-08-08T11:23:59.058Z"
+  "totalNodeEvents": 865,
+  "totalDelegatorEvents": 878,
+  "lastUpdated": "2025-08-08T13:50:47.413Z"
 }
