@@ -1217,17 +1217,15 @@ class ComprehensiveQAService {
   // Operation 5: Missing Events Detection
   async validateMissingEventsDetection(network, cache) {
     console.log(`\n🔍 5. Detecting missing events for ${network}...`);
-    
+  
     const dbName = this.databaseMap[network];
     const client = new Client({ ...this.dbConfig, database: dbName });
-    
+  
     try {
       await client.connect();
-      
-      // Step 1: Determine safe upper bound to scan
+  
+      // Step 1: Determine safe upper bound
       console.log(`   📊 Step 1: Determining safe upper bound...`);
-      
-      // Get latest processed block from indexer
       const indexedTipResult = await client.query(`
         SELECT MAX(block_number) as latest_block FROM (
           SELECT block_number FROM node_stake_updated
@@ -1235,219 +1233,124 @@ class ComprehensiveQAService {
           SELECT block_number FROM delegator_base_stake_updated
         ) all_blocks
       `);
-      
+  
       const indexedTip = indexedTipResult.rows[0]?.latest_block || 0;
-      const confirmationsBuffer = 10; // 10 block buffer for finality
+      const confirmationsBuffer = 10;
       const scanTo = indexedTip - confirmationsBuffer;
-      
+  
       console.log(`   📊 Indexed tip: ${indexedTip.toLocaleString()}`);
       console.log(`   📊 Safe scan bound: ${scanTo.toLocaleString()} (with ${confirmationsBuffer} block buffer)`);
-      
+  
       if (scanTo <= 0) {
         console.log(`   ⚠️ No safe blocks to scan, skipping`);
         return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
       }
-      
-      // Step 2: Get contract events from cache (ground truth)
+  
+      // Step 2: Get contract events from cache
       console.log(`   📊 Step 2: Getting contract events from cache...`);
-      
+  
       if (!cache || !cache.nodeEvents || !cache.delegatorEvents) {
         console.log(`   ⚠️ No cache data available, skipping`);
         return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
       }
-      
-      // Debug cache statistics
-      console.log(`   📊 Cache statistics:`);
-      console.log(`      Total cached node events: ${cache.nodeEvents.length}`);
-      console.log(`      Total cached delegator events: ${cache.delegatorEvents.length}`);
-      
-      if (cache.nodeEvents.length > 0) {
-        const nodeBlockRange = {
-          min: Math.min(...cache.nodeEvents.map(e => e.blockNumber)),
-          max: Math.max(...cache.nodeEvents.map(e => e.blockNumber))
-        };
-        console.log(`      Node events block range: ${nodeBlockRange.min.toLocaleString()} to ${nodeBlockRange.max.toLocaleString()}`);
+  
+      const inRange = (b) => b > 0 && b <= scanTo;
+  
+      const onchainNodeEvents = (cache.nodeEvents || []).filter(e => inRange(e.blockNumber));
+      const onchainDelegatorEvents = (cache.delegatorEvents || []).filter(e => inRange(e.blockNumber));
+  
+      console.log(`      Cached node events: ${onchainNodeEvents.length}`);
+      console.log(`      Cached delegator events: ${onchainDelegatorEvents.length}`);
+  
+      // Step 3: Build on-chain event keys
+      const onchainKeys = new Set();
+      for (const e of onchainNodeEvents) {
+        const key = e.transactionHash && e.logIndex !== undefined
+          ? `${e.blockNumber}:${e.transactionHash}:${e.logIndex}`
+          : `${e.blockNumber}:Node:${e.identityId}:${e.stake}`;
+        onchainKeys.add(key);
       }
-      
-      if (cache.delegatorEvents.length > 0) {
-        const delegatorBlockRange = {
-          min: Math.min(...cache.delegatorEvents.map(e => e.blockNumber)),
-          max: Math.max(...cache.delegatorEvents.map(e => e.blockNumber))
-        };
-        console.log(`      Delegator events block range: ${delegatorBlockRange.min.toLocaleString()} to ${delegatorBlockRange.max.toLocaleString()}`);
+      for (const e of onchainDelegatorEvents) {
+        const key = e.transactionHash && e.logIndex !== undefined
+          ? `${e.blockNumber}:${e.transactionHash}:${e.logIndex}`
+          : `${e.blockNumber}:Delegator:${e.identityId}:${e.delegatorKey}:${e.stakeBase}`;
+        onchainKeys.add(key);
       }
-      
-      // Use ALL cached events (no filtering by block range)
-      const onchainNodeEvents = cache.nodeEvents;
-      const onchainDelegatorEvents = cache.delegatorEvents;
-      
-      console.log(`   📊 Using ALL cached events: ${onchainNodeEvents.length} node events, ${onchainDelegatorEvents.length} delegator events`);
-      
-      // Convert cached events to the same format as before
-      const onchainEvents = [];
-      
-      // Process cached node events
-      for (const event of onchainNodeEvents) {
-        onchainEvents.push({
-          eventType: 'NodeStakeUpdated',
-          identityId: event.identityId,
-          stake: event.stake,
-          blockNumber: event.blockNumber,
-          transactionHash: `cached-${event.blockNumber}-${event.identityId}`, // Placeholder for cached data
-          logIndex: 0, // Placeholder for cached data
-          eventId: `cached-${event.blockNumber}-${event.identityId}-0`
-        });
-      }
-      
-      // Process cached delegator events
-      for (const event of onchainDelegatorEvents) {
-        onchainEvents.push({
-          eventType: 'DelegatorBaseStakeUpdated',
-          identityId: event.identityId,
-          delegatorKey: event.delegatorKey,
-          stakeBase: event.stakeBase,
-          blockNumber: event.blockNumber,
-          transactionHash: `cached-${event.blockNumber}-${event.identityId}`, // Placeholder for cached data
-          logIndex: 0, // Placeholder for cached data
-          eventId: `cached-${event.blockNumber}-${event.identityId}-${event.delegatorKey}`
-        });
-      }
-      
-      console.log(`   📊 Total cached events found: ${onchainEvents.length}`);
-      
-      // Step 3: Fetch ALL indexer events
-      console.log(`   📊 Step 3: Fetching ALL indexer events...`);
-      
-      const indexerEvents = [];
-      
-      // Fetch ALL node stake events from indexer
+  
+      console.log(`   📊 On-chain unique events in range: ${onchainKeys.size}`);
+  
+      // Step 4: Fetch indexer events up to scanTo
+      console.log(`   📊 Step 3: Fetching indexer events...`);
+  
       const indexerNodeEvents = await client.query(`
         SELECT identity_id, stake, block_number, transaction_hash, log_index
-        FROM node_stake_updated 
+        FROM node_stake_updated
+        WHERE block_number <= $1
         ORDER BY block_number ASC
-      `);
-      
-      for (const row of indexerNodeEvents.rows) {
-        indexerEvents.push({
-          eventType: 'NodeStakeUpdated',
-          identityId: row.identity_id.toString(),
-          stake: row.stake,
-          blockNumber: row.block_number,
-          transactionHash: row.transaction_hash,
-          logIndex: row.log_index,
-          eventId: `${row.block_number}-${row.transaction_hash}-${row.log_index}`
-        });
-      }
-      
-      // Fetch ALL delegator stake events from indexer
+      `, [scanTo]);
+  
       const indexerDelegatorEvents = await client.query(`
         SELECT identity_id, delegator_key, stake_base, block_number, transaction_hash, log_index
-        FROM delegator_base_stake_updated 
+        FROM delegator_base_stake_updated
+        WHERE block_number <= $1
         ORDER BY block_number ASC
-      `);
-      
-      for (const row of indexerDelegatorEvents.rows) {
-        indexerEvents.push({
-          eventType: 'DelegatorBaseStakeUpdated',
-          identityId: row.identity_id.toString(),
-          delegatorKey: row.delegator_key,
-          stakeBase: row.stake_base,
-          blockNumber: row.block_number,
-          transactionHash: row.transaction_hash,
-          logIndex: row.log_index,
-          eventId: `${row.block_number}-${row.transaction_hash}-${row.log_index}`
-        });
+      `, [scanTo]);
+  
+      // Step 5: Build indexer event keys
+      const indexerKeys = new Set();
+      for (const r of indexerNodeEvents.rows) {
+        const key = r.transaction_hash && r.log_index !== null
+          ? `${r.block_number}:${r.transaction_hash}:${r.log_index}`
+          : `${r.block_number}:Node:${r.identity_id}:${r.stake}`;
+        indexerKeys.add(key);
       }
-      
-      console.log(`   📊 Total indexer events found: ${indexerEvents.length}`);
-      
-      // Debug indexer block ranges
-      if (indexerEvents.length > 0) {
-        const indexerBlockRange = {
-          min: Math.min(...indexerEvents.map(e => e.blockNumber)),
-          max: Math.max(...indexerEvents.map(e => e.blockNumber))
-        };
-        console.log(`   📊 Indexer events block range: ${indexerBlockRange.min.toLocaleString()} to ${indexerBlockRange.max.toLocaleString()}`);
+      for (const r of indexerDelegatorEvents.rows) {
+        const key = r.transaction_hash && r.log_index !== null
+          ? `${r.block_number}:${r.transaction_hash}:${r.log_index}`
+          : `${r.block_number}:Delegator:${r.identity_id}:${r.delegator_key}:${r.stake_base}`;
+        indexerKeys.add(key);
       }
-      
-      // Step 4: Compute the set difference (simplified for cached data)
-      console.log(`   📊 Step 4: Computing missing events...`);
-      
-      // Since we're using cached data without exact transaction hashes, we'll compare by block number and event type
-      const indexerEventMap = new Map();
-      for (const event of indexerEvents) {
-        const key = `${event.blockNumber}-${event.eventType}-${event.identityId}`;
-        if (event.eventType === 'DelegatorBaseStakeUpdated') {
-          const delegatorKey = event.delegatorKey;
-          indexerEventMap.set(`${key}-${delegatorKey}`, event);
-        } else {
-          indexerEventMap.set(key, event);
-        }
-      }
-      
+  
+      console.log(`   📊 Indexer unique events in range: ${indexerKeys.size}`);
+  
+      // Step 6: Compare sets
       const missingEvents = [];
-      for (const onchainEvent of onchainEvents) {
-        const key = `${onchainEvent.blockNumber}-${onchainEvent.eventType}-${onchainEvent.identityId}`;
-        const fullKey = onchainEvent.eventType === 'DelegatorBaseStakeUpdated' 
-          ? `${key}-${onchainEvent.delegatorKey}` 
-          : key;
-        
-        if (!indexerEventMap.has(fullKey)) {
-          missingEvents.push(onchainEvent);
+      for (const e of [...onchainNodeEvents, ...onchainDelegatorEvents]) {
+        const k = (e.transactionHash && e.logIndex !== undefined)
+          ? `${e.blockNumber}:${e.transactionHash}:${e.logIndex}`
+          : (e.eventType === 'NodeStakeUpdated'
+            ? `${e.blockNumber}:Node:${e.identityId}:${e.stake}`
+            : `${e.blockNumber}:Delegator:${e.identityId}:${e.delegatorKey}:${e.stakeBase}`);
+  
+        if (!indexerKeys.has(k)) {
+          missingEvents.push(e);
         }
       }
-      
+  
       console.log(`   📊 Missing events found: ${missingEvents.length}`);
-      
-      // Step 5: Log missing events
-      console.log(`   📊 Step 5: Logging missing events...`);
-      
-      for (const missingEvent of missingEvents) {
-        if (missingEvent.eventType === 'NodeStakeUpdated') {
-          console.log(`   📊 Missing: NodeStakeUpdated at block ${missingEvent.blockNumber}, Node ${missingEvent.identityId}, Stake ${this.weiToTRAC(missingEvent.stake)} TRAC`);
+      for (const m of missingEvents) {
+        if (m.eventType === 'NodeStakeUpdated') {
+          console.log(`      ❌ Missing NodeStakeUpdated at block ${m.blockNumber} for Node ${m.identityId} stake ${this.weiToTRAC(m.stake)} TRAC`);
         } else {
-          console.log(`   📊 Missing: DelegatorBaseStakeUpdated at block ${missingEvent.blockNumber}, Node ${missingEvent.identityId}, Delegator ${missingEvent.delegatorKey}, Stake ${this.weiToTRAC(missingEvent.stakeBase)} TRAC`);
+          console.log(`      ❌ Missing DelegatorBaseStakeUpdated at block ${m.blockNumber} for Node ${m.identityId}, Delegator ${m.delegatorKey}, stake ${this.weiToTRAC(m.stakeBase)} TRAC`);
         }
       }
-      
-      // Step 6: Generate report
-      console.log(`   📊 Step 6: Generating report...`);
-      
-      // Calculate scan range for summary
-      const scanRange = {
-        from: indexerEvents.length > 0 ? Math.min(...indexerEvents.map(e => e.blockNumber)) : 0,
-        to: indexerEvents.length > 0 ? Math.max(...indexerEvents.map(e => e.blockNumber)) : 0
-      };
-      
+  
+      // Step 7: Summary
       const summary = {
         network,
-        scannedBlocks: scanRange.to - scanRange.from + 1,
-        onchainEvents: onchainEvents.length,
-        indexerEvents: indexerEvents.length,
-        missingEvents: missingEvents.length,
-        nodeEvents: onchainEvents.filter(e => e.eventType === 'NodeStakeUpdated').length,
-        delegatorEvents: onchainEvents.filter(e => e.eventType === 'DelegatorBaseStakeUpdated').length,
-        missingNodeEvents: missingEvents.filter(e => e.eventType === 'NodeStakeUpdated').length,
-        missingDelegatorEvents: missingEvents.filter(e => e.eventType === 'DelegatorBaseStakeUpdated').length
+        scannedBlocks: scanTo,
+        onchainEvents: onchainKeys.size,
+        indexerEvents: indexerKeys.size,
+        missingEvents: missingEvents.length
       };
-      
-      console.log(`   📊 Missing Events Summary:`);
+  
+      console.log(`   📊 Summary:`);
       console.log(`      Scanned blocks: ${summary.scannedBlocks.toLocaleString()}`);
-      console.log(`      On-chain events: ${summary.onchainEvents.toLocaleString()}`);
-      console.log(`      Indexer events: ${summary.indexerEvents.toLocaleString()}`);
-      console.log(`      Missing events: ${summary.missingEvents.toLocaleString()}`);
-      console.log(`      Missing node events: ${summary.missingNodeEvents.toLocaleString()}`);
-      console.log(`      Missing delegator events: ${summary.missingDelegatorEvents.toLocaleString()}`);
-      
-      // Save detailed report to file
-      const reportFile = path.join(__dirname, `missing_events_${network.toLowerCase()}_${Date.now()}.json`);
-      fs.writeFileSync(reportFile, JSON.stringify({
-        summary,
-        missingEvents: missingEvents
-      }, null, 2));
-      
-      console.log(`   📊 Detailed report saved to: ${reportFile}`);
-      
+      console.log(`      On-chain events: ${summary.onchainEvents}`);
+      console.log(`      Indexer events: ${summary.indexerEvents}`);
+      console.log(`      Missing events: ${summary.missingEvents}`);
+  
       if (missingEvents.length === 0) {
         console.log(`   ✅ No missing events detected`);
         return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
@@ -1455,7 +1358,7 @@ class ComprehensiveQAService {
         console.log(`   ❌ Missing events detected`);
         return { passed: 0, failed: 1, warnings: 0, rpcErrors: 0, total: 1 };
       }
-      
+  
     } catch (error) {
       console.error(`Error detecting missing events: ${error.message}`);
       return { passed: 0, failed: 0, warnings: 0, rpcErrors: 1, total: 1 };
@@ -1463,6 +1366,7 @@ class ComprehensiveQAService {
       await client.end();
     }
   }
+  
 
   // RUN ALL VALIDATIONS
   async runAllValidations(network, cache) {
