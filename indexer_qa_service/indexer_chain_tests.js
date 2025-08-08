@@ -1256,23 +1256,32 @@ class ComprehensiveQAService {
         return { passed: 1, failed: 0, warnings: 0, rpcErrors: 0, total: 1 };
       }
       
-      // Filter cached events to the scan range
-      const fromBlock = Math.max(0, scanTo - 10000); // Scan last 10k blocks for demo
-      const toBlock = scanTo;
+      // Debug cache statistics
+      console.log(`   📊 Cache statistics:`);
+      console.log(`      Total cached node events: ${cache.nodeEvents.length}`);
+      console.log(`      Total cached delegator events: ${cache.delegatorEvents.length}`);
       
-      console.log(`   📊 Scanning blocks ${fromBlock.toLocaleString()} to ${toBlock.toLocaleString()}`);
+      if (cache.nodeEvents.length > 0) {
+        const nodeBlockRange = {
+          min: Math.min(...cache.nodeEvents.map(e => e.blockNumber)),
+          max: Math.max(...cache.nodeEvents.map(e => e.blockNumber))
+        };
+        console.log(`      Node events block range: ${nodeBlockRange.min.toLocaleString()} to ${nodeBlockRange.max.toLocaleString()}`);
+      }
       
-      // Filter cached node events to scan range
-      const onchainNodeEvents = cache.nodeEvents.filter(event => 
-        event.blockNumber >= fromBlock && event.blockNumber <= toBlock
-      );
+      if (cache.delegatorEvents.length > 0) {
+        const delegatorBlockRange = {
+          min: Math.min(...cache.delegatorEvents.map(e => e.blockNumber)),
+          max: Math.max(...cache.delegatorEvents.map(e => e.blockNumber))
+        };
+        console.log(`      Delegator events block range: ${delegatorBlockRange.min.toLocaleString()} to ${delegatorBlockRange.max.toLocaleString()}`);
+      }
       
-      // Filter cached delegator events to scan range
-      const onchainDelegatorEvents = cache.delegatorEvents.filter(event => 
-        event.blockNumber >= fromBlock && event.blockNumber <= toBlock
-      );
+      // Use ALL cached events (no filtering by block range)
+      const onchainNodeEvents = cache.nodeEvents;
+      const onchainDelegatorEvents = cache.delegatorEvents;
       
-      console.log(`   📊 Cached events in range: ${onchainNodeEvents.length} node events, ${onchainDelegatorEvents.length} delegator events`);
+      console.log(`   📊 Using ALL cached events: ${onchainNodeEvents.length} node events, ${onchainDelegatorEvents.length} delegator events`);
       
       // Convert cached events to the same format as before
       const onchainEvents = [];
@@ -1306,18 +1315,17 @@ class ComprehensiveQAService {
       
       console.log(`   📊 Total cached events found: ${onchainEvents.length}`);
       
-      // Step 3: Fetch indexer events
-      console.log(`   📊 Step 3: Fetching indexer events...`);
+      // Step 3: Fetch ALL indexer events
+      console.log(`   📊 Step 3: Fetching ALL indexer events...`);
       
       const indexerEvents = [];
       
-      // Fetch node stake events from indexer
+      // Fetch ALL node stake events from indexer
       const indexerNodeEvents = await client.query(`
         SELECT identity_id, stake, block_number, transaction_hash, log_index
         FROM node_stake_updated 
-        WHERE block_number BETWEEN $1 AND $2
         ORDER BY block_number ASC
-      `, [fromBlock, toBlock]);
+      `);
       
       for (const row of indexerNodeEvents.rows) {
         indexerEvents.push({
@@ -1331,13 +1339,12 @@ class ComprehensiveQAService {
         });
       }
       
-      // Fetch delegator stake events from indexer
+      // Fetch ALL delegator stake events from indexer
       const indexerDelegatorEvents = await client.query(`
         SELECT identity_id, delegator_key, stake_base, block_number, transaction_hash, log_index
         FROM delegator_base_stake_updated 
-        WHERE block_number BETWEEN $1 AND $2
         ORDER BY block_number ASC
-      `, [fromBlock, toBlock]);
+      `);
       
       for (const row of indexerDelegatorEvents.rows) {
         indexerEvents.push({
@@ -1353,6 +1360,15 @@ class ComprehensiveQAService {
       }
       
       console.log(`   📊 Total indexer events found: ${indexerEvents.length}`);
+      
+      // Debug indexer block ranges
+      if (indexerEvents.length > 0) {
+        const indexerBlockRange = {
+          min: Math.min(...indexerEvents.map(e => e.blockNumber)),
+          max: Math.max(...indexerEvents.map(e => e.blockNumber))
+        };
+        console.log(`   📊 Indexer events block range: ${indexerBlockRange.min.toLocaleString()} to ${indexerBlockRange.max.toLocaleString()}`);
+      }
       
       // Step 4: Compute the set difference (simplified for cached data)
       console.log(`   📊 Step 4: Computing missing events...`);
