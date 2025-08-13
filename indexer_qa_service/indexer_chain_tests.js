@@ -900,21 +900,11 @@ class ComprehensiveQAService {
       // Get ALL nodes from indexer (not just active ones)
       let nodesResult;
       
-      if (network === 'Base') {
-        nodesResult = await client.query(`
-          SELECT DISTINCT n.identity_id, n.stake FROM node_stake_updated n
-          INNER JOIN (SELECT identity_id, MAX(block_number) as max_block FROM node_stake_updated GROUP BY identity_id) latest 
-          ON n.identity_id = latest.identity_id AND n.block_number = latest.max_block
-          WHERE n.stake > 0
-          ORDER BY n.stake DESC
-        `);
-      } else {
-        nodesResult = await client.query(`
-          SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
-          WHERE n.stake > 0
-          ORDER BY n.identity_id, n.block_number DESC
-        `);
-      }
+      nodesResult = await client.query(`
+        SELECT DISTINCT ON (n.identity_id) n.identity_id, n.stake FROM node_stake_updated n
+        WHERE n.stake > 0
+        ORDER BY n.identity_id, n.block_number DESC
+      `);
       
       if (nodesResult.rows.length === 0) {
         console.log(`   ⚠️ No nodes found in ${network} indexer`);
@@ -1124,10 +1114,13 @@ class ComprehensiveQAService {
 
         if (difference === 0n || (difference > -tolerance && difference < tolerance)) {
           console.log(`      ✅ Delegator sum matches node stake (within tolerance)`);
+          if (difference !== 0n) {
+            console.log(`      📊 Difference: ${difference} WEI`);
+          }
           passed++;
         } else {
           console.log(`      ❌ Delegator sum does not match node stake`);
-          console.log(`      📊 Difference: ${this.weiToTRAC(difference)} TRAC`);
+          console.log(`      📊 Difference: ${difference} WEI`);
           failed++;
         }
       }
