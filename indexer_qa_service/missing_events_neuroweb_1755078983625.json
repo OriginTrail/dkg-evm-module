@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "network": "Neuroweb",
+    "scannedBlocks": 3260989,
+    "onchainEvents": 1012,
+    "indexerEvents": 3238,
+    "missingEvents": 0,
+    "nodeEvents": 353,
+    "delegatorEvents": 659,
+    "missingNodeEvents": 0,
+    "missingDelegatorEvents": 0
+  },
+  "missingEvents": []
+}
