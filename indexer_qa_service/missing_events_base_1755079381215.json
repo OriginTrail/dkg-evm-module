@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "network": "Base",
+    "scannedBlocks": 9921660,
+    "onchainEvents": 2327,
+    "indexerEvents": 2327,
+    "missingEvents": 0,
+    "nodeEvents": 1157,
+    "delegatorEvents": 1170,
+    "missingNodeEvents": 0,
+    "missingDelegatorEvents": 0
+  },
+  "missingEvents": []
+}

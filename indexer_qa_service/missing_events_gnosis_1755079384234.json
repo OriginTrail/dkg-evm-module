@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "network": "Gnosis",
+    "scannedBlocks": 3867588,
+    "onchainEvents": 3194,
+    "indexerEvents": 3194,
+    "missingEvents": 0,
+    "nodeEvents": 1557,
+    "delegatorEvents": 1637,
+    "missingNodeEvents": 0,
+    "missingDelegatorEvents": 0
+  },
+  "missingEvents": []
+}

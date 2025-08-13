@@ -636,6 +636,61 @@
       "stake": "2004126382592042103155490"
     },
     {
+      "identityId": "101",
+      "blockNumber": 10483105,
+      "stake": "1962938299790606209908891"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10483137,
+      "stake": "2000000000000000000000000"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10484160,
+      "stake": "1999998238153360760445823"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10485569,
+      "stake": "1900732067192361376135513"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10486413,
+      "stake": "1900784082145579314021397"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10486427,
+      "stake": "1936977432538503330220517"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10486684,
+      "stake": "1946615340725654122374445"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10486701,
+      "stake": "1956073576481107478291800"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10486707,
+      "stake": "1956115725905424442905874"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10486714,
+      "stake": "1956212470456431172882117"
+    },
+    {
+      "identityId": "101",
+      "blockNumber": 10487003,
+      "stake": "2000000000000000000000000"
+    },
+    {
       "identityId": "103",
       "blockNumber": 9789618,
       "stake": "51181456136049175971911"
@@ -826,6 +881,31 @@
       "stake": "469569719431774889241695"
     },
     {
+      "identityId": "131",
+      "blockNumber": 10482907,
+      "stake": "436485102031181671830654"
+    },
+    {
+      "identityId": "131",
+      "blockNumber": 10482999,
+      "stake": "386351532513068307441976"
+    },
+    {
+      "identityId": "131",
+      "blockNumber": 10483137,
+      "stake": "349289832303674517350867"
+    },
+    {
+      "identityId": "131",
+      "blockNumber": 10486413,
+      "stake": "349237817350456579464983"
+    },
+    {
+      "identityId": "131",
+      "blockNumber": 10486707,
+      "stake": "349195667926139614850909"
+    },
+    {
       "identityId": "135",
       "blockNumber": 9789645,
       "stake": "500086443777395"
@@ -1009,6 +1089,21 @@
       "identityId": "158",
       "blockNumber": 10389947,
       "stake": "1999999991667241902245191"
+    },
+    {
+      "identityId": "158",
+      "blockNumber": 10486427,
+      "stake": "1974428216356187568984380"
+    },
+    {
+      "identityId": "158",
+      "blockNumber": 10486701,
+      "stake": "1964969980600734213067025"
+    },
+    {
+      "identityId": "158",
+      "blockNumber": 10487138,
+      "stake": "2000000000000000000000000"
     },
     {
       "identityId": "159",
@@ -1206,6 +1301,26 @@
       "stake": "1236118028713096381159082"
     },
     {
+      "identityId": "171",
+      "blockNumber": 10482907,
+      "stake": "1172183507020237101122701"
+    },
+    {
+      "identityId": "171",
+      "blockNumber": 10482990,
+      "stake": "1182240550846077902809732"
+    },
+    {
+      "identityId": "171",
+      "blockNumber": 10482999,
+      "stake": "1232374120364191267198410"
+    },
+    {
+      "identityId": "171",
+      "blockNumber": 10486714,
+      "stake": "1232277375813184537222167"
+    },
+    {
       "identityId": "172",
       "blockNumber": 9789702,
       "stake": "50638996727574051029932"
@@ -1401,6 +1516,16 @@
       "stake": "2000000000000000000000000"
     },
     {
+      "identityId": "191",
+      "blockNumber": 10487003,
+      "stake": "1979489620651132126330759"
+    },
+    {
+      "identityId": "191",
+      "blockNumber": 10487128,
+      "stake": "2000000000000000000000000"
+    },
+    {
       "identityId": "192",
       "blockNumber": 7591350,
       "stake": "1998937253706956691642803"
@@ -1444,6 +1569,11 @@
       "identityId": "193",
       "blockNumber": 10115009,
       "stake": "2035743938811627917985616"
+    },
+    {
+      "identityId": "193",
+      "blockNumber": 10484343,
+      "stake": "2053561268505551410307099"
     },
     {
       "identityId": "194",
@@ -1596,6 +1726,26 @@
       "stake": "723865204860706944300292"
     },
     {
+      "identityId": "201",
+      "blockNumber": 10482990,
+      "stake": "716863597732611852584479"
+    },
+    {
+      "identityId": "201",
+      "blockNumber": 10486684,
+      "stake": "707225689545461060430551"
+    },
+    {
+      "identityId": "201",
+      "blockNumber": 10487128,
+      "stake": "686715310196593186761310"
+    },
+    {
+      "identityId": "201",
+      "blockNumber": 10487138,
+      "stake": "651685290797327399828335"
+    },
+    {
       "identityId": "210",
       "blockNumber": 10389773,
       "stake": "1984999999160777342803360"
@@ -1606,164 +1756,74 @@
       "stake": "1999999999160777342803360"
     },
     {
-      "blockNumber": 10482907,
-      "identityId": "131",
-      "stake": "436485102031181671830654"
-    },
-    {
-      "blockNumber": 10482907,
-      "identityId": "171",
-      "stake": "1172183507020237101122701"
-    },
-    {
-      "blockNumber": 10482990,
-      "identityId": "201",
-      "stake": "716863597732611852584479"
-    },
-    {
-      "blockNumber": 10482990,
-      "identityId": "171",
-      "stake": "1182240550846077902809732"
-    },
-    {
-      "blockNumber": 10482999,
-      "identityId": "131",
-      "stake": "386351532513068307441976"
-    },
-    {
-      "blockNumber": 10482999,
-      "identityId": "171",
-      "stake": "1232374120364191267198410"
-    },
-    {
-      "blockNumber": 10483105,
-      "identityId": "101",
-      "stake": "1962938299790606209908891"
-    },
-    {
-      "blockNumber": 10483105,
       "identityId": "212",
+      "blockNumber": 10483105,
       "stake": "50010000000000000000000"
     },
     {
-      "blockNumber": 10483137,
-      "identityId": "131",
-      "stake": "349289832303674517350867"
-    },
-    {
-      "blockNumber": 10483137,
-      "identityId": "101",
-      "stake": "2000000000000000000000000"
-    },
-    {
-      "blockNumber": 10484160,
-      "identityId": "101",
-      "stake": "1999998238153360760445823"
-    },
-    {
-      "blockNumber": 10484343,
-      "identityId": "193",
-      "stake": "2053561268505551410307099"
-    },
-    {
-      "blockNumber": 10485569,
-      "identityId": "101",
-      "stake": "1900732067192361376135513"
-    },
-    {
-      "blockNumber": 10485569,
       "identityId": "212",
+      "blockNumber": 10485569,
       "stake": "149276170960999384310310"
     },
     {
-      "blockNumber": 10486413,
-      "identityId": "131",
-      "stake": "349237817350456579464983"
-    },
-    {
-      "blockNumber": 10486413,
-      "identityId": "101",
-      "stake": "1900784082145579314021397"
-    },
-    {
-      "blockNumber": 10486427,
-      "identityId": "158",
-      "stake": "1974428216356187568984380"
-    },
-    {
-      "blockNumber": 10486427,
-      "identityId": "101",
-      "stake": "1936977432538503330220517"
-    },
-    {
-      "blockNumber": 10486684,
-      "identityId": "201",
-      "stake": "707225689545461060430551"
-    },
-    {
-      "blockNumber": 10486684,
-      "identityId": "101",
-      "stake": "1946615340725654122374445"
-    },
-    {
-      "blockNumber": 10486701,
-      "identityId": "158",
-      "stake": "1964969980600734213067025"
-    },
-    {
-      "blockNumber": 10486701,
-      "identityId": "101",
-      "stake": "1956073576481107478291800"
-    },
-    {
-      "blockNumber": 10486707,
-      "identityId": "131",
-      "stake": "349195667926139614850909"
-    },
-    {
-      "blockNumber": 10486707,
-      "identityId": "101",
-      "stake": "1956115725905424442905874"
-    },
-    {
-      "blockNumber": 10486714,
+      "blockNumber": 10497564,
       "identityId": "171",
-      "stake": "1232277375813184537222167"
+      "stake": "1232177741946109122336145"
     },
     {
-      "blockNumber": 10486714,
-      "identityId": "101",
-      "stake": "1956212470456431172882117"
+      "blockNumber": 10498156,
+      "identityId": "9",
+      "stake": "1999862210453209197824367"
     },
     {
-      "blockNumber": 10487003,
-      "identityId": "191",
-      "stake": "1979489620651132126330759"
-    },
-    {
-      "blockNumber": 10487003,
-      "identityId": "101",
-      "stake": "2000000000000000000000000"
-    },
-    {
-      "blockNumber": 10487128,
+      "blockNumber": 10498156,
       "identityId": "201",
-      "stake": "686715310196593186761310"
+      "stake": "925484610759948455950172"
     },
     {
-      "blockNumber": 10487128,
-      "identityId": "191",
-      "stake": "2000000000000000000000000"
-    },
-    {
-      "blockNumber": 10487138,
+      "blockNumber": 10498321,
       "identityId": "201",
-      "stake": "651685290797327399828335"
+      "stake": "925346821213157653774539"
     },
     {
-      "blockNumber": 10487138,
-      "identityId": "158",
+      "blockNumber": 10498321,
+      "identityId": "9",
       "stake": "2000000000000000000000000"
+    },
+    {
+      "blockNumber": 10498751,
+      "identityId": "201",
+      "stake": "925351821213157653774539"
+    },
+    {
+      "blockNumber": 10498762,
+      "identityId": "201",
+      "stake": "925349821213157653774539"
+    },
+    {
+      "blockNumber": 10498762,
+      "identityId": "54",
+      "stake": "54632781875957132147416"
+    },
+    {
+      "blockNumber": 10498772,
+      "identityId": "54",
+      "stake": "54631781875957132147416"
+    },
+    {
+      "blockNumber": 10498956,
+      "identityId": "212",
+      "stake": "149278170960999384310310"
+    },
+    {
+      "blockNumber": 10498961,
+      "identityId": "212",
+      "stake": "149277170960999384310310"
+    },
+    {
+      "blockNumber": 10498961,
+      "identityId": "103",
+      "stake": "51182456136049175971911"
     }
   ],
   "delegatorEvents": [
@@ -2618,6 +2678,12 @@
       "delegatorKey": "0x787e2a9770dd0826ed59f7c20a17cfb71303cbe3280a342d4b25dde1c78eae4c",
       "blockNumber": 10246008,
       "stakeBase": "47906875313099828570470"
+    },
+    {
+      "identityId": "77",
+      "delegatorKey": "0x787e2a9770dd0826ed59f7c20a17cfb71303cbe3280a342d4b25dde1c78eae4c",
+      "blockNumber": 10439810,
+      "stakeBase": "5606875313099828570470"
     },
     {
       "identityId": "77",
@@ -5716,10 +5782,112 @@
       "stakeBase": "5010000000000000000000"
     },
     {
-      "blockNumber": 10439810,
-      "identityId": "77",
-      "delegatorKey": "0x787e2a9770dd0826ed59f7c20a17cfb71303cbe3280a342d4b25dde1c78eae4c",
-      "stakeBase": "5606875313099828570470"
+      "blockNumber": 10490145,
+      "identityId": "171",
+      "delegatorKey": "0x81acdcd0c8f57fd185e7f1170deb3160761acc5427bafa91c458208eeb14f047",
+      "stakeBase": "0"
+    },
+    {
+      "blockNumber": 10490145,
+      "identityId": "201",
+      "delegatorKey": "0x81acdcd0c8f57fd185e7f1170deb3160761acc5427bafa91c458208eeb14f047",
+      "stakeBase": "201204305333822902886"
+    },
+    {
+      "blockNumber": 10490170,
+      "identityId": "131",
+      "delegatorKey": "0x81acdcd0c8f57fd185e7f1170deb3160761acc5427bafa91c458208eeb14f047",
+      "stakeBase": "0"
+    },
+    {
+      "blockNumber": 10490170,
+      "identityId": "201",
+      "delegatorKey": "0x81acdcd0c8f57fd185e7f1170deb3160761acc5427bafa91c458208eeb14f047",
+      "stakeBase": "207779863914138494217"
+    },
+    {
+      "blockNumber": 10490188,
+      "identityId": "185",
+      "delegatorKey": "0x81acdcd0c8f57fd185e7f1170deb3160761acc5427bafa91c458208eeb14f047",
+      "stakeBase": "0"
+    },
+    {
+      "blockNumber": 10490188,
+      "identityId": "201",
+      "delegatorKey": "0x81acdcd0c8f57fd185e7f1170deb3160761acc5427bafa91c458208eeb14f047",
+      "stakeBase": "262779309219412500653983"
+    },
+    {
+      "blockNumber": 10497564,
+      "identityId": "171",
+      "delegatorKey": "0x7035601b19e5797ca0a893b3e12aa2495aaf8c4e727b83f0aa5d2ffeea749f31",
+      "stakeBase": "1000000000000000000"
+    },
+    {
+      "blockNumber": 10498156,
+      "identityId": "9",
+      "delegatorKey": "0x50f4835dea43899c294facbd05c302843eecea2844df80e565259e84f6d83817",
+      "stakeBase": "0"
+    },
+    {
+      "blockNumber": 10498156,
+      "identityId": "201",
+      "delegatorKey": "0x50f4835dea43899c294facbd05c302843eecea2844df80e565259e84f6d83817",
+      "stakeBase": "11120581181466963484718"
+    },
+    {
+      "blockNumber": 10498321,
+      "identityId": "201",
+      "delegatorKey": "0x50f4835dea43899c294facbd05c302843eecea2844df80e565259e84f6d83817",
+      "stakeBase": "10982791634676161309085"
+    },
+    {
+      "blockNumber": 10498321,
+      "identityId": "9",
+      "delegatorKey": "0x50f4835dea43899c294facbd05c302843eecea2844df80e565259e84f6d83817",
+      "stakeBase": "137789546790802175633"
+    },
+    {
+      "blockNumber": 10498751,
+      "identityId": "201",
+      "delegatorKey": "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e",
+      "stakeBase": "5000000000000000000"
+    },
+    {
+      "blockNumber": 10498762,
+      "identityId": "201",
+      "delegatorKey": "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e",
+      "stakeBase": "3000000000000000000"
+    },
+    {
+      "blockNumber": 10498762,
+      "identityId": "54",
+      "delegatorKey": "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e",
+      "stakeBase": "2000000000000000000"
+    },
+    {
+      "blockNumber": 10498772,
+      "identityId": "54",
+      "delegatorKey": "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e",
+      "stakeBase": "1000000000000000000"
+    },
+    {
+      "blockNumber": 10498956,
+      "identityId": "212",
+      "delegatorKey": "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e",
+      "stakeBase": "2000000000000000000"
+    },
+    {
+      "blockNumber": 10498961,
+      "identityId": "212",
+      "delegatorKey": "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e",
+      "stakeBase": "1000000000000000000"
+    },
+    {
+      "blockNumber": 10498961,
+      "identityId": "103",
+      "delegatorKey": "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e",
+      "stakeBase": "1000000000000000000"
     }
   ],
   "nodeEventsByNode": {
@@ -5808,6 +5976,14 @@
       },
       {
         "blockNumber": 10205460,
+        "stake": "2000000000000000000000000"
+      },
+      {
+        "blockNumber": 10498156,
+        "stake": "1999862210453209197824367"
+      },
+      {
+        "blockNumber": 10498321,
         "stake": "2000000000000000000000000"
       }
     ],
@@ -6131,6 +6307,14 @@
       {
         "blockNumber": 9789565,
         "stake": "54630397579332200036686"
+      },
+      {
+        "blockNumber": 10498762,
+        "stake": "54632781875957132147416"
+      },
+      {
+        "blockNumber": 10498772,
+        "stake": "54631781875957132147416"
       }
     ],
     "55": [
@@ -6437,6 +6621,10 @@
       {
         "blockNumber": 9789618,
         "stake": "51181456136049175971911"
+      },
+      {
+        "blockNumber": 10498961,
+        "stake": "51182456136049175971911"
       }
     ],
     "104": [
@@ -7019,6 +7207,10 @@
       {
         "blockNumber": 10486714,
         "stake": "1232277375813184537222167"
+      },
+      {
+        "blockNumber": 10497564,
+        "stake": "1232177741946109122336145"
       }
     ],
     "172": [
@@ -7391,6 +7583,22 @@
       {
         "blockNumber": 10487138,
         "stake": "651685290797327399828335"
+      },
+      {
+        "blockNumber": 10498156,
+        "stake": "925484610759948455950172"
+      },
+      {
+        "blockNumber": 10498321,
+        "stake": "925346821213157653774539"
+      },
+      {
+        "blockNumber": 10498751,
+        "stake": "925351821213157653774539"
+      },
+      {
+        "blockNumber": 10498762,
+        "stake": "925349821213157653774539"
       }
     ],
     "210": [
@@ -7411,6 +7619,14 @@
       {
         "blockNumber": 10485569,
         "stake": "149276170960999384310310"
+      },
+      {
+        "blockNumber": 10498956,
+        "stake": "149278170960999384310310"
+      },
+      {
+        "blockNumber": 10498961,
+        "stake": "149277170960999384310310"
       }
     ]
   },
@@ -7668,6 +7884,14 @@
         {
           "blockNumber": 10103888,
           "stakeBase": "11059913999901859019068"
+        },
+        {
+          "blockNumber": 10498156,
+          "stakeBase": "0"
+        },
+        {
+          "blockNumber": 10498321,
+          "stakeBase": "137789546790802175633"
         }
       ],
       "0xec783052bd51f1d0a8a0d6bacefd93770392a3a8ec0e58b4e94c3ce55be4b0b9": [
@@ -8140,6 +8364,16 @@
         {
           "blockNumber": 10103964,
           "stakeBase": "54630781875957132147416"
+        }
+      ],
+      "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e": [
+        {
+          "blockNumber": 10498762,
+          "stakeBase": "2000000000000000000"
+        },
+        {
+          "blockNumber": 10498772,
+          "stakeBase": "1000000000000000000"
         }
       ]
     },
@@ -8793,6 +9027,12 @@
           "blockNumber": 9778368,
           "stakeBase": "51181456136049175971911"
         }
+      ],
+      "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e": [
+        {
+          "blockNumber": 10498961,
+          "stakeBase": "1000000000000000000"
+        }
       ]
     },
     "104": {
@@ -9031,6 +9271,10 @@
         },
         {
           "blockNumber": 10105481,
+          "stakeBase": "0"
+        },
+        {
+          "blockNumber": 10490170,
           "stakeBase": "0"
         }
       ],
@@ -10070,6 +10314,10 @@
         {
           "blockNumber": 10104213,
           "stakeBase": "100328332952009604417"
+        },
+        {
+          "blockNumber": 10490145,
+          "stakeBase": "0"
         }
       ],
       "0xd8f5eef5e59aea8aca5e5e2a134602624e12bf7e7f6ad793847e92acf38c725a": [
@@ -10132,6 +10380,12 @@
         {
           "blockNumber": 10377029,
           "stakeBase": "0"
+        }
+      ],
+      "0x7035601b19e5797ca0a893b3e12aa2495aaf8c4e727b83f0aa5d2ffeea749f31": [
+        {
+          "blockNumber": 10497564,
+          "stakeBase": "1000000000000000000"
         }
       ]
     },
@@ -10210,6 +10464,10 @@
         {
           "blockNumber": 10105481,
           "stakeBase": "261711000000000000000000"
+        },
+        {
+          "blockNumber": 10490188,
+          "stakeBase": "0"
         }
       ]
     },
@@ -11224,6 +11482,18 @@
         {
           "blockNumber": 10104368,
           "stakeBase": "100124850857500437112"
+        },
+        {
+          "blockNumber": 10490145,
+          "stakeBase": "201204305333822902886"
+        },
+        {
+          "blockNumber": 10490170,
+          "stakeBase": "207779863914138494217"
+        },
+        {
+          "blockNumber": 10490188,
+          "stakeBase": "262779309219412500653983"
         }
       ],
       "0xaac86010b160e63d66d25260f356263248d03301dc3a97f508c35a5a1f965ac7": [
@@ -11279,6 +11549,26 @@
           "blockNumber": 10389147,
           "stakeBase": "10000000000000000000"
         }
+      ],
+      "0x50f4835dea43899c294facbd05c302843eecea2844df80e565259e84f6d83817": [
+        {
+          "blockNumber": 10498156,
+          "stakeBase": "11120581181466963484718"
+        },
+        {
+          "blockNumber": 10498321,
+          "stakeBase": "10982791634676161309085"
+        }
+      ],
+      "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e": [
+        {
+          "blockNumber": 10498751,
+          "stakeBase": "5000000000000000000"
+        },
+        {
+          "blockNumber": 10498762,
+          "stakeBase": "3000000000000000000"
+        }
       ]
     },
     "210": {
@@ -11331,10 +11621,20 @@
           "blockNumber": 10345073,
           "stakeBase": "5010000000000000000000"
         }
+      ],
+      "0x631697387a951db3af9153311af5765bf70d4f9e661c603b5f3e96ff8d6ab25e": [
+        {
+          "blockNumber": 10498956,
+          "stakeBase": "2000000000000000000"
+        },
+        {
+          "blockNumber": 10498961,
+          "stakeBase": "1000000000000000000"
+        }
       ]
     }
   },
-  "totalNodeEvents": 353,
-  "totalDelegatorEvents": 659,
-  "lastUpdated": "2025-08-13T09:56:15.311Z"
+  "totalNodeEvents": 365,
+  "totalDelegatorEvents": 677,
+  "lastUpdated": "2025-08-13T10:02:59.429Z"
 }
