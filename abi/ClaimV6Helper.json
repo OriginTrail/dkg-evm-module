@@ -83,7 +83,7 @@
         "type": "uint256"
       }
     ],
-    "name": "enforceV6ClaimPointerSync",
+    "name": "enforceOnlyOneEpochAdvance",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -139,11 +139,11 @@
         "type": "bytes32"
       }
     ],
-    "name": "prepareForStakeChangeV6External",
+    "name": "prepareForStakeChangeV6",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "delegatorEpochScore",
         "type": "uint256"
       }
     ],

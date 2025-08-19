@@ -101,15 +101,15 @@ contract V8_1_1_Rewards_Period is INamed, IVersioned, ContractStatus {
         // Replicate Staking.stake logic (without token transfer)
         // ────────────────────────────────────────────────────────
         // Reuse Staking contract's validation logic
-        stakingMain.validateDelegatorEpochClaimsExternal(identityId, delegator);
+        stakingMain._validateDelegatorEpochClaims(identityId, delegator);
 
         bytes32 delegatorKey = _getDelegatorKey(delegator);
 
         // Settle pending score changes in both legacy (v8) and V6 systems
         uint256 currentEpoch = chronos.getCurrentEpoch();
-        stakingMain.prepareForStakeChangeExternal(currentEpoch, identityId, delegatorKey);
+        stakingMain._prepareForStakeChange(currentEpoch, identityId, delegatorKey);
         // V6 logic applies only to legacy nodes; call via helper and let internal checks handle
-        claimV6Helper.prepareForStakeChangeV6External(currentEpoch, identityId, delegatorKey);
+        claimV6Helper.prepareForStakeChangeV6(currentEpoch, identityId, delegatorKey);
 
         uint96 currentDelegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
         uint96 newDelegatorStakeBase = currentDelegatorStakeBase + addedStake;

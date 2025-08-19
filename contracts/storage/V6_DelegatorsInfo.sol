@@ -36,10 +36,6 @@ contract V6_DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable
     // Epoch when v8.1.2 release occurred
     uint256 public v812ReleaseEpoch;
 
-    function setV812ReleaseEpoch(uint256 _epoch) external onlyHub {
-        v812ReleaseEpoch = _epoch;
-    }
-
     event DelegatorAdded(uint72 indexed identityId, address indexed delegator);
     event DelegatorRemoved(uint72 indexed identityId, address indexed delegator);
     event DelegatorLastClaimedEpochUpdated(
@@ -67,8 +63,10 @@ contract V6_DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable
         bytes32 indexed delegatorKey,
         bool claimed
     );
+    event V812ReleaseEpochUpdated(uint256 indexed epoch);
 
     constructor(address hubAddress) ContractStatus(hubAddress) {
+        // TODO: change this to the actual epoch
         v812ReleaseEpoch = 2;
     }
 
@@ -80,6 +78,12 @@ contract V6_DelegatorsInfo is INamed, IVersioned, ContractStatus, IInitializable
 
     function version() external pure virtual override returns (string memory) {
         return _VERSION;
+    }
+
+    // TODO: change for only hub owner or multisig owner
+    function setV812ReleaseEpoch(uint256 _epoch) external onlyHub {
+        v812ReleaseEpoch = _epoch;
+        emit V812ReleaseEpochUpdated(_epoch);
     }
 
     function setLastClaimedEpoch(uint72 identityId, address delegator, uint256 epoch) external onlyContracts {

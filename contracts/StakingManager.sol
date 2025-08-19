@@ -76,22 +76,18 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
         return _VERSION;
     }
 
-    // Forwarder to underlying V6 contract keeping original signature
-    function claimDelegatorRewardsV6(uint72 identityId, uint256 epoch, address delegator) public {
-        v6Claim.claimDelegatorRewardsV6(identityId, epoch, delegator);
-    }
-
     function claimDelegatorRewardsCombined(
         uint72 identityId,
         uint256 epoch,
         address delegator
-    ) external profileExists(identityId) {
+    ) public profileExists(identityId) {
         stakingMain.claimDelegatorRewards(identityId, epoch, delegator);
         // Execute V6-specific claim logic only for nodes created before the cutoff timestamp
         if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < claimV6Helper.v6NodeCutoffTs()) {
-            claimDelegatorRewardsV6(identityId, epoch, delegator);
+            v6Claim.claimDelegatorRewardsV6(identityId, epoch, delegator);
         }
 
+        // TODO: Better to do a migration??
         // V8.1.1 migration rewards – auto-restake when delegator is up-to-date
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
@@ -126,7 +122,7 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
     ) external profileExists(identityId) {
         for (uint256 i = 0; i < epochs.length; i++) {
             for (uint256 j = 0; j < delegators.length; j++) {
-                claimDelegatorRewardsV6(identityId, epochs[i], delegators[j]);
+                v6Claim.claimDelegatorRewardsV6(identityId, epochs[i], delegators[j]);
             }
         }
     }
@@ -138,8 +134,7 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
     ) external profileExists(identityId) {
         for (uint256 i = 0; i < epochs.length; i++) {
             for (uint256 j = 0; j < delegators.length; j++) {
-                claimDelegatorRewardsV6(identityId, epochs[i], delegators[j]);
-                stakingMain.claimDelegatorRewards(identityId, epochs[i], delegators[j]);
+                claimDelegatorRewardsCombined(identityId, epochs[i], delegators[j]);
             }
         }
     }

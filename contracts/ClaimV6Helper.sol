@@ -40,28 +40,21 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
 
         // Default cutoff 02-Aug-2025 00:00:00 UTC
+        // TODO: Cutoff time is wrong - it should be the timestamp of v8.0 Hub release
         v6NodeCutoffTs = 1754092800;
     }
 
     // Hub owner can update cutoff
+    // TODO: change this to owner or multisig owner
     function setV6NodeCutoffTs(uint256 newTs) external onlyHub {
         v6NodeCutoffTs = newTs;
     }
 
-    // External gateway for other contracts
-    function prepareForStakeChangeV6External(
+    function prepareForStakeChangeV6(
         uint256 epoch,
         uint72 identityId,
         bytes32 delegatorKey
-    ) external onlyContracts returns (uint256) {
-        return _prepareForStakeChangeV6(epoch, identityId, delegatorKey);
-    }
-
-    function _prepareForStakeChangeV6(
-        uint256 epoch,
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) internal returns (uint256 delegatorEpochScore) {
+    ) external onlyContracts returns (uint256 delegatorEpochScore) {
         if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) >= v6NodeCutoffTs) {
             return 0;
         }
@@ -112,6 +105,10 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
     // Replicates Staking's pre-stake-change validation but for V6 stores.
     // Can be called by other Hub-registered contracts (e.g., Staking).
     function validateDelegatorEpochClaimsV6(uint72 identityId, address delegator) external onlyContracts {
+        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) >= v6NodeCutoffTs) {
+            return;
+        }
+
         bytes32 delegatorKey = keccak256(abi.encodePacked(delegator));
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
@@ -179,7 +176,10 @@ contract ClaimV6Helper is INamed, IVersioned, ContractStatus {
                 lastClaimedV6 = v812Epoch - 1;
             }
 
-            require(lastClaimed <= lastClaimedV6 + 1, "DelegatorsInfo advanced too far compared to V6 store");
+            require(
+                lastClaimed == lastClaimedV6,
+                "You have unclaimed V6 rewards for previous epoch(s). Claim them before claiming v8 rewards"
+            );
         }
     }
 

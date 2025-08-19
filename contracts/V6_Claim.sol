@@ -135,7 +135,7 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         // Allow only nodes created before cutoff timestamp
         require(
             profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < claimV6Helper.v6NodeCutoffTs(),
-            "Node created after cutoff"
+            "This node was not active during V6"
         );
         uint256 currentEpoch = chronos.getCurrentEpoch();
         require(epoch < currentEpoch, "Epoch not finalised");
@@ -143,26 +143,29 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         // Cannot claim rewards for a delegator that is not a node delegator
         require(delegatorsInfo.isNodeDelegator(identityId, delegator), "Delegator not found");
 
-        uint256 lastClaimed = v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        uint256 lastClaimedMain = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
+        uint256 lastClaimedV6 = v6_delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
 
         // Ensure V6 store is exactly one epoch behind the main DelegatorsInfo store
-        uint256 lastClaimedMain = delegatorsInfo.getLastClaimedEpoch(identityId, delegator);
-        if (lastClaimed == 0) {
+        if (lastClaimedV6 == 0) {
             uint256 v812ReleaseEpoch = v6_delegatorsInfo.v812ReleaseEpoch();
             v6_delegatorsInfo.setLastClaimedEpoch(identityId, delegator, v812ReleaseEpoch - 1);
-            lastClaimed = v812ReleaseEpoch - 1;
+            lastClaimedV6 = v812ReleaseEpoch - 1;
         }
-        require(lastClaimedMain == lastClaimed + 1, "V6 store not one epoch behind main store");
+        require(
+            lastClaimedMain == lastClaimedV6 + 1,
+            "Must claim V8 rewards for this epoch first, before claiming V6 rewards"
+        );
 
-        if (lastClaimed == currentEpoch - 1) {
+        if (lastClaimedV6 == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
         }
 
-        if (epoch <= lastClaimed) {
+        if (epoch <= lastClaimedV6) {
             revert("Epoch already claimed");
         }
 
-        if (epoch > lastClaimed + 1) {
+        if (epoch > lastClaimedV6 + 1) {
             revert("Must claim older epochs first");
         }
 
@@ -173,8 +176,8 @@ contract V6_Claim is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         // settle all pending score changes for the node's delegator (V6 logic)
-        uint256 delegatorScore18 = claimV6Helper.prepareForStakeChangeV6External(epoch, identityId, delegatorKey);
-        stakingMain.prepareForStakeChangeExternal(epoch, identityId, delegatorKey);
+        uint256 delegatorScore18 = claimV6Helper.prepareForStakeChangeV6(epoch, identityId, delegatorKey);
+        stakingMain._prepareForStakeChange(epoch, identityId, delegatorKey);
         uint256 nodeScore18 = v6_randomSamplingStorage.getNodeEpochScore(epoch, identityId);
 
         uint256 reward;

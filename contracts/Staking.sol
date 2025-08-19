@@ -130,7 +130,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
-        claimV6Helper.prepareForStakeChangeV6External(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 delegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
 
@@ -188,10 +189,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Prepare for stake change on the source and destination nodes
         uint256 fromDelegatorEpochScore18 = _prepareForStakeChange(currentEpoch, fromIdentityId, delegatorKey);
-        claimV6Helper.prepareForStakeChangeV6External(currentEpoch, fromIdentityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(currentEpoch, fromIdentityId, delegatorKey);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(currentEpoch, toIdentityId, delegatorKey);
-        claimV6Helper.prepareForStakeChangeV6External(currentEpoch, toIdentityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(currentEpoch, toIdentityId, delegatorKey);
 
         uint96 fromDelegatorStakeBase = ss.getDelegatorStakeBase(fromIdentityId, delegatorKey);
 
@@ -262,7 +265,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorEpochScore18 = _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
-        claimV6Helper.prepareForStakeChangeV6External(currentEpoch, identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(currentEpoch, identityId, delegatorKey);
 
         uint96 delegatorStakeBase = ss.getDelegatorStakeBase(identityId, delegatorKey);
         if (removedStake > delegatorStakeBase) {
@@ -346,7 +350,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
-        claimV6Helper.prepareForStakeChangeV6External(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 nodeStakeBefore = ss.getNodeStake(identityId);
         uint96 maxStake = parametersStorage.maximumStake();
@@ -414,7 +419,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
-        claimV6Helper.prepareForStakeChangeV6External(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - addedStake);
 
@@ -574,7 +580,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
-        claimV6Helper.prepareForStakeChangeV6External(epoch, identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(epoch, identityId, delegatorKey);
 
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 reward;
@@ -667,12 +674,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * @param identityId Node to validate claims for
      * @param delegator Address of delegator to validate
      */
-    function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
+    function _validateDelegatorEpochClaims(uint72 identityId, address delegator) public onlyContracts {
         _validateDelegatorEpochClaimsv81(identityId, delegator);
         // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
-        if (profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < claimV6Helper.v6NodeCutoffTs()) {
-            claimV6Helper.validateDelegatorEpochClaimsV6(identityId, delegator);
-        }
+        claimV6Helper.validateDelegatorEpochClaimsV6(identityId, delegator);
     }
 
     function _validateDelegatorEpochClaimsv81(uint72 identityId, address delegator) internal {
@@ -747,7 +752,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch,
         uint72 identityId,
         bytes32 delegatorKey
-    ) internal returns (uint256 delegatorEpochScore) {
+    ) public onlyContracts returns (uint256 delegatorEpochScore) {
         // 1. Current "score-per-stake"
         uint256 nodeScorePerStake36 = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
 
@@ -795,24 +800,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         return currentDelegatorScore18 + scoreEarned18;
-    }
-
-    // External gateway for other contracts; protected to Hub-registered contracts only
-    function prepareForStakeChangeExternal(
-        uint256 epoch,
-        uint72 identityId,
-        bytes32 delegatorKey
-    ) external onlyContracts returns (uint256) {
-        return _prepareForStakeChange(epoch, identityId, delegatorKey);
-    }
-
-    /**
-     * @notice External gateway for other Hub-registered contracts to run the same
-     *         delegator-claim validation that Staking enforces before stake
-     *         mutations. Restricted to contracts registered in the Hub.
-     */
-    function validateDelegatorEpochClaimsExternal(uint72 identityId, address delegator) external onlyContracts {
-        _validateDelegatorEpochClaims(identityId, delegator);
     }
 
     /**

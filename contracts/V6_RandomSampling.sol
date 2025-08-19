@@ -68,6 +68,14 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
         _;
     }
 
+    modifier nodeCreatedBeforeV6Cutoff(uint72 identityId) {
+        require(
+            profileStorage.getOperatorFeeEffectiveDateByIndex(identityId, 0) < claimV6Helper.v6NodeCutoffTs(),
+            "Node created after V6 cutoff timestamp"
+        );
+        _;
+    }
+
     // @dev Only transactions by HubController owner or one of the owners of the MultiSig Wallet
     modifier onlyOwnerOrMultiSigOwner() {
         _checkOwnerOrMultiSigOwner();
@@ -151,12 +159,8 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
         external
         profileExists(identityStorage.getIdentityId(msg.sender))
         nodeExistsInShardingTable(identityStorage.getIdentityId(msg.sender))
+        nodeCreatedBeforeV6Cutoff(identityStorage.getIdentityId(msg.sender))
     {
-        require(
-            profileStorage.getOperatorFeeEffectiveDateByIndex(identityStorage.getIdentityId(msg.sender), 0) <
-                claimV6Helper.v6NodeCutoffTs(),
-            "Node created after cutoff"
-        );
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
         RandomSamplingLib.Challenge memory nodeChallenge = v6_randomSamplingStorage.getNodeChallenge(identityId);
 
@@ -194,12 +198,8 @@ contract V6_RandomSampling is INamed, IVersioned, ContractStatus, IInitializable
         external
         profileExists(identityStorage.getIdentityId(msg.sender))
         nodeExistsInShardingTable(identityStorage.getIdentityId(msg.sender))
+        nodeCreatedBeforeV6Cutoff(identityStorage.getIdentityId(msg.sender))
     {
-        require(
-            profileStorage.getOperatorFeeEffectiveDateByIndex(identityStorage.getIdentityId(msg.sender), 0) <
-                claimV6Helper.v6NodeCutoffTs(),
-            "Node created after cutoff"
-        );
         // Get node identityId
         uint72 identityId = identityStorage.getIdentityId(msg.sender);
         // Get node challenge
