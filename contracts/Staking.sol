@@ -10,6 +10,7 @@ import {ProfileStorage} from "./storage/ProfileStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {StakingStorage} from "./storage/StakingStorage.sol";
 import {DelegatorsInfo} from "./storage/DelegatorsInfo.sol";
+import {V6_DelegatorsInfo} from "./storage/V6_DelegatorsInfo.sol";
 import {ContractStatus} from "./abstract/ContractStatus.sol";
 import {IInitializable} from "./interfaces/IInitializable.sol";
 import {INamed} from "./interfaces/INamed.sol";
@@ -24,6 +25,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RandomSamplingStorage} from "./storage/RandomSamplingStorage.sol";
 import {Chronos} from "./storage/Chronos.sol";
 import {EpochStorage} from "./storage/EpochStorage.sol";
+import {V6_RandomSamplingStorage} from "./storage/V6_RandomSamplingStorage.sol";
+import {ClaimV6Helper} from "./ClaimV6Helper.sol";
 
 contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "Staking";
@@ -39,8 +42,11 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
     ProfileStorage public profileStorage;
     StakingStorage public stakingStorage;
     DelegatorsInfo public delegatorsInfo;
+    V6_DelegatorsInfo public v6_delegatorsInfo;
     IERC20 public tokenContract;
     RandomSamplingStorage public randomSamplingStorage;
+    V6_RandomSamplingStorage public v6_randomSamplingStorage;
+    ClaimV6Helper public claimV6Helper;
     Chronos public chronos;
     EpochStorage public epochStorage;
 
@@ -71,10 +77,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         profileStorage = ProfileStorage(hub.getContractAddress("ProfileStorage"));
         stakingStorage = StakingStorage(hub.getContractAddress("StakingStorage"));
         delegatorsInfo = DelegatorsInfo(hub.getContractAddress("DelegatorsInfo"));
+        v6_delegatorsInfo = V6_DelegatorsInfo(hub.getContractAddress("V6_DelegatorsInfo"));
         tokenContract = IERC20(hub.getContractAddress("Token"));
         randomSamplingStorage = RandomSamplingStorage(hub.getContractAddress("RandomSamplingStorage"));
+        v6_randomSamplingStorage = V6_RandomSamplingStorage(hub.getContractAddress("V6_RandomSamplingStorage"));
         chronos = Chronos(hub.getContractAddress("Chronos"));
         epochStorage = EpochStorage(hub.getContractAddress("EpochStorageV8"));
+        claimV6Helper = ClaimV6Helper(hub.getContractAddress("ClaimV6Helper"));
     }
 
     /**
@@ -121,6 +130,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 delegatorStakeBase = stakingStorage.getDelegatorStakeBase(identityId, delegatorKey);
 
@@ -178,8 +189,12 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // Prepare for stake change on the source and destination nodes
         uint256 fromDelegatorEpochScore18 = _prepareForStakeChange(currentEpoch, fromIdentityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(currentEpoch, fromIdentityId, delegatorKey);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(currentEpoch, toIdentityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(currentEpoch, toIdentityId, delegatorKey);
 
         uint96 fromDelegatorStakeBase = ss.getDelegatorStakeBase(fromIdentityId, delegatorKey);
 
@@ -250,6 +265,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorEpochScore18 = _prepareForStakeChange(currentEpoch, identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(currentEpoch, identityId, delegatorKey);
 
         uint96 delegatorStakeBase = ss.getDelegatorStakeBase(identityId, delegatorKey);
         if (removedStake > delegatorStakeBase) {
@@ -333,6 +350,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         uint96 nodeStakeBefore = ss.getNodeStake(identityId);
         uint96 maxStake = parametersStorage.maximumStake();
@@ -400,6 +419,8 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         bytes32 delegatorKey = _getDelegatorKey(msg.sender);
         // settle all pending score changes for the node's delegator
         _prepareForStakeChange(chronos.getCurrentEpoch(), identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(chronos.getCurrentEpoch(), identityId, delegatorKey);
 
         ss.setOperatorFeeBalance(identityId, oldOperatorFeeBalance - addedStake);
 
@@ -536,6 +557,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
             lastClaimed = v81ReleaseEpoch - 1;
         }
 
+        // Ensure main DelegatorsInfo does not exceed V6 counterpart by more than 1 epoch (legacy nodes only)
+        claimV6Helper.enforceOnlyOneEpochAdvance(identityId, delegator, lastClaimed);
+
         if (lastClaimed == currentEpoch - 1) {
             revert("Already claimed all finalised epochs");
         }
@@ -556,6 +580,9 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
 
         // settle all pending score changes for the node's delegator
         uint256 delegatorScore18 = _prepareForStakeChange(epoch, identityId, delegatorKey);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.prepareForStakeChangeV6(epoch, identityId, delegatorKey);
+
         uint256 nodeScore18 = randomSamplingStorage.getNodeEpochScore(epoch, identityId);
         uint256 reward;
 
@@ -629,7 +656,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         //Should it increase on roling rewards or on stakeBaseIncrease only?
         stakingStorage.addDelegatorCumulativeEarnedRewards(identityId, delegatorKey, uint96(reward));
     }
-
     /**
      * @dev Claims rewards for multiple delegators across multiple epochs in batch
      * Calls claimDelegatorRewards internally for each epoch-delegator combination
@@ -639,17 +665,6 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * @param epochs Array of epochs to claim for (each must be valid for claiming)
      * @param delegators Array of delegator addresses (each must be a node delegator)
      */
-    function batchClaimDelegatorRewards(
-        uint72 identityId,
-        uint256[] memory epochs,
-        address[] memory delegators
-    ) external profileExists(identityId) {
-        for (uint256 i = 0; i < epochs.length; i++) {
-            for (uint256 j = 0; j < delegators.length; j++) {
-                claimDelegatorRewards(identityId, epochs[i], delegators[j]);
-            }
-        }
-    }
 
     /**
      * @dev Internal function to validate that delegator has claimed all required epoch rewards
@@ -659,7 +674,13 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
      * @param identityId Node to validate claims for
      * @param delegator Address of delegator to validate
      */
-    function _validateDelegatorEpochClaims(uint72 identityId, address delegator) internal {
+    function _validateDelegatorEpochClaims(uint72 identityId, address delegator) public onlyContracts {
+        _validateDelegatorEpochClaimsv81(identityId, delegator);
+        // V6-specific validation only for legacy nodes (operator fee entry < cutoff)
+        claimV6Helper.validateDelegatorEpochClaimsV6(identityId, delegator);
+    }
+
+    function _validateDelegatorEpochClaimsv81(uint72 identityId, address delegator) internal {
         bytes32 delegatorKey = _getDelegatorKey(delegator);
         uint256 currentEpoch = chronos.getCurrentEpoch();
         uint256 previousEpoch = currentEpoch - 1;
@@ -731,7 +752,7 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 epoch,
         uint72 identityId,
         bytes32 delegatorKey
-    ) internal returns (uint256 delegatorEpochScore) {
+    ) public onlyContracts returns (uint256 delegatorEpochScore) {
         // 1. Current "score-per-stake"
         uint256 nodeScorePerStake36 = randomSamplingStorage.getNodeEpochScorePerStake(epoch, identityId);
 
