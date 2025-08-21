@@ -28,19 +28,6 @@
   },
   {
     "inputs": [],
-    "name": "SCALE18",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "askContract",
     "outputs": [
       {
@@ -79,6 +66,24 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint72",
+        "name": "identityId",
+        "type": "uint72"
+      },
+      {
+        "internalType": "address",
+        "name": "delegator",
+        "type": "address"
+      }
+    ],
+    "name": "claimV8TuningPeriodRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "delegatorsInfo",
     "outputs": [
@@ -102,24 +107,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint72",
-        "name": "identityId",
-        "type": "uint72"
-      },
-      {
-        "internalType": "address",
-        "name": "delegator",
-        "type": "address"
-      }
-    ],
-    "name": "increaseDelegatorStakeBase",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

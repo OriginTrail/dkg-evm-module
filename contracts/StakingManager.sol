@@ -98,7 +98,7 @@ contract StakingManager is INamed, IVersioned, ContractStatus {
         ) {
             (uint96 reward811, bool claimed811) = v8_1_1_rewards_storage.getReward(identityId, delegator);
             if (reward811 > 0 && !claimed811) {
-                v8_1_1_rewards_period.increaseDelegatorStakeBase(identityId, delegator);
+                v8_1_1_rewards_period.claimV8TuningPeriodRewards(identityId, delegator);
             }
         }
     }
