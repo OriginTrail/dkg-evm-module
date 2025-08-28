@@ -21,7 +21,10 @@ contract MigratorV8TuningPeriodRewards is INamed, IVersioned, ContractStatus {
     string private constant _NAME = "MigratorV8TuningPeriodRewards";
     string private constant _VERSION = "1.0.0";
 
+    mapping(uint72 => mapping(address => uint96)) public delegatorRewardAmount;
     mapping(uint72 => mapping(address => bool)) public claimedDelegatorReward;
+
+    mapping(uint72 => uint96) public operatorRewardAmount;
     mapping(uint72 => bool) public claimedOperatorReward;
 
     StakingStorage public stakingStorage;
@@ -68,20 +71,41 @@ contract MigratorV8TuningPeriodRewards is INamed, IVersioned, ContractStatus {
         return _VERSION;
     }
 
-    /**
-     * @notice Claims the pre-calculated reward for the caller and immediately
-     *         restakes it for the given node.
-     * @param identityId The node identifier the caller is delegating to.
-     * @param delegator The delegator address.
-     * @param amount The amount of reward to migrate.
-     */
-    function migrateDelegatorReward(
+    event DelegatorRewardAmountSet(uint72 indexed identityId, address indexed delegator, uint96 amount);
+    event OperatorRewardAmountSet(uint72 indexed identityId, uint96 amount);
+
+    function setDelegatorRewardAmount(
         uint72 identityId,
         address delegator,
         uint96 amount
     ) external onlyOwnerOrMultiSigOwner profileExists(identityId) {
         require(amount > 0, "No reward");
+        delegatorRewardAmount[identityId][delegator] = amount;
+
+        emit DelegatorRewardAmountSet(identityId, delegator, amount);
+    }
+
+    function setOperatorRewardAmount(
+        uint72 identityId,
+        uint96 amount
+    ) external onlyOwnerOrMultiSigOwner profileExists(identityId) {
+        require(amount > 0, "No reward");
+        operatorRewardAmount[identityId] = amount;
+
+        emit OperatorRewardAmountSet(identityId, amount);
+    }
+
+    /**
+     * @notice Claims the pre-calculated reward for the caller and immediately
+     *         restakes it for the given node.
+     * @param identityId The node identifier the caller is delegating to.
+     * @param delegator The delegator address.
+     */
+    function migrateDelegatorReward(uint72 identityId, address delegator) external profileExists(identityId) {
         require(!claimedDelegatorReward[identityId][delegator], "Already claimed delegator reward for this node");
+
+        uint96 amount = delegatorRewardAmount[identityId][delegator];
+        require(amount > 0, "No reward");
 
         // Mark reward as processed - avoid reentrancy
         claimedDelegatorReward[identityId][delegator] = true;
@@ -114,14 +138,12 @@ contract MigratorV8TuningPeriodRewards is INamed, IVersioned, ContractStatus {
     /**
      * @notice Transfers the operator reward to the operator balance in staking storage.
      * @param identityId The node identifier the caller is delegating to.
-     * @param amount The amount of operator reward to transfer.
      */
-    function migrateOperatorReward(
-        uint72 identityId,
-        uint96 amount
-    ) external onlyOwnerOrMultiSigOwner profileExists(identityId) {
-        require(amount > 0, "No reward");
+    function migrateOperatorReward(uint72 identityId) external profileExists(identityId) {
         require(!claimedOperatorReward[identityId], "Already claimed operator reward for this node");
+
+        uint96 amount = operatorRewardAmount[identityId];
+        require(amount > 0, "No reward");
 
         claimedOperatorReward[identityId] = true;
 

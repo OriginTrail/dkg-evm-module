@@ -173,6 +173,182 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
     node2Id = nodeIds.node2Id;
   });
 
+  describe('Reward Amount Setting', function () {
+    describe('Delegator Reward Amount Setting', function () {
+      it('should successfully set delegator reward amount and emit event', async function () {
+        const rewardAmount = toTRAC(5_000);
+
+        await expect(
+          contracts.migrator.setDelegatorRewardAmount(
+            node1Id,
+            accounts.delegator1.address,
+            rewardAmount,
+          ),
+        )
+          .to.emit(contracts.migrator, 'DelegatorRewardAmountSet')
+          .withArgs(node1Id, accounts.delegator1.address, rewardAmount);
+
+        // Verify the amount was stored correctly
+        const storedAmount = await contracts.migrator.delegatorRewardAmount(
+          node1Id,
+          accounts.delegator1.address,
+        );
+        expect(storedAmount).to.equal(rewardAmount);
+      });
+
+      it('should allow updating delegator reward amount', async function () {
+        const initialAmount = toTRAC(1_000);
+        const updatedAmount = toTRAC(2_500);
+
+        // Set initial amount
+        await contracts.migrator.setDelegatorRewardAmount(
+          node1Id,
+          accounts.delegator1.address,
+          initialAmount,
+        );
+
+        // Update to new amount
+        await expect(
+          contracts.migrator.setDelegatorRewardAmount(
+            node1Id,
+            accounts.delegator1.address,
+            updatedAmount,
+          ),
+        )
+          .to.emit(contracts.migrator, 'DelegatorRewardAmountSet')
+          .withArgs(node1Id, accounts.delegator1.address, updatedAmount);
+
+        // Verify the updated amount
+        const storedAmount = await contracts.migrator.delegatorRewardAmount(
+          node1Id,
+          accounts.delegator1.address,
+        );
+        expect(storedAmount).to.equal(updatedAmount);
+      });
+
+      it('should reject zero delegator reward amounts', async function () {
+        await expect(
+          contracts.migrator.setDelegatorRewardAmount(
+            node1Id,
+            accounts.delegator1.address,
+            0,
+          ),
+        ).to.be.revertedWith('No reward');
+      });
+
+      it('should reject setting rewards for non-existent profiles', async function () {
+        const nonExistentNodeId = 99999n;
+
+        await expect(
+          contracts.migrator.setDelegatorRewardAmount(
+            nonExistentNodeId,
+            accounts.delegator1.address,
+            toTRAC(1_000),
+          ),
+        ).to.be.revertedWithCustomError(
+          contracts.migrator,
+          'ProfileDoesntExist',
+        );
+      });
+    });
+
+    describe('Operator Reward Amount Setting', function () {
+      it('should successfully set operator reward amount and emit event', async function () {
+        const rewardAmount = toTRAC(3_000);
+
+        await expect(
+          contracts.migrator.setOperatorRewardAmount(node1Id, rewardAmount),
+        )
+          .to.emit(contracts.migrator, 'OperatorRewardAmountSet')
+          .withArgs(node1Id, rewardAmount);
+
+        // Verify the amount was stored correctly
+        const storedAmount =
+          await contracts.migrator.operatorRewardAmount(node1Id);
+        expect(storedAmount).to.equal(rewardAmount);
+      });
+
+      it('should allow updating operator reward amount', async function () {
+        const initialAmount = toTRAC(2_000);
+        const updatedAmount = toTRAC(4_500);
+
+        // Set initial amount
+        await contracts.migrator.setOperatorRewardAmount(
+          node1Id,
+          initialAmount,
+        );
+
+        // Update to new amount
+        await expect(
+          contracts.migrator.setOperatorRewardAmount(node1Id, updatedAmount),
+        )
+          .to.emit(contracts.migrator, 'OperatorRewardAmountSet')
+          .withArgs(node1Id, updatedAmount);
+
+        // Verify the updated amount
+        const storedAmount =
+          await contracts.migrator.operatorRewardAmount(node1Id);
+        expect(storedAmount).to.equal(updatedAmount);
+      });
+
+      it('should reject zero operator reward amounts', async function () {
+        await expect(
+          contracts.migrator.setOperatorRewardAmount(node1Id, 0),
+        ).to.be.revertedWith('No reward');
+      });
+
+      it('should reject setting rewards for non-existent profiles', async function () {
+        const nonExistentNodeId = 99999n;
+
+        await expect(
+          contracts.migrator.setOperatorRewardAmount(
+            nonExistentNodeId,
+            toTRAC(1_000),
+          ),
+        ).to.be.revertedWithCustomError(
+          contracts.migrator,
+          'ProfileDoesntExist',
+        );
+      });
+    });
+
+    describe('Access Control for Setters', function () {
+      it('should only allow owner or multisig to set delegator rewards', async function () {
+        await expect(
+          contracts.migrator
+            .connect(accounts.delegator1)
+            .setDelegatorRewardAmount(
+              node1Id,
+              accounts.delegator1.address,
+              toTRAC(1_000),
+            ),
+        ).to.be.reverted;
+
+        // Verify owner can set rewards
+        await expect(
+          contracts.migrator.setDelegatorRewardAmount(
+            node1Id,
+            accounts.delegator1.address,
+            toTRAC(1_000),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it('should only allow owner or multisig to set operator rewards', async function () {
+        await expect(
+          contracts.migrator
+            .connect(accounts.delegator1)
+            .setOperatorRewardAmount(node1Id, toTRAC(1_000)),
+        ).to.be.reverted;
+
+        // Verify owner can set rewards
+        await expect(
+          contracts.migrator.setOperatorRewardAmount(node1Id, toTRAC(1_000)),
+        ).to.not.be.reverted;
+      });
+    });
+  });
+
   describe('Delegator Reward Migration', function () {
     it('should successfully migrate delegator rewards while system is active', async function () {
       // Test migrator directly without initial stakes since it handles historical rewards
@@ -187,12 +363,16 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         await contracts.stakingStorage.getNodeStake(node1Id);
       const initialTotalStake = await contracts.stakingStorage.getTotalStake();
 
-      // Migrate reward
+      // Set and migrate reward
       const rewardAmount = toTRAC(1_000);
-      await contracts.migrator.migrateDelegatorReward(
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         accounts.delegator1.address,
         rewardAmount,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
       );
 
       // Verify state changes
@@ -252,10 +432,14 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
       // Migrate reward - use large enough amount to meet minimum stake
       const minimumStake = await contracts.parametersStorage.minimumStake();
       const rewardAmount = minimumStake + toTRAC(1_000); // Ensure above minimum
-      await contracts.migrator.migrateDelegatorReward(
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         accounts.delegator1.address,
         rewardAmount,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
       );
 
       // Verify score tracking is maintained
@@ -290,12 +474,16 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         0n,
       );
 
-      // Migrate rewards for all delegators
+      // Set and migrate rewards for all delegators
       for (let i = 0; i < delegators.length; i++) {
-        await contracts.migrator.migrateDelegatorReward(
+        await contracts.migrator.setDelegatorRewardAmount(
           node1Id,
           delegators[i].address,
           rewardAmounts[i],
+        );
+        await contracts.migrator.migrateDelegatorReward(
+          node1Id,
+          delegators[i].address,
         );
       }
 
@@ -322,11 +510,15 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
     it('should reject double migration attempts', async function () {
       const rewardAmount = toTRAC(1_000);
 
-      // First migration should succeed
-      await contracts.migrator.migrateDelegatorReward(
+      // Set reward amount and first migration should succeed
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         accounts.delegator1.address,
         rewardAmount,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
       );
 
       // Second migration should fail
@@ -334,17 +526,15 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         contracts.migrator.migrateDelegatorReward(
           node1Id,
           accounts.delegator1.address,
-          rewardAmount,
         ),
       ).to.be.revertedWith('Already claimed delegator reward for this node');
     });
 
-    it('should reject zero amount migrations', async function () {
+    it('should reject migration when no reward amount is set', async function () {
       await expect(
         contracts.migrator.migrateDelegatorReward(
           node1Id,
           accounts.delegator1.address,
-          0,
         ),
       ).to.be.revertedWith('No reward');
     });
@@ -353,7 +543,7 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
       const nonExistentNodeId = 99999n;
 
       await expect(
-        contracts.migrator.migrateDelegatorReward(
+        contracts.migrator.setDelegatorRewardAmount(
           nonExistentNodeId,
           accounts.delegator1.address,
           toTRAC(1_000),
@@ -375,11 +565,15 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         ),
       ).to.be.false;
 
-      // Migrate reward for new delegator
-      await contracts.migrator.migrateDelegatorReward(
+      // Set and migrate reward for new delegator
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         newDelegator.address,
         rewardAmount,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        newDelegator.address,
       );
 
       // Verify delegator is now registered
@@ -409,7 +603,8 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         await contracts.stakingStorage.getOperatorFeeBalance(node1Id);
       const rewardAmount = toTRAC(5_000);
 
-      await contracts.migrator.migrateOperatorReward(node1Id, rewardAmount);
+      await contracts.migrator.setOperatorRewardAmount(node1Id, rewardAmount);
+      await contracts.migrator.migrateOperatorReward(node1Id);
 
       const finalOperatorBalance =
         await contracts.stakingStorage.getOperatorFeeBalance(node1Id);
@@ -426,18 +621,19 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
     it('should reject double operator reward migrations', async function () {
       const rewardAmount = toTRAC(5_000);
 
-      // First migration should succeed
-      await contracts.migrator.migrateOperatorReward(node1Id, rewardAmount);
+      // Set reward and first migration should succeed
+      await contracts.migrator.setOperatorRewardAmount(node1Id, rewardAmount);
+      await contracts.migrator.migrateOperatorReward(node1Id);
 
       // Second migration should fail
       await expect(
-        contracts.migrator.migrateOperatorReward(node1Id, rewardAmount),
+        contracts.migrator.migrateOperatorReward(node1Id),
       ).to.be.revertedWith('Already claimed operator reward for this node');
     });
 
-    it('should reject zero amount operator migrations', async function () {
+    it('should reject migration when no reward amount is set', async function () {
       await expect(
-        contracts.migrator.migrateOperatorReward(node1Id, 0),
+        contracts.migrator.migrateOperatorReward(node1Id),
       ).to.be.revertedWith('No reward');
     });
 
@@ -445,7 +641,7 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
       const nonExistentNodeId = 99999n;
 
       await expect(
-        contracts.migrator.migrateOperatorReward(
+        contracts.migrator.setOperatorRewardAmount(
           nonExistentNodeId,
           toTRAC(1_000),
         ),
@@ -463,13 +659,18 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
       const initialOperatorBalance =
         await contracts.stakingStorage.getOperatorFeeBalance(node1Id);
 
-      // Migrate both types of rewards
-      await contracts.migrator.migrateDelegatorReward(
+      // Set and migrate both types of rewards
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         accounts.delegator1.address,
         delegatorReward,
       );
-      await contracts.migrator.migrateOperatorReward(node1Id, operatorReward);
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
+      );
+      await contracts.migrator.setOperatorRewardAmount(node1Id, operatorReward);
+      await contracts.migrator.migrateOperatorReward(node1Id);
 
       // Verify delegator reward increased node stake
       const finalNodeStake =
@@ -505,18 +706,34 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
       const operatorReward1 = toTRAC(1_000);
       const operatorReward2 = toTRAC(1_200);
 
-      await contracts.migrator.migrateDelegatorReward(
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         accounts.delegator1.address,
         delegatorReward1,
       );
       await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
+      );
+      await contracts.migrator.setDelegatorRewardAmount(
         node2Id,
         accounts.delegator2.address,
         delegatorReward2,
       );
-      await contracts.migrator.migrateOperatorReward(node1Id, operatorReward1);
-      await contracts.migrator.migrateOperatorReward(node2Id, operatorReward2);
+      await contracts.migrator.migrateDelegatorReward(
+        node2Id,
+        accounts.delegator2.address,
+      );
+      await contracts.migrator.setOperatorRewardAmount(
+        node1Id,
+        operatorReward1,
+      );
+      await contracts.migrator.migrateOperatorReward(node1Id);
+      await contracts.migrator.setOperatorRewardAmount(
+        node2Id,
+        operatorReward2,
+      );
+      await contracts.migrator.migrateOperatorReward(node2Id);
 
       // Verify system state consistency
       const finalSystemState = {
@@ -587,12 +804,16 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         );
       expect(scoreBefore).to.equal(0n);
 
-      // Migrate delegator reward (creates stake base and settles to current SPS index)
+      // Set and migrate delegator reward (creates stake base and settles to current SPS index)
       const migratedStake = toTRAC(3_000);
-      await contracts.migrator.migrateDelegatorReward(
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         accounts.delegator1.address,
         migratedStake,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
       );
 
       // Increase node score-per-stake after migration
@@ -620,41 +841,27 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
     });
   });
 
-  describe('Access Control', function () {
-    it('should only allow owner or multisig to migrate rewards', async function () {
-      // TODO: Test access control when multisig is properly set up
-      //   // Try migration from non-owner account - must revert with specific custom error
-      //   await expect(
-      //     contracts.migrator
-      //       .connect(accounts.delegator1)
-      //       .migrateDelegatorReward(
-      //         node1Id,
-      //         accounts.delegator1.address,
-      //         toTRAC(1_000),
-      //       ),
-      //   )
-      //     .to.be.revertedWithCustomError(contracts.migrator, 'UnauthorizedAccess')
-      //     .withArgs('Only Hub Owner or Multisig Owner');
+  describe('Migration without Access Control', function () {
+    it('should allow anyone to migrate rewards once amounts are set', async function () {
+      // Set rewards as owner
+      await contracts.migrator.setDelegatorRewardAmount(
+        node2Id,
+        accounts.delegator1.address,
+        toTRAC(1_000),
+      );
+      await contracts.migrator.setOperatorRewardAmount(node2Id, toTRAC(1_000));
 
-      //   await expect(
-      //     contracts.migrator
-      //       .connect(accounts.delegator1)
-      //       .migrateOperatorReward(node1Id, toTRAC(1_000)),
-      //   )
-      //     .to.be.revertedWithCustomError(contracts.migrator, 'UnauthorizedAccess')
-      //     .withArgs('Only Hub Owner or Multisig Owner');
-
-      // Verify that owner can successfully call these functions
+      // Anyone should be able to call migration functions
       await expect(
-        contracts.migrator.migrateDelegatorReward(
-          node2Id,
-          accounts.delegator1.address,
-          toTRAC(1_000),
-        ),
+        contracts.migrator
+          .connect(accounts.delegator1)
+          .migrateDelegatorReward(node2Id, accounts.delegator1.address),
       ).to.not.be.reverted;
 
       await expect(
-        contracts.migrator.migrateOperatorReward(node2Id, toTRAC(1_000)),
+        contracts.migrator
+          .connect(accounts.delegator2)
+          .migrateOperatorReward(node2Id),
       ).to.not.be.reverted;
     });
   });
@@ -674,11 +881,15 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         ),
       ).to.be.false;
 
-      // Migration should succeed and register the delegator
-      await contracts.migrator.migrateDelegatorReward(
+      // Set and migrate - should succeed and register the delegator
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         newDelegator.address,
         rewardAmount,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        newDelegator.address,
       );
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -712,12 +923,16 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
           .false;
       }
 
-      // Migrate enough to bring above minimum
+      // Set and migrate enough to bring above minimum
       const rewardAmount = minimumStake + toTRAC(1_000);
-      await contracts.migrator.migrateDelegatorReward(
+      await contracts.migrator.setDelegatorRewardAmount(
         node2Id,
         accounts.delegator1.address,
         rewardAmount,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node2Id,
+        accounts.delegator1.address,
       );
 
       // Verify node is now in sharding table
@@ -730,10 +945,14 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
       // This should succeed since the original contract doesn't validate maximum stake
       const largeReward = toTRAC(1_000_000); // Very large amount
 
-      await contracts.migrator.migrateDelegatorReward(
+      await contracts.migrator.setDelegatorRewardAmount(
         node1Id,
         accounts.delegator1.address,
         largeReward,
+      );
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
       );
 
       // Verify the migration succeeded
