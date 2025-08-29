@@ -22,8 +22,10 @@ const glob = require('glob');
 const { createObjectCsvWriter } = require('csv-writer');
 const ethers = require('ethers');
 
+const CHAIN = 'neuroweb';
+
 const deployments = JSON.parse(
-  fs.readFileSync('deployments/neuroweb_mainnet_contracts.json', 'utf8'),
+  fs.readFileSync(`deployments/${CHAIN}_mainnet_contracts.json`, 'utf8'),
 );
 const IDENTITY_CONTRACT_ADDRESS = deployments.contracts.Identity.evmAddress;
 const MIGRATOR_CONTRACT_ADDRESS =
@@ -82,7 +84,8 @@ const insertStmt = db.prepare(`
 
 const DEFAULT_CSV = path.join(DATA_FOLDER, 'indexer_input.csv');
 
-const RPC_URL = process.env.RPC_URL;
+const rpcEnvName = `RPC_${CHAIN.toUpperCase()}_MAINNET`;
+const RPC_URL = process.env[rpcEnvName];
 const INPUT_CSV = process.argv[2]
   ? path.resolve(process.cwd(), process.argv[2])
   : DEFAULT_CSV;
@@ -164,6 +167,14 @@ const MANUAL_OVERRIDES = new Map<
       function_inputs: ['22', '38', '2083543073369909585000'],
     },
   ],
+  [
+    '0x13192336e7c5a4eed453d2b84f31648d2581175edaee6dd3f0ba3014330f23e0',
+    {
+      contract_name: 'Staking',
+      function_name: 'requestWithdrawal',
+      function_inputs: ['49', '1015166665862022175362124'],
+    },
+  ],
 ]);
 
 // Additional override: map specific tx hashes to a custom msg.sender value
@@ -183,6 +194,10 @@ const MSG_SENDER_OVERRIDES = new Map<string, string>([
   [
     '0x25511cbe5e040e818638cf15cba2b6ba68b0c4cf3b1770db8d879c3f1aa757c0',
     '0x047d912410759a0824cfad69a134df0172dbc067',
+  ],
+  [
+    '0x13192336e7c5a4eed453d2b84f31648d2581175edaee6dd3f0ba3014330f23e0',
+    '0x54e8e41b7620a49b2451634d9fd56650f0835bb6',
   ],
 ]);
 
