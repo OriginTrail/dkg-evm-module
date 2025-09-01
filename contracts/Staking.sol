@@ -717,6 +717,10 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         revert("Must claim the previous epoch rewards before changing stake");
     }
 
+    function validateDelegatorEpochClaims(uint72 identityId, address delegator) external onlyContracts {
+        _validateDelegatorEpochClaims(identityId, delegator);
+    }
+
     /**
      * @dev Internal function to settle delegator rewards before stake changes
      * Calculates and applies newly earned score for the delegator in the epoch
@@ -779,6 +783,14 @@ contract Staking is INamed, IVersioned, ContractStatus, IInitializable {
         );
 
         return currentDelegatorScore18 + scoreEarned18;
+    }
+
+    function prepareForStakeChange(
+        uint256 epoch,
+        uint72 identityId,
+        bytes32 delegatorKey
+    ) external onlyContracts returns (uint256 delegatorEpochScore) {
+        return _prepareForStakeChange(epoch, identityId, delegatorKey);
     }
 
     /**
