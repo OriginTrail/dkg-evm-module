@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
+// import * as readline from 'readline';
 
 import {
   Hub,
@@ -972,6 +973,653 @@ describe('MigratorV8TuningPeriodRewards Integration Tests', function () {
         delegatorKey,
       );
       expect(finalStake).to.equal(largeReward);
+    });
+  });
+
+  describe('Interactive Demo: VA Tuning Period Rewards Migration', function () {
+    it('should demonstrate complete migration flow with interactive pauses', async function () {
+      console.log('\n🎬 ===========================================');
+      console.log('🎬 VA TUNING PERIOD REWARDS MIGRATION DEMO');
+      console.log('🎬 ===========================================\n');
+
+      // // Helper function for interactive pauses
+      // const waitForInput = async (message: string) => {
+      //   // console.log(`\n⏸️  ${message}`);
+      //   // console.log('   Press Enter to continue...');
+      //   // In a real demo, you'd use readline or similar
+      //   // For now, we'll simulate with a small delay
+      //   await new Promise((resolve) => {
+      //     const rl = readline.createInterface({
+      //       input: process.stdin,
+      //       output: process.stdout,
+      //     });
+      //     rl.question(
+      //       `\n⏸️  ${message}\n   Press Enter to continue...`,
+      //       (answer) => {
+      //         rl.close();
+      //         resolve(answer);
+      //       },
+      //     );
+      //   });
+      //   console.log('\n' + '-'.repeat(100) + '\n');
+      // };
+
+      // Color codes for better visibility
+      const colors = {
+        reset: '\x1b[0m',
+        bright: '\x1b[1m',
+        red: '\x1b[31m',
+        green: '\x1b[32m',
+        yellow: '\x1b[33m',
+        blue: '\x1b[34m',
+        magenta: '\x1b[35m',
+        cyan: '\x1b[36m',
+        white: '\x1b[37m',
+        bgRed: '\x1b[41m',
+        bgGreen: '\x1b[42m',
+        bgYellow: '\x1b[43m',
+        bgBlue: '\x1b[44m',
+      };
+
+      // Helper function to display state
+      const displayState = async (
+        title: string,
+        contracts: TestContracts,
+        accounts: TestAccounts,
+        node1Id: bigint,
+      ) => {
+        console.log(
+          `\n${colors.cyan}${colors.bright}📊 ${title}${colors.reset}`,
+        );
+        console.log(
+          '   ┌─────────────────────────────────────────────────────────┐',
+        );
+
+        // Stake information
+        const node1Stake = await contracts.stakingStorage.getNodeStake(node1Id);
+        const delegator1Key = ethers.keccak256(
+          ethers.solidityPacked(['address'], [accounts.delegator1.address]),
+        );
+        const delegator1Stake =
+          await contracts.stakingStorage.getDelegatorStakeBase(
+            node1Id,
+            delegator1Key,
+          );
+        const delegator2Key = ethers.keccak256(
+          ethers.solidityPacked(['address'], [accounts.delegator2.address]),
+        );
+        const delegator2Stake =
+          await contracts.stakingStorage.getDelegatorStakeBase(
+            node1Id,
+            delegator2Key,
+          );
+
+        console.log(
+          `   │ Node1 Total Stake: ${ethers.formatEther(node1Stake)} TRAC`,
+        );
+        console.log(
+          `   │ Delegator1 Stake: ${ethers.formatEther(delegator1Stake)} TRAC`,
+        );
+        console.log(
+          `   │ Delegator2 Stake: ${ethers.formatEther(delegator2Stake)} TRAC`,
+        );
+
+        // Delegator status
+        const isDelegator1 = await contracts.delegatorsInfo.isNodeDelegator(
+          node1Id,
+          accounts.delegator1.address,
+        );
+        const isDelegator2 = await contracts.delegatorsInfo.isNodeDelegator(
+          node1Id,
+          accounts.delegator2.address,
+        );
+
+        console.log(
+          `   │ Delegator1 Registered: ${isDelegator1 ? '✅ YES' : '❌ NO'}`,
+        );
+        console.log(
+          `   │ Delegator2 Registered: ${isDelegator2 ? '✅ YES' : '❌ NO'}`,
+        );
+
+        // Operator balance
+        const operatorBalance =
+          await contracts.stakingStorage.getOperatorFeeBalance(node1Id);
+        console.log(
+          `   │ Operator Balance: ${ethers.formatEther(operatorBalance)} TRAC`,
+        );
+
+        console.log(
+          '   └─────────────────────────────────────────────────────────┘',
+        );
+      };
+
+      // Phase 1: Setup & Initial State
+      console.log('🚀 PHASE 1: Initial System State');
+      console.log(
+        '   Setting up the staking system with nodes and delegators...\n',
+      );
+
+      // First, let's create a realistic scenario where delegators were already staking
+      console.log(
+        '📝 Setting up realistic scenario: Delegators were already staking during tuning period',
+      );
+
+      // Delegator1 stakes some tokens
+      const initialStake1 = toTRAC(10_000);
+      await contracts.token
+        .connect(accounts.delegator1)
+        .approve(await contracts.staking.getAddress(), initialStake1);
+      await contracts.staking
+        .connect(accounts.delegator1)
+        .stake(node1Id, initialStake1);
+
+      // Delegator2 stakes some tokens
+      const initialStake2 = toTRAC(8_000);
+      await contracts.token
+        .connect(accounts.delegator2)
+        .approve(await contracts.staking.getAddress(), initialStake2);
+      await contracts.staking
+        .connect(accounts.delegator2)
+        .stake(node1Id, initialStake2);
+
+      console.log(
+        `   ✅ Delegator1 staked: ${ethers.formatEther(initialStake1)} TRAC`,
+      );
+      console.log(
+        `   ✅ Delegator2 staked: ${ethers.formatEther(initialStake2)} TRAC`,
+      );
+
+      await displayState(
+        'STATE AFTER INITIAL STAKING',
+        contracts,
+        accounts,
+        node1Id,
+      );
+
+      // await waitForInput(
+      //   'Initial staking complete - now explaining the V8 tuning period rewards',
+      // );
+
+      // Phase 2: Explain V8 Tuning Period Rewards
+      console.log(
+        `\n${colors.blue}${colors.bright}📚 UNDERSTANDING V8 TUNING PERIOD REWARDS${colors.reset}`,
+      );
+      console.log(
+        '   Between V8.0 (launch) and V8.1 (new staking), delegator rewards were not distributed.',
+      );
+      console.log('   The simulation we created calculated those rewards.');
+      console.log(
+        '   The MigratorV8TuningPeriodRewards contract fixes this by distributing',
+      );
+      console.log('   the backlogged rewards retroactively.\n');
+
+      // Phase 3: Explain the Problem
+      console.log(
+        `\n${colors.red}${colors.bright}⚠️  THE PROBLEM: V8 Tuning Period Rewards Not Distributed${colors.reset}`,
+      );
+      console.log(
+        '   During the V8.0→V8.1 transition, delegators earned rewards but they were never distributed.',
+      );
+      console.log(
+        '   The migrator contract allows us to retroactively distribute these earned rewards.\n',
+      );
+
+      // await waitForInput(
+      //   'Problem explained - now setting up active node scenario',
+      // );
+
+      // Phase 4: Score Update Scenario (Critical for Active Nodes) - BEFORE migration
+      console.log(
+        `\n${colors.yellow}${colors.bright}🎯 PHASE 2: Active Node with Proofs${colors.reset}`,
+      );
+      console.log(
+        '   Demonstrating how the migrator handles score updates for active nodes...\n',
+      );
+
+      console.log(
+        '📝 Setting up scenario: Node is actively submitting proofs and has accumulated scores',
+      );
+
+      // Advance epoch to create activity and scores
+      const epochLength = await contracts.chronos.epochLength();
+      await time.increase(Number(epochLength));
+      await contracts.randomSampling.updateAndGetActiveProofPeriodStartBlock();
+
+      const currentEpoch = await contracts.chronos.getCurrentEpoch();
+      console.log(
+        `   ${colors.cyan}✅ Advanced to epoch: ${currentEpoch}${colors.reset}`,
+      );
+
+      // Simulate node submitting proofs and accumulating scores
+      const proofScore = ethers.parseUnits('0.001', 18); // 0.001e18 score-per-stake (much smaller, more realistic)
+      await contracts.randomSamplingStorage
+        .connect(accounts.owner)
+        .addToNodeEpochScorePerStake(currentEpoch, node1Id, proofScore);
+
+      console.log(
+        `   📊 Node submitted proofs, accumulated score-per-stake: ${ethers.formatEther(proofScore)}`,
+      );
+
+      // Calculate and display node total score
+      const nodeTotalStake =
+        await contracts.stakingStorage.getNodeStake(node1Id);
+      const nodeTotalScore =
+        (nodeTotalStake * proofScore) / ethers.parseUnits('1', 18);
+      console.log(
+        `   📈 Node total score: ${ethers.formatEther(nodeTotalScore)} (${ethers.formatEther(nodeTotalStake)} stake × ${ethers.formatEther(proofScore)} score-per-stake)`,
+      );
+
+      // Check initial delegator scores before migration
+      const delegator1Key = ethers.keccak256(
+        ethers.solidityPacked(['address'], [accounts.delegator1.address]),
+      );
+      const delegator2Key = ethers.keccak256(
+        ethers.solidityPacked(['address'], [accounts.delegator2.address]),
+      );
+
+      const initialDelegator1Score =
+        await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+          currentEpoch,
+          node1Id,
+          delegator1Key,
+        );
+      const initialDelegator2Score =
+        await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+          currentEpoch,
+          node1Id,
+          delegator2Key,
+        );
+
+      console.log(
+        `   📊 Initial Delegator1 score: ${ethers.formatEther(initialDelegator1Score)}`,
+      );
+      console.log(
+        `   📊 Initial Delegator2 score: ${ethers.formatEther(initialDelegator2Score)}`,
+      );
+      console.log(
+        `   💡 Note: Scores are calculated as: delegator_stake × node_score_per_stake`,
+      );
+
+      // await waitForInput(
+      //   'Node has active proofs and scores - now configuring rewards',
+      // );
+
+      // Phase 5: Reward Configuration
+      console.log('\n' + '='.repeat(80));
+      console.log(
+        `${colors.magenta}${colors.bright}💰 PHASE 3: Configuring V8 Tuning Period Rewards${colors.reset}`,
+      );
+      console.log('='.repeat(80));
+      console.log(
+        '   Setting up the rewards that should have been distributed during the V8 tuning period...\n',
+      );
+
+      const delegator1Reward = toTRAC(5_000);
+      const delegator2Reward = toTRAC(3_000);
+      const operatorReward = toTRAC(2_000);
+
+      console.log(
+        `   💸 Setting Delegator1 V8 tuning reward: ${ethers.formatEther(delegator1Reward)} TRAC`,
+      );
+      await contracts.migrator.setDelegatorRewardAmount(
+        node1Id,
+        accounts.delegator1.address,
+        delegator1Reward,
+      );
+
+      console.log(
+        `   💸 Setting Delegator2 V8 tuning reward: ${ethers.formatEther(delegator2Reward)} TRAC`,
+      );
+      await contracts.migrator.setDelegatorRewardAmount(
+        node1Id,
+        accounts.delegator2.address,
+        delegator2Reward,
+      );
+
+      console.log(
+        `   💸 Setting Operator V8 tuning reward: ${ethers.formatEther(operatorReward)} TRAC`,
+      );
+      await contracts.migrator.setOperatorRewardAmount(node1Id, operatorReward);
+
+      // await waitForInput(
+      //   'V8 tuning period rewards configured - ready to start migration',
+      // );
+
+      // Phase 6: Migration Execution
+      console.log('\n' + '='.repeat(80));
+      console.log(
+        `${colors.blue}${colors.bright}🔄 PHASE 4: Executing V8 Tuning Period Reward Migrations${colors.reset}`,
+      );
+      console.log('='.repeat(80));
+      console.log(
+        '   Migrating the earned but undistributed V8 tuning rewards to actual stakes and balances...',
+      );
+      console.log(
+        '   Note: This will also update delegator scores via prepareForStakeChange()...\n',
+      );
+
+      // Step 1: Migrate Delegator1
+      console.log(
+        `${colors.green}${colors.bright}👤 STEP 1: Migrating Delegator1 V8 Tuning Rewards${colors.reset}`,
+      );
+      console.log('   ' + '-'.repeat(60));
+      console.log(`   💰 Amount: ${ethers.formatEther(delegator1Reward)} TRAC`);
+
+      const beforeDelegator1 =
+        await contracts.stakingStorage.getDelegatorStakeBase(
+          node1Id,
+          ethers.keccak256(
+            ethers.solidityPacked(['address'], [accounts.delegator1.address]),
+          ),
+        );
+      const beforeNode1 = await contracts.stakingStorage.getNodeStake(node1Id);
+
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
+      );
+
+      const afterDelegator1 =
+        await contracts.stakingStorage.getDelegatorStakeBase(
+          node1Id,
+          ethers.keccak256(
+            ethers.solidityPacked(['address'], [accounts.delegator1.address]),
+          ),
+        );
+      const afterNode1 = await contracts.stakingStorage.getNodeStake(node1Id);
+
+      console.log(
+        `   📈 Delegator1 stake: ${ethers.formatEther(beforeDelegator1)} → ${ethers.formatEther(afterDelegator1)} TRAC`,
+      );
+      console.log(
+        `   📈 Node1 total stake: ${ethers.formatEther(beforeNode1)} → ${ethers.formatEther(afterNode1)} TRAC`,
+      );
+
+      // Check Delegator1 score immediately after migration
+      const afterDelegator1Score =
+        await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+          currentEpoch,
+          node1Id,
+          delegator1Key,
+        );
+      console.log(
+        `   📊 Delegator1 score: ${ethers.formatEther(initialDelegator1Score)} → ${ethers.formatEther(afterDelegator1Score)}`,
+      );
+
+      // await waitForInput(
+      //   'Delegator1 V8 tuning rewards migrated - ready for Delegator2',
+      // );
+
+      // Step 2: Migrate Delegator2
+      console.log(
+        `\n${colors.green}${colors.bright}👤 STEP 2: Migrating Delegator2 V8 Tuning Rewards${colors.reset}`,
+      );
+      console.log('   ' + '-'.repeat(60));
+      console.log(`   💰 Amount: ${ethers.formatEther(delegator2Reward)} TRAC`);
+
+      const beforeDelegator2 =
+        await contracts.stakingStorage.getDelegatorStakeBase(
+          node1Id,
+          ethers.keccak256(
+            ethers.solidityPacked(['address'], [accounts.delegator2.address]),
+          ),
+        );
+
+      await contracts.migrator.migrateDelegatorReward(
+        node1Id,
+        accounts.delegator2.address,
+      );
+
+      const afterDelegator2 =
+        await contracts.stakingStorage.getDelegatorStakeBase(
+          node1Id,
+          ethers.keccak256(
+            ethers.solidityPacked(['address'], [accounts.delegator2.address]),
+          ),
+        );
+      const finalNode1 = await contracts.stakingStorage.getNodeStake(node1Id);
+
+      console.log(
+        `   📈 Delegator2 stake: ${ethers.formatEther(beforeDelegator2)} → ${ethers.formatEther(afterDelegator2)} TRAC`,
+      );
+      console.log(
+        `   📈 Node1 total stake: ${ethers.formatEther(afterNode1)} → ${ethers.formatEther(finalNode1)} TRAC`,
+      );
+
+      // Check Delegator2 score immediately after migration
+      const afterDelegator2Score =
+        await contracts.randomSamplingStorage.getEpochNodeDelegatorScore(
+          currentEpoch,
+          node1Id,
+          delegator2Key,
+        );
+      console.log(
+        `   ${colors.cyan}📊 Delegator2 score: ${ethers.formatEther(initialDelegator2Score)} → ${ethers.formatEther(afterDelegator2Score)}${colors.reset}`,
+      );
+
+      // await waitForInput(
+      //   'Delegator2 V8 tuning rewards migrated - ready for operator migration',
+      // );
+
+      // Step 3: Migrate Operator Rewards
+      console.log(
+        `\n${colors.magenta}${colors.bright}👨‍💼 STEP 3: Migrating Operator V8 Tuning Rewards${colors.reset}`,
+      );
+      console.log('   ' + '-'.repeat(60));
+      console.log(`   💰 Amount: ${ethers.formatEther(operatorReward)} TRAC`);
+
+      const beforeOperator =
+        await contracts.stakingStorage.getOperatorFeeBalance(node1Id);
+
+      await contracts.migrator.migrateOperatorReward(node1Id);
+
+      const afterOperator =
+        await contracts.stakingStorage.getOperatorFeeBalance(node1Id);
+
+      console.log(
+        `   📈 Operator balance: ${ethers.formatEther(beforeOperator)} → ${ethers.formatEther(afterOperator)} TRAC`,
+      );
+      console.log(
+        `   💡 Note: Operator rewards don't affect node stake, only operator balance`,
+      );
+
+      // await waitForInput(
+      //   'Operator V8 tuning rewards migrated - checking final state',
+      // );
+
+      // Phase 7: Final State Verification
+      console.log('\n' + '='.repeat(80));
+      console.log(
+        `${colors.green}${colors.bright}✅ PHASE 5: Final State Verification${colors.reset}`,
+      );
+      console.log('='.repeat(80));
+      console.log(
+        '   Verifying all V8 tuning period rewards were successfully distributed...\n',
+      );
+
+      await displayState(
+        'FINAL STATE AFTER V8 TUNING PERIOD REWARD MIGRATION',
+        contracts,
+        accounts,
+        node1Id,
+      );
+
+      // Verify claim flags
+      const delegator1Claimed = await contracts.migrator.claimedDelegatorReward(
+        node1Id,
+        accounts.delegator1.address,
+      );
+      const delegator2Claimed = await contracts.migrator.claimedDelegatorReward(
+        node1Id,
+        accounts.delegator2.address,
+      );
+      const operatorClaimed =
+        await contracts.migrator.claimedOperatorReward(node1Id);
+
+      console.log('\n' + '='.repeat(80));
+      console.log(
+        `${colors.cyan}${colors.bright}🏁 V8 TUNING PERIOD REWARD MIGRATION STATUS${colors.reset}`,
+      );
+      console.log('='.repeat(80));
+      console.log(
+        `   ✅ Delegator1 V8 tuning rewards claimed: ${delegator1Claimed ? 'YES' : 'NO'}`,
+      );
+      console.log(
+        `   ✅ Delegator2 V8 tuning rewards claimed: ${delegator2Claimed ? 'YES' : 'NO'}`,
+      );
+      console.log(
+        `   ✅ Operator V8 tuning rewards claimed: ${operatorClaimed ? 'YES' : 'NO'}`,
+      );
+
+      // await waitForInput('Final state verified - testing security features');
+
+      // Phase 8: Security Validation
+      console.log('\n' + '='.repeat(80));
+      console.log(
+        `${colors.red}${colors.bright}🔒 PHASE 6: Security Validation${colors.reset}`,
+      );
+      console.log('='.repeat(80));
+      console.log(
+        '   Testing double migration prevention and access control...\n',
+      );
+
+      // Test double migration prevention
+      console.log(
+        `${colors.red}🚫 Testing Double Migration Prevention${colors.reset}`,
+      );
+      console.log('   ' + '-'.repeat(60));
+      console.log(
+        '   Attempting to migrate Delegator1 V8 tuning rewards again...',
+      );
+
+      await expect(
+        contracts.migrator.migrateDelegatorReward(
+          node1Id,
+          accounts.delegator1.address,
+        ),
+      ).to.be.revertedWith('Already claimed delegator reward for this node');
+
+      console.log(`   ✅ Double migration correctly prevented`);
+
+      // Test access control
+      console.log(`\n${colors.red}🔐 Testing Access Control${colors.reset}`);
+      console.log('   ' + '-'.repeat(60));
+      console.log('   Attempting to set V8 tuning rewards as non-admin...');
+
+      await expect(
+        contracts.migrator
+          .connect(accounts.delegator1)
+          .setDelegatorRewardAmount(
+            node1Id,
+            accounts.delegator3.address,
+            toTRAC(1_000),
+          ),
+      ).to.be.reverted;
+
+      console.log(`   ✅ Only system admin can set V8 tuning rewards`);
+
+      // Test that anyone can execute migrations once set
+      console.log(
+        `\n${colors.green}✅ Testing Migration Execution by Anyone${colors.reset}`,
+      );
+      console.log('   ' + '-'.repeat(60));
+      console.log('   Setting up a new V8 tuning reward for Delegator3...');
+
+      await contracts.migrator.setDelegatorRewardAmount(
+        node1Id,
+        accounts.delegator3.address,
+        toTRAC(1_000),
+      );
+
+      console.log('   Executing migration as Delegator3...');
+      await contracts.migrator
+        .connect(accounts.delegator3)
+        .migrateDelegatorReward(node1Id, accounts.delegator3.address);
+
+      console.log(
+        `   ✅ Anyone can execute migrations once V8 tuning rewards are set`,
+      );
+
+      // await waitForInput('Security validation complete - demo finished');
+
+      // Final summary
+      console.log('\n' + '='.repeat(80));
+      console.log(
+        `${colors.green}${colors.bright}🎉 V8 TUNING PERIOD REWARDS MIGRATION DEMO COMPLETE!${colors.reset}`,
+      );
+      console.log('='.repeat(80));
+      console.log('   Summary of what was accomplished:');
+      console.log(
+        '   • Set up realistic scenario with existing delegators and stakes',
+      );
+      console.log(
+        '   • Explained the V8.0→V8.1 transition and tuning period context',
+      );
+      console.log('   • Demonstrated active node with proofs and scores');
+      console.log(
+        '   • Configured V8 tuning period rewards that were never distributed',
+      );
+      console.log(
+        '   • Successfully migrated all V8 tuning rewards to actual stakes/balances',
+      );
+      console.log('   • Verified score updates via prepareForStakeChange()');
+      console.log('   • Verified delegator registration and claim flags');
+      console.log('   • Confirmed security features work correctly');
+      console.log(
+        '   • Demonstrated that anyone can execute migrations once set',
+      );
+      console.log(
+        `\n✨ The MigratorV8TuningPeriodRewards contract successfully distributed`,
+      );
+      console.log(
+        'the backlogged rewards from the V8 tuning period while maintaining',
+      );
+      console.log('proper score tracking for active nodes!');
+      console.log('='.repeat(80));
+
+      // Verify final expectations
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await contracts.migrator.claimedDelegatorReward(
+          node1Id,
+          accounts.delegator1.address,
+        ),
+      ).to.be.true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await contracts.migrator.claimedDelegatorReward(
+          node1Id,
+          accounts.delegator2.address,
+        ),
+      ).to.be.true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(await contracts.migrator.claimedOperatorReward(node1Id)).to.be
+        .true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await contracts.delegatorsInfo.isNodeDelegator(
+          node1Id,
+          accounts.delegator1.address,
+        ),
+      ).to.be.true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await contracts.delegatorsInfo.isNodeDelegator(
+          node1Id,
+          accounts.delegator2.address,
+        ),
+      ).to.be.true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      expect(
+        await contracts.delegatorsInfo.isNodeDelegator(
+          node1Id,
+          accounts.delegator3.address,
+        ),
+      ).to.be.true;
+
+      // Verify that scores were properly updated
+      expect(afterDelegator1Score).to.be.gt(initialDelegator1Score);
+      expect(afterDelegator2Score).to.be.gt(initialDelegator2Score);
     });
   });
 });
