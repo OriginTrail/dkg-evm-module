@@ -82,6 +82,10 @@ const insertStmt = db.prepare(`
   ) VALUES (?,?,?,?,?,?,?,?,?,?);
 `);
 
+const checkExistsStmt = db.prepare(`
+  SELECT 1 FROM enriched_events WHERE transaction_hash = ? LIMIT 1;
+`);
+
 const DEFAULT_CSV = path.join(DATA_FOLDER, 'indexer_input.csv');
 
 const rpcEnvName = `RPC_${CHAIN.toUpperCase()}_MAINNET`;
@@ -311,6 +315,13 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
     const txHash = (row.transaction_hash || row.txHash) as string | undefined;
     if (!txHash) continue;
 
+    // Skip if transaction already exists in database
+    const exists = checkExistsStmt.get(txHash);
+    if (exists) {
+      console.log(`⏭️  [${txHash.slice(0, 10)}…] Already processed, skipping`);
+      continue;
+    }
+
     let delegatorKeyCsvRaw = row.delegator_key as string | undefined;
     if (typeof delegatorKeyCsvRaw === 'string')
       delegatorKeyCsvRaw = delegatorKeyCsvRaw.trim();
@@ -403,7 +414,44 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
       let resolutionMethod = 'Direct';
 
       if (delegatorKeyCsv) {
-        const computedKey = getDelegatorKey(effectiveSender).toLowerCase();
+        // Extract actual delegator address based on function type
+        let actualDelegatorAddress = effectiveSender;
+
+        if (
+          decodedMethod === 'claimDelegatorRewards' &&
+          Array.isArray(decodedParams) &&
+          decodedParams.length >= 3
+        ) {
+          // For claimDelegatorRewards, the 3rd parameter (index 2) is the delegator address
+          actualDelegatorAddress = decodedParams[2] as string;
+          resolutionMethod = 'ClaimRewards';
+        } else if (
+          decodedMethod === 'batchClaimDelegatorRewards' &&
+          Array.isArray(decodedParams) &&
+          decodedParams.length >= 3
+        ) {
+          // For batchClaimDelegatorRewards, the 3rd parameter (index 2) is an array of delegator addresses
+          // We need to check if any of these addresses match our delegator key
+          const delegatorAddresses = decodedParams[2] as string[];
+          let foundMatch = false;
+          for (const addr of delegatorAddresses) {
+            const addrKey = getDelegatorKey(addr).toLowerCase();
+            if (addrKey === delegatorKeyCsv) {
+              actualDelegatorAddress = addr;
+              foundMatch = true;
+              resolutionMethod = 'BatchClaimRewards';
+              break;
+            }
+          }
+          if (!foundMatch) {
+            // If no match found in the array, keep the original sender for migration check
+            actualDelegatorAddress = effectiveSender;
+          }
+        }
+
+        const computedKey = getDelegatorKey(
+          actualDelegatorAddress,
+        ).toLowerCase();
 
         if (computedKey !== delegatorKeyCsv) {
           if (tx.to && tx.to.toLowerCase() === MIGRATOR_CONTRACT_ADDRESS) {
@@ -470,6 +518,9 @@ function csvStream(filePath: string): AsyncIterable<InputRow> {
           } else {
             errorMsg = `Key mismatch (csv=${delegatorKeyCsv} computed=${computedKey})`;
           }
+        } else {
+          // No key mismatch, use the resolved delegator address
+          delegatorAddress = actualDelegatorAddress;
         }
       }
 
