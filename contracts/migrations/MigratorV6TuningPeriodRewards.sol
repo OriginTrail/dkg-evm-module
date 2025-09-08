@@ -17,8 +17,8 @@ import {ICustodian} from "../interfaces/ICustodian.sol";
 import {ProfileStorage} from "../storage/ProfileStorage.sol";
 import {ProfileLib} from "../libraries/ProfileLib.sol";
 
-contract MigratorV8TuningPeriodRewards is INamed, IVersioned, ContractStatus {
-    string private constant _NAME = "MigratorV8TuningPeriodRewards";
+contract MigratorV6TuningPeriodRewards is INamed, IVersioned, ContractStatus {
+    string private constant _NAME = "MigratorV6TuningPeriodRewards";
     string private constant _VERSION = "1.0.0";
 
     mapping(uint72 => mapping(address => uint96)) public delegatorRewardAmount;
