@@ -1,4 +1,4 @@
--- GNOSIS MAINNET
+-- GNOSIS MAINNET epoch 8 end
 SELECT DISTINCT
        transaction_hash,
        block_number,
@@ -33,11 +33,11 @@ FROM (
     FROM delegator_withdrawal_request_deleted
 ) AS combined
 WHERE block_number >= 37746315
-  AND block_number <  41557883
+  AND block_number <  42060171
 ORDER BY block_number;
 
 
--- BASE MAINNET
+-- BASE MAINNET epoch 8 end
 SELECT DISTINCT
        transaction_hash,
        block_number,
@@ -72,11 +72,11 @@ FROM (
     FROM delegator_withdrawal_request_deleted
 ) AS combined
 WHERE block_number >= 24277327
-  AND block_number <  34083727
+  AND block_number <  35376127
 ORDER BY block_number;
 
 
--- NEUROWEB MAINNET
+-- NEUROWEB MAINNET epoch 8 end
 SELECT DISTINCT
        transaction_hash,
        block_number,
@@ -111,5 +111,5 @@ FROM (
     FROM delegator_withdrawal_request_deleted
 ) AS combined
 WHERE block_number >= 7266256
-  AND block_number <  10479287
+  AND block_number <  10906621
 ORDER BY block_number;
