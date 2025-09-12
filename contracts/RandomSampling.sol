@@ -450,7 +450,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
         uint256 pubRatio18 = (nodePub * SCALE18) / maxNodePub;
         uint256 nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
 
-        return nodeStakeFactor18 + nodeAskFactor18 + nodePublishingFactor18;
+        return nodeStakeFactor18 + nodeAskFactor18 / 10 + nodePublishingFactor18 * 15;
     }
 
     /**

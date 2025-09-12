@@ -281,12 +281,12 @@
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0xF56f9653b197e6Ab8eBdb09aB4E9Eed3Be13Bf87",
+      "evmAddress": "0x598F34aa6C65433B54C68c866A854A6dc5764DBe",
       "version": "1.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "c9a15babfb0378b5de81963247c5a0d2262d8080",
-      "deploymentBlock": 27547214,
-      "deploymentTimestamp": 1750862719851,
+      "gitBranch": "release/adjust-score-formula",
+      "gitCommitHash": "1088476e13c3c8b46f087f45cdea103959f2135c",
+      "deploymentBlock": 30956460,
+      "deploymentTimestamp": 1757681208307,
       "deployed": true
     },
     "StakingKPI": {
