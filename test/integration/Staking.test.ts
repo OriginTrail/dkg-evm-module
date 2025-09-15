@@ -131,7 +131,9 @@ async function calculateExpectedNodeScore(
     nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
   }
 
-  return nodeStakeFactor18 + nodeAskFactor18 + nodePublishingFactor18;
+  return (
+    nodeStakeFactor18 + nodeAskFactor18 / 10n + nodePublishingFactor18 * 15n
+  );
 }
 
 /**
