@@ -72,7 +72,7 @@ FROM (
     FROM delegator_withdrawal_request_deleted
 ) AS combined
 WHERE block_number >= 24277327
-  AND block_number <  35376127
+  AND block_number <  35379727
 ORDER BY block_number;
 
 
@@ -111,5 +111,5 @@ FROM (
     FROM delegator_withdrawal_request_deleted
 ) AS combined
 WHERE block_number >= 7266256
-  AND block_number <  10906621
+  AND block_number < 10906621
 ORDER BY block_number;
