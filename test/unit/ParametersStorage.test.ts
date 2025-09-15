@@ -67,7 +67,7 @@ describe('@unit ParametersStorage contract', function () {
       ParametersStorage.connect(accounts[1]).setMinimumStake(
         minimumStake.toString(),
       ),
-    ).to.be.revertedWithCustomError(ParametersStorage, 'UnauthorizedAccess');
+    ).to.be.revertedWith('Only Hub Owner, Hub, or Multisig Owner can call');
   });
 
   it('validate stake withdrawal delay for owner, expect to pass', async () => {
@@ -97,6 +97,6 @@ describe('@unit ParametersStorage contract', function () {
       ParametersStorage.connect(accounts[1]).setStakeWithdrawalDelay(
         stakeWithdrawalDelay.toString(),
       ),
-    ).to.be.revertedWithCustomError(ParametersStorage, 'UnauthorizedAccess');
+    ).to.be.revertedWith('Only Hub Owner, Hub, or Multisig Owner can call');
   });
 });
