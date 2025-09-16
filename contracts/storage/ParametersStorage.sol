@@ -40,7 +40,7 @@ contract ParametersStorage is INamed, IVersioned, HubDependent {
 
     constructor(address hubAddress, uint256 _v81ReleaseEpoch) HubDependent(hubAddress) {
         minimumStake = 50_000 ether;
-        maximumStake = 2_000_000 ether;
+        maximumStake = 5_000_000 ether;
 
         stakeWithdrawalDelay = 28 days;
         nodeAskUpdateDelay = 1 days;
