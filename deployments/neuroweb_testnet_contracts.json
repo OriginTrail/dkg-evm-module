@@ -22,13 +22,13 @@
       "deployed": true
     },
     "ParametersStorage": {
-      "evmAddress": "0x09553F8aDACf76D76Da49678555240cb614c36AF",
-      "substrateAddress": "5EMjsczN3bSheXkvgjGGSfYg3vg9VkGqkw3Z6YGobaU4un5L",
+      "evmAddress": "0xe4fF01a0cEC8172BC5f087655cC8a54aCFB1FDb1",
+      "substrateAddress": "5EMjsd184SS8WZBgsU9Xyc6WmESaGe7dUwuAqijTV196kz9z",
       "version": "1.0.0",
       "gitBranch": "improvement/parameters-storage-access-policy",
-      "gitCommitHash": "bcad38c0a01f8de58fb773c1ad16634547b7cd16",
-      "deploymentBlock": 9105221,
-      "deploymentTimestamp": 1758030538103,
+      "gitCommitHash": "da6617b493c439a5d23a429290c267efc2bd5810",
+      "deploymentBlock": 9105590,
+      "deploymentTimestamp": 1758033268884,
       "deployed": true
     },
     "WhitelistStorage": {
