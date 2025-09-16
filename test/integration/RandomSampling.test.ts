@@ -135,12 +135,7 @@ async function calculateExpectedNodeScore(
     nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
   }
 
-  // Match the contract logic: different formulas based on maxNodePubFactor
-  if (maxNodePubFactor == 0n) {
-    return nodeStakeFactor + nodeAskFactor;
-  } else {
-    return nodeStakeFactor + nodeAskFactor / 10n + nodePublishingFactor * 15n;
-  }
+  return nodeStakeFactor + nodeAskFactor / 10n + nodePublishingFactor * 15n;
 }
 
 describe('@integration RandomSampling', () => {
