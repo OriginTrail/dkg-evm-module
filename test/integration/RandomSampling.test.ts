@@ -135,7 +135,7 @@ async function calculateExpectedNodeScore(
     nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
   }
 
-  return nodeStakeFactor + nodePublishingFactor + nodeAskFactor;
+  return nodeStakeFactor + nodeAskFactor / 10n + nodePublishingFactor * 15n;
 }
 
 describe('@integration RandomSampling', () => {
@@ -2346,7 +2346,6 @@ describe('@integration RandomSampling', () => {
     it('Should handle precision loss testing and maintain accuracy', async () => {
       // Setup: Use stakes that might cause precision issues
       const minimumStake = await ParametersStorage.minimumStake();
-      const maximumStake = await ParametersStorage.maximumStake();
 
       const deps = {
         accounts,
@@ -2367,43 +2366,25 @@ describe('@integration RandomSampling', () => {
         await setupNodeWithStakeAndAsk(nodeIdCounter, stake, nodeAsk, deps);
       nodeIdCounter += 2; // Account for both admin and operational accounts
 
-      const [askLowerBound, askUpperBound] = await AskStorage.getAskBounds();
-
       // Calculate actual score from contract
       const actualScore = await RandomSampling.calculateNodeScore(
         publishingNodeIdentityId,
       );
 
-      // Calculate expected score using the proper contract formula
-      const cappedStake = stake > maximumStake ? maximumStake : stake;
-
-      // Stake factor: 2 * (stake / maxStake)^2
-      const stakeRatio = Number(cappedStake) / Number(maximumStake);
-      const expectedStakeFactor = 2 * stakeRatio ** 2;
-
-      // Ask factor: (stakeRatio) * ((upperBound - nodeAsk) / (upperBound - lowerBound))^2
-      const nodeAskScaled = Number(nodeAsk) * Number(SCALING_FACTOR);
-      let expectedAskFactor = 0;
-      if (
-        nodeAskScaled >= Number(askLowerBound) &&
-        nodeAskScaled <= Number(askUpperBound)
-      ) {
-        const askDiffRatio =
-          (Number(askUpperBound) - nodeAskScaled) /
-          (Number(askUpperBound) - Number(askLowerBound));
-        expectedAskFactor = stakeRatio * askDiffRatio ** 2;
-      }
-
-      // Publishing factor is 0 for this test (no knowledge collections)
-      const expectedPublishingFactor = 0;
-      const expectedTotal =
-        expectedStakeFactor + expectedAskFactor + expectedPublishingFactor;
-
-      // The precision difference should be very small which indicates that your calculation logic is essentially correct - it's just hitting the limits of floating-point precision in JavaScript.
-      expect(Number(actualScore) / Number(SCALING_FACTOR)).to.be.closeTo(
-        expectedTotal,
-        1e-15,
+      // Calculate expected score using our helper that matches the contract logic exactly
+      const expectedScore = await calculateExpectedNodeScore(
+        BigInt(publishingNodeIdentityId),
+        stake,
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+        },
       );
+
+      // The scores should match exactly since we're using the same integer arithmetic
+      expect(actualScore).to.equal(expectedScore);
     });
 
     it('Should calculate accurate score for node with stake and ask', async () => {
