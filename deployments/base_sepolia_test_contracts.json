@@ -20,12 +20,12 @@
       "deployed": true
     },
     "ParametersStorage": {
-      "evmAddress": "0x464c1da3B250984338EfcAFa36Bbc58e80Ff3e36",
+      "evmAddress": "0x7ad79B9A2607Fd15c4fEf85412684B83473C7dBa",
       "version": "1.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "0a60162a01dace5e6f414efa34d7ac62168349ba",
-      "deploymentBlock": 28140031,
-      "deploymentTimestamp": 1752048354414,
+      "gitBranch": "improvement/parameters-storage-access-policy",
+      "gitCommitHash": "ca8b8ffaaf1961fa270fb7a1a5f187fcc5d45ff4",
+      "deploymentBlock": 31132834,
+      "deploymentTimestamp": 1758033973092,
       "deployed": true
     },
     "WhitelistStorage": {
@@ -281,12 +281,12 @@
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0xF56f9653b197e6Ab8eBdb09aB4E9Eed3Be13Bf87",
+      "evmAddress": "0x09553F8aDACf76D76Da49678555240cb614c36AF",
       "version": "1.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "c9a15babfb0378b5de81963247c5a0d2262d8080",
-      "deploymentBlock": 27547214,
-      "deploymentTimestamp": 1750862719851,
+      "gitBranch": "improvement/parameters-storage-access-policy",
+      "gitCommitHash": "ca8b8ffaaf1961fa270fb7a1a5f187fcc5d45ff4",
+      "deploymentBlock": 31132846,
+      "deploymentTimestamp": 1758033980703,
       "deployed": true
     },
     "StakingKPI": {
