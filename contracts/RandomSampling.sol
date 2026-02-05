@@ -451,14 +451,16 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             : 0;
 
         // 3. Ask alignment factor A(t) = 1 - |nodeAsk - networkPrice| / networkPrice (RFC-26 Section 4.3)
-        // Rewards nodes whose ask is close to the network reference price
+        // Rewards nodes whose ask is close to the network reference price:
+        // - Perfect alignment (deviation = 0): A(t) = 1.0 (maximum bonus)
+        // - 50% deviation: A(t) = 0.5
+        // - 100%+ deviation: A(t) = 0.0 (no bonus, capped to avoid negative values)
         uint256 nodeAsk = uint256(profileStorage.getAsk(identityId));
         uint256 networkPrice = askStorage.getPricePerKbEpoch();
         uint256 askAlignmentFactor18 = 0;
         if (networkPrice > 0) {
             uint256 deviation = nodeAsk > networkPrice ? nodeAsk - networkPrice : networkPrice - nodeAsk;
             uint256 deviationRatio18 = (deviation * SCALE18) / networkPrice;
-            // A(t) is capped at 0 if deviation >= networkPrice
             askAlignmentFactor18 = deviationRatio18 >= SCALE18 ? 0 : SCALE18 - deviationRatio18;
         }
 
