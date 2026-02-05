@@ -7,6 +7,32 @@
 
 This repository contains the smart contracts for OriginTrail V8, which serves as the core module for the Decentralized Knowledge Graph (DKG). The module handles various aspects, such as DKG Node profile management, Knowledge Assets ownership, consensus mechanisms, and others, in order to ensure the secure and efficient operation of the network. The contracts are written in Solidity and can be deployed on Ethereum and compatible networks.
 
+## Node Scoring Mechanism (RFC-26)
+
+The DKG network uses a node scoring formula to determine reward distribution among participating nodes. The current implementation follows [RFC-26: Stake-Adjusted, Multi-Epoch Node Score Formula](https://github.com/OriginTrail/OT-RFC-repository/tree/main/RFCs/OT-RFC-26_Stake_Adjusted_Multi_Epoch_Node_Score_Formula).
+
+### Formula
+
+```
+nodeScore(t) = 0.04 × S(t) + 0.86 × P(t) + 0.6 × A(t) × P(t)
+```
+
+Where:
+
+| Factor | Description | Weight |
+|--------|-------------|--------|
+| **S(t)** - Stake Factor | `√(nodeStake / STAKE_CAP)` — Sublinear scaling using square root to reduce stake dominance | 4% |
+| **P(t)** - Publishing Factor | `K_n / K_total` — Node's share of knowledge production over a rolling 4-epoch window (epochs t-3, t-2, t-1, t) | 86% |
+| **A(t)** - Ask Alignment Factor | `1 - |nodeAsk - networkPrice| / networkPrice` — Rewards nodes whose ask price is close to the network reference price | 60% (multiplied with P(t)) |
+
+### Key Design Principles
+
+1. **Sublinear Stake Scaling**: Using square root reduces the dominance of large stakers while still rewarding stake commitment
+2. **Multi-Epoch Publishing**: Smooths publishing factor over 4 epochs to reduce gaming and reward consistent knowledge production
+3. **Ask Alignment**: Incentivizes competitive pricing by rewarding nodes whose ask prices align with network demand
+
+For detailed rationale and mathematical derivations, see the [RFC-26 specification](https://github.com/OriginTrail/OT-RFC-repository/tree/main/RFCs/OT-RFC-26_Stake_Adjusted_Multi_Epoch_Node_Score_Formula).
+
 ## Repository Structure
 
 This repository contains the following main components:

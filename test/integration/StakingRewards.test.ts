@@ -1330,8 +1330,8 @@ describe('Claim order enforcement tests', () => {
 
     console.log(`    📊 Node-1 score: ${node1Score}`);
     console.log(`    📊 Node-2 score: ${node2Score}`);
-    console.log(`    📊 Node-3 score: ${node3Score} (should be 0 - no stake)`);
-    console.log(`    📊 Node-4 score: ${node4Score} (should be 0 - no stake)`);
+    console.log(`    📊 Node-3 score: ${node3Score} (no stake, but has publishing/ask factors per RFC-26)`);
+    console.log(`    📊 Node-4 score: ${node4Score} (no stake, but has publishing/ask factors per RFC-26)`);
     console.log(`    📈 Node-1 score per stake: ${node1ScorePerStake}`);
     console.log(`    📈 Node-2 score per stake: ${node2ScorePerStake}`);
 
@@ -1345,15 +1345,14 @@ describe('Claim order enforcement tests', () => {
       'Node-1 and Node-2 should have equal score per stake',
     );
 
-    // Verify zero scores for nodes without stakes
-    expect(node3Score).to.equal(
-      0n,
-      'Node-3 should have zero score (no stake in epoch 2)',
-    );
-    expect(node4Score).to.equal(
-      0n,
-      'Node-4 should have zero score (no stake in epoch 2)',
-    );
+    // RFC-26: Nodes without stake can still have scores from publishing factor (P(t))
+    // and ask alignment factor (A(t)). The score formula is:
+    // nodeScore = 0.04 * S(t) + 0.86 * P(t) + 0.6 * A(t) * P(t)
+    // With S(t) = 0, the score is: 0.86 * P(t) + 0.6 * A(t) * P(t)
+    // Verify nodes without stake have lower scores than staked nodes
+    // (since they're missing the 0.04 * S(t) stake component)
+    expect(node3Score < node1Score).to.be.true;
+    expect(node4Score < node1Score).to.be.true;
 
     // Both nodes should have positive scores
     expect(node1Score).to.be.gt(0n, 'Node-1 should have positive score');
@@ -1363,7 +1362,7 @@ describe('Claim order enforcement tests', () => {
       '    ✅ Node-1 and Node-2 have identical scores and score per stake',
     );
     console.log(
-      '    ✅ Node-3 and Node-4 have zero scores (no stakes in epoch 2)',
+      '    ✅ Node-3 and Node-4 have lower scores than staked nodes (RFC-26: no stake component)',
     );
     console.log(
       '    📝 Note: Equal KC setup resulted in equal node performance',

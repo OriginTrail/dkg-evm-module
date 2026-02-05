@@ -1,5 +1,6 @@
 import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
 import { extendEnvironment } from 'hardhat/config';
 import { lazyObject } from 'hardhat/plugins';
 import { HardhatRuntimeEnvironment, HardhatUserConfig } from 'hardhat/types';
