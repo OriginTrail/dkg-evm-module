@@ -30,6 +30,7 @@ import {
   Ask,
 } from '../../typechain';
 import { createKnowledgeCollection } from '../helpers/kc-helpers';
+import { sqrt } from '../helpers/math-helpers';
 import { createProfile, createProfiles } from '../helpers/profile-helpers';
 import {
   getDefaultKCCreator,
@@ -80,21 +81,6 @@ type RandomSamplingFixture = {
   ParametersStorage: ParametersStorage;
   Ask: Ask;
 };
-
-/**
- * Helper function for integer square root (Babylonian method)
- * Used for sublinear stake scaling in RFC-26 formula
- */
-function sqrt(x: bigint): bigint {
-  if (x === 0n) return 0n;
-  let z = (x + 1n) / 2n;
-  let y = x;
-  while (z < y) {
-    y = z;
-    z = (x / z + z) / 2n;
-  }
-  return y;
-}
 
 /**
  * Calculate expected node score based on RFC-26 formula:

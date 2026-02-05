@@ -24,6 +24,7 @@ import {
   AskStorage,
 } from '../../typechain';
 import { createKnowledgeCollection } from '../helpers/kc-helpers';
+import { sqrt } from '../helpers/math-helpers';
 import { createProfile } from '../helpers/profile-helpers';
 
 // Sample data for KC
@@ -81,21 +82,6 @@ type TestAccounts = {
   receiver2: { operational: SignerWithAddress; admin: SignerWithAddress };
   receiver3: { operational: SignerWithAddress; admin: SignerWithAddress };
 };
-
-/**
- * Helper function for integer square root (Babylonian method)
- * Used for sublinear stake scaling in RFC-26 formula
- */
-function sqrt(x: bigint): bigint {
-  if (x === 0n) return 0n;
-  let z = (x + 1n) / 2n;
-  let y = x;
-  while (z < y) {
-    y = z;
-    z = (x / z + z) / 2n;
-  }
-  return y;
-}
 
 /**
  * Calculate expected node score manually to verify contract calculation
