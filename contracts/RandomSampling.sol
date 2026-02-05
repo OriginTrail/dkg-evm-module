@@ -21,6 +21,7 @@ import {ParametersStorage} from "./storage/ParametersStorage.sol";
 import {ShardingTableStorage} from "./storage/ShardingTableStorage.sol";
 import {ICustodian} from "./interfaces/ICustodian.sol";
 import {HubLib} from "./libraries/HubLib.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     string private constant _NAME = "RandomSampling";
@@ -410,47 +411,64 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
     }
 
     /**
-     * @dev Calculates the node score based on stake, ask price, and publishing activity
-     * Score = nodeStakeFactor + nodeAskFactor + nodePublishingFactor
+     * @dev Calculates the node score based on stake, publishing activity, and ask alignment
+     * Implements RFC-26: Stake-Adjusted, Multi-Epoch Node Score Formula
      *
-     * nodeStakeFactor: 2 * (nodeStake / maxStake)^2 - rewards higher stake
-     * nodeAskFactor: (nodeStake/maxStake) * ((upperBound - nodeAsk) / (upperBound - lowerBound))^2 - rewards lower ask prices
-     * nodePublishingFactor: nodeStakeFactor * (nodePublishing / maxNodePublishing) - rewards active publishers
+     * Formula: nodeScore(t) = 0.04 * S(t) + 0.86 * P(t) + 0.6 * A(t) * P(t)
+     *
+     * Where:
+     * - S(t) = sqrt(nodeStake / STAKE_CAP) - sublinear stake scaling
+     * - P(t) = K_n / K_total - publishing share over 4 epochs (t-3, t-2, t-1, t)
+     * - A(t) = 1 - |nodeAsk - networkPrice| / networkPrice - ask alignment factor
      *
      * All calculations use 18-decimal precision for accuracy
      * @param identityId The node identity to calculate score for
      * @return score18 The calculated node score scaled by 18-decimal for precision
      */
     function calculateNodeScore(uint72 identityId) public view returns (uint256) {
-        // 1. Node stake factor calculation
-        // Formula: nodeStakeFactor = 2 * (nodeStake / maximumStake)^2
-        uint256 maximumStake = uint256(parametersStorage.maximumStake());
+        uint256 currentEpoch = chronos.getCurrentEpoch();
+
+        // 1. Stake factor S(t) = sqrt(nodeStake / stakeCap)
+        // Using sublinear scaling to reduce stake dominance (RFC-26 Section 4.1)
+        uint256 stakeCap = uint256(parametersStorage.maximumStake());
         uint256 nodeStake = uint256(stakingStorage.getNodeStake(identityId));
-        nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
-        uint256 stakeRatio18 = (nodeStake * SCALE18) / maximumStake;
-        uint256 nodeStakeFactor18 = (2 * stakeRatio18 * stakeRatio18) / SCALE18;
+        nodeStake = nodeStake > stakeCap ? stakeCap : nodeStake;
+        // S18 = sqrt((nodeStake / stakeCap) * SCALE18) * sqrt(SCALE18)
+        uint256 stakeRatio18 = (nodeStake * SCALE18) / stakeCap;
+        uint256 stakeFactor18 = Math.sqrt(stakeRatio18 * SCALE18);
 
-        // 2. Node ask factor calculation
-        // Formula: nodeStake * ((upperAskBound - nodeAsk) / (upperAskBound - lowerAskBound))^2 / maximumStake
-        uint256 nodeAsk18 = uint256(profileStorage.getAsk(identityId)) * SCALE18;
-        (uint256 askLowerBound18, uint256 askUpperBound18) = askStorage.getAskBounds();
-        uint256 nodeAskFactor18;
-        if (askUpperBound18 > askLowerBound18 && nodeAsk18 >= askLowerBound18 && nodeAsk18 <= askUpperBound18) {
-            uint256 askDiffRatio18 = ((askUpperBound18 - nodeAsk18) * SCALE18) / (askUpperBound18 - askLowerBound18);
-            nodeAskFactor18 = (stakeRatio18 * (askDiffRatio18 ** 2)) / (SCALE18 ** 2);
+        // 2. Publishing factor P(t) = K_n / K_total over 4 epochs (RFC-26 Section 4.2)
+        // Sum knowledge value over epochs (t-3, t-2, t-1, t)
+        uint256 nodeKnowledgeValue = 0;
+        uint256 totalKnowledgeValue = 0;
+        uint256 startEpoch = currentEpoch >= 3 ? currentEpoch - 3 : 0;
+        for (uint256 e = startEpoch; e <= currentEpoch; e++) {
+            nodeKnowledgeValue += uint256(epochStorage.getNodeEpochProducedKnowledgeValue(identityId, e));
+            totalKnowledgeValue += uint256(epochStorage.getEpochProducedKnowledgeValue(e));
+        }
+        uint256 publishingFactor18 = totalKnowledgeValue > 0
+            ? (nodeKnowledgeValue * SCALE18) / totalKnowledgeValue
+            : 0;
+
+        // 3. Ask alignment factor A(t) = 1 - |nodeAsk - networkPrice| / networkPrice (RFC-26 Section 4.3)
+        // Rewards nodes whose ask is close to the network reference price
+        uint256 nodeAsk = uint256(profileStorage.getAsk(identityId));
+        uint256 networkPrice = askStorage.getPricePerKbEpoch();
+        uint256 askAlignmentFactor18 = 0;
+        if (networkPrice > 0) {
+            uint256 deviation = nodeAsk > networkPrice ? nodeAsk - networkPrice : networkPrice - nodeAsk;
+            uint256 deviationRatio18 = (deviation * SCALE18) / networkPrice;
+            // A(t) is capped at 0 if deviation >= networkPrice
+            askAlignmentFactor18 = deviationRatio18 >= SCALE18 ? 0 : SCALE18 - deviationRatio18;
         }
 
-        // 3. Node publishing factor calculation
-        // Original: nodeStakeFactor * (nodePublishingFactor / MAX(allNodesPublishingFactors))
-        uint256 maxNodePub = uint256(epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue());
-        uint256 nodePublishingFactor18 = 0;
-        if (maxNodePub > 0) {
-            uint256 nodePub = uint256(epochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId));
-            uint256 pubRatio18 = (nodePub * SCALE18) / maxNodePub;
-            nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
-        }
+        // nodeScore(t) = 0.04 * S(t) + 0.86 * P(t) + 0.6 * A(t) * P(t)
+        // Coefficients: 0.04 = 4/100, 0.86 = 86/100, 0.6 = 60/100
+        uint256 stakeComponent18 = (4 * stakeFactor18) / 100;
+        uint256 publishingComponent18 = (86 * publishingFactor18) / 100;
+        uint256 askPublishingComponent18 = (60 * askAlignmentFactor18 * publishingFactor18) / (100 * SCALE18);
 
-        return nodeStakeFactor18 + nodeAskFactor18 / 10 + nodePublishingFactor18 * 15;
+        return stakeComponent18 + publishingComponent18 + askPublishingComponent18;
     }
 
     /**

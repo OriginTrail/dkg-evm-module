@@ -83,8 +83,30 @@ type TestAccounts = {
 };
 
 /**
+ * Helper function for integer square root (Babylonian method)
+ * Used for sublinear stake scaling in RFC-26 formula
+ */
+function sqrt(x: bigint): bigint {
+  if (x === 0n) return 0n;
+  let z = (x + 1n) / 2n;
+  let y = x;
+  while (z < y) {
+    y = z;
+    z = (x / z + z) / 2n;
+  }
+  return y;
+}
+
+/**
  * Calculate expected node score manually to verify contract calculation
- * This implements the same logic as RandomSampling.calculateNodeScore()
+ * Implements RFC-26: Stake-Adjusted, Multi-Epoch Node Score Formula
+ *
+ * Formula: nodeScore(t) = 0.04 * S(t) + 0.86 * P(t) + 0.6 * A(t) * P(t)
+ *
+ * Where:
+ * - S(t) = sqrt(nodeStake / stakeCap) - sublinear stake scaling
+ * - P(t) = K_n / K_total - publishing share over 4 epochs
+ * - A(t) = 1 - |nodeAsk - networkPrice| / networkPrice - ask alignment
  */
 async function calculateExpectedNodeScore(
   nodeId: bigint,
@@ -92,48 +114,54 @@ async function calculateExpectedNodeScore(
 ): Promise<bigint> {
   const SCALE18 = ethers.parseUnits('1', 18);
 
-  // 1. Node stake factor calculation
-  const maximumStake = await contracts.parametersStorage.maximumStake();
+  // Get current epoch
+  const currentEpoch = await contracts.chronos.getCurrentEpoch();
+
+  // 1. Stake Factor S(t) = sqrt(nodeStake / stakeCap) - sublinear scaling (RFC-26 Section 4.1)
+  const stakeCap = await contracts.parametersStorage.maximumStake();
   let nodeStake = await contracts.stakingStorage.getNodeStake(nodeId);
-  nodeStake = nodeStake > maximumStake ? maximumStake : nodeStake;
+  nodeStake = nodeStake > stakeCap ? stakeCap : nodeStake;
 
-  const stakeRatio18 = (nodeStake * SCALE18) / maximumStake;
-  const nodeStakeFactor18 = (2n * stakeRatio18 * stakeRatio18) / SCALE18;
+  const stakeRatio18 = (nodeStake * SCALE18) / stakeCap;
+  const stakeFactor18 = sqrt(stakeRatio18 * SCALE18);
 
-  // 2. Node ask factor calculation
-  const nodeAsk18 = (await contracts.profileStorage.getAsk(nodeId)) * SCALE18;
-  const [askLowerBound18, askUpperBound18] =
-    await contracts.askStorage.getAskBounds();
+  // 2. Publishing Factor P(t) = K_n / K_total over 4 epochs (RFC-26 Section 4.2)
+  let nodeKnowledgeValue = 0n;
+  let totalKnowledgeValue = 0n;
+  const startEpoch = currentEpoch >= 3n ? currentEpoch - 3n : 0n;
+  for (let e = startEpoch; e <= currentEpoch; e++) {
+    nodeKnowledgeValue +=
+      await contracts.epochStorage.getNodeEpochProducedKnowledgeValue(
+        nodeId,
+        e,
+      );
+    totalKnowledgeValue +=
+      await contracts.epochStorage.getEpochProducedKnowledgeValue(e);
+  }
+  const publishingFactor18 =
+    totalKnowledgeValue > 0n
+      ? (nodeKnowledgeValue * SCALE18) / totalKnowledgeValue
+      : 0n;
 
-  let nodeAskFactor18 = 0n;
-  if (
-    askUpperBound18 > askLowerBound18 &&
-    nodeAsk18 >= askLowerBound18 &&
-    nodeAsk18 <= askUpperBound18
-  ) {
-    const askDiffRatio18 =
-      ((askUpperBound18 - nodeAsk18) * SCALE18) /
-      (askUpperBound18 - askLowerBound18);
-    nodeAskFactor18 = (stakeRatio18 * askDiffRatio18 ** 2n) / SCALE18 ** 2n;
+  // 3. Ask Alignment Factor A(t) = 1 - |nodeAsk - networkPrice| / networkPrice (RFC-26 Section 4.3)
+  const nodeAsk = await contracts.profileStorage.getAsk(nodeId);
+  const networkPrice = await contracts.askStorage.getPricePerKbEpoch();
+  let askAlignmentFactor18 = 0n;
+  if (networkPrice > 0n) {
+    const deviation =
+      nodeAsk > networkPrice ? nodeAsk - networkPrice : networkPrice - nodeAsk;
+    const deviationRatio18 = (deviation * SCALE18) / networkPrice;
+    askAlignmentFactor18 =
+      deviationRatio18 >= SCALE18 ? 0n : SCALE18 - deviationRatio18;
   }
 
-  // 3. Node publishing factor calculation
-  const nodePub =
-    await contracts.epochStorage.getNodeCurrentEpochProducedKnowledgeValue(
-      nodeId,
-    );
-  const maxNodePub =
-    await contracts.epochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
+  // nodeScore(t) = 0.04 * S(t) + 0.86 * P(t) + 0.6 * A(t) * P(t)
+  const stakeComponent18 = (4n * stakeFactor18) / 100n;
+  const publishingComponent18 = (86n * publishingFactor18) / 100n;
+  const askPublishingComponent18 =
+    (60n * askAlignmentFactor18 * publishingFactor18) / (100n * SCALE18);
 
-  let nodePublishingFactor18 = 0n;
-  if (maxNodePub > 0n) {
-    const pubRatio18 = (nodePub * SCALE18) / maxNodePub;
-    nodePublishingFactor18 = (nodeStakeFactor18 * pubRatio18) / SCALE18;
-  }
-
-  return (
-    nodeStakeFactor18 + nodeAskFactor18 / 10n + nodePublishingFactor18 * 15n
-  );
+  return stakeComponent18 + publishingComponent18 + askPublishingComponent18;
 }
 
 /**
