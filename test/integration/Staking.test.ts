@@ -4188,7 +4188,9 @@ describe(`Delegator Scoring`, function () {
 
       console.log(`    ✅ Total delegator score: ${totalDelegatorScore}`);
       console.log(`    ✅ Node score: ${nodeScore}`);
-      console.log(`    ✅ Difference: ${scoreDiff} wei (≤${maxToleranceWei} wei tolerance)`);
+      console.log(
+        `    ✅ Difference: ${scoreDiff} wei (≤${maxToleranceWei} wei tolerance)`,
+      );
     });
 
     it('2J - cancelWithdrawal() split restake', async function () {
@@ -5844,23 +5846,27 @@ describe(`Delegator Scoring`, function () {
         await contracts.stakingKPI.getNetNodeRewards(node1Id, startEpoch);
 
       // Allow small tolerance for rounding differences in reward calculations
-      const rewardsDiff = expectedNetNodeRewards > totalDelegatorRewards
-        ? expectedNetNodeRewards - totalDelegatorRewards
-        : totalDelegatorRewards - expectedNetNodeRewards;
+      const rewardsDiff =
+        expectedNetNodeRewards > totalDelegatorRewards
+          ? expectedNetNodeRewards - totalDelegatorRewards
+          : totalDelegatorRewards - expectedNetNodeRewards;
       const maxRewardToleranceWei = 1000000n; // 0.000001 TRAC - accounts for precision loss
       expect(rewardsDiff <= maxRewardToleranceWei).to.be.true;
 
       // **DELEGATOR SCORING ASSERTIONS**
       // Allow small tolerance for rounding differences
-      const grossDiff = (expectedNetNodeRewards + operatorFeeEarned) > grossRewards
-        ? (expectedNetNodeRewards + operatorFeeEarned) - grossRewards
-        : grossRewards - (expectedNetNodeRewards + operatorFeeEarned);
+      const grossDiff =
+        expectedNetNodeRewards + operatorFeeEarned > grossRewards
+          ? expectedNetNodeRewards + operatorFeeEarned - grossRewards
+          : grossRewards - (expectedNetNodeRewards + operatorFeeEarned);
       expect(grossDiff <= maxRewardToleranceWei).to.be.true;
 
-      const expectedOperatorFee = (grossRewards * BigInt(operatorFeePercentage * 100)) / 10_000n;
-      const operatorFeeDiff = operatorFeeEarned > expectedOperatorFee
-        ? operatorFeeEarned - expectedOperatorFee
-        : expectedOperatorFee - operatorFeeEarned;
+      const expectedOperatorFee =
+        (grossRewards * BigInt(operatorFeePercentage * 100)) / 10_000n;
+      const operatorFeeDiff =
+        operatorFeeEarned > expectedOperatorFee
+          ? operatorFeeEarned - expectedOperatorFee
+          : expectedOperatorFee - operatorFeeEarned;
       expect(operatorFeeDiff <= maxRewardToleranceWei).to.be.true;
 
       // Calculate expected rewards based on stake proportions

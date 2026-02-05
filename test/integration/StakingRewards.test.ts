@@ -1330,8 +1330,12 @@ describe('Claim order enforcement tests', () => {
 
     console.log(`    📊 Node-1 score: ${node1Score}`);
     console.log(`    📊 Node-2 score: ${node2Score}`);
-    console.log(`    📊 Node-3 score: ${node3Score} (no stake, but has publishing/ask factors per RFC-26)`);
-    console.log(`    📊 Node-4 score: ${node4Score} (no stake, but has publishing/ask factors per RFC-26)`);
+    console.log(
+      `    📊 Node-3 score: ${node3Score} (no stake, but has publishing/ask factors per RFC-26)`,
+    );
+    console.log(
+      `    📊 Node-4 score: ${node4Score} (no stake, but has publishing/ask factors per RFC-26)`,
+    );
     console.log(`    📈 Node-1 score per stake: ${node1ScorePerStake}`);
     console.log(`    📈 Node-2 score per stake: ${node2ScorePerStake}`);
 

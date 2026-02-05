@@ -446,9 +446,7 @@ contract RandomSampling is INamed, IVersioned, ContractStatus, IInitializable {
             nodeKnowledgeValue += uint256(epochStorage.getNodeEpochProducedKnowledgeValue(identityId, e));
             totalKnowledgeValue += uint256(epochStorage.getEpochProducedKnowledgeValue(e));
         }
-        uint256 publishingFactor18 = totalKnowledgeValue > 0
-            ? (nodeKnowledgeValue * SCALE18) / totalKnowledgeValue
-            : 0;
+        uint256 publishingFactor18 = totalKnowledgeValue > 0 ? (nodeKnowledgeValue * SCALE18) / totalKnowledgeValue : 0;
 
         // 3. Ask alignment factor A(t) = 1 - |nodeAsk - networkPrice| / networkPrice (RFC-26 Section 4.3)
         // Rewards nodes whose ask is close to the network reference price:
