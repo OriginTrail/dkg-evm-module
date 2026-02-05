@@ -1690,7 +1690,7 @@ describe(`Full complex scenario`, function () {
     expect(
       lastClaimedBefore === 0n || lastClaimedBefore === claimEpoch17 - 1n,
       'Delegator-3 must claim the oldest pending epoch first',
-    ).to.be.true;
+    ).to.equal(true);
 
     /* ── 2. Manual reward calculation (for assertions) ───────────────── */
     const stakeBaseBefore =
@@ -2298,7 +2298,7 @@ describe(`Full complex scenario`, function () {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     expect(d1StillOnN1).to.be.false;
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    expect(d1OnN2).to.be.true;
+    expect(d1OnN2).to.equal(true);
 
     // Log the crucial state for debugging Step B
     const lastStakeHeldEpochN1 =
@@ -2488,7 +2488,7 @@ describe(`Full complex scenario`, function () {
       'N1 total stake should increase by the redelegated amount',
     );
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    expect(stillDelegatorOnN2, 'D1 must remain delegator on N2').to.be.true;
+    expect(stillDelegatorOnN2, 'D1 must remain delegator on N2').to.equal(true);
     expect(
       lastStakeHeldEpochN2,
       'lastStakeHeldEpoch mismatch, should be set to current epoch',
@@ -3694,7 +3694,7 @@ describe(`Delegator Scoring`, function () {
         accounts.delegator1.address,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(isDelegator).to.be.true;
+      expect(isDelegator).to.equal(true);
 
       console.log(
         `    ✅ Score unchanged after withdrawal: ${scoreAfterWithdrawal}`,
@@ -4184,7 +4184,7 @@ describe(`Delegator Scoring`, function () {
 
       // Allow small tolerance for rounding differences in score calculations (RFC-26 formula precision)
       const maxToleranceWei = 10000n; // 0.00001 TRAC - accounts for precision loss in sqrt and multi-epoch calculations
-      expect(scoreDiff <= maxToleranceWei).to.be.true;
+      expect(scoreDiff <= maxToleranceWei).to.equal(true);
 
       console.log(`    ✅ Total delegator score: ${totalDelegatorScore}`);
       console.log(`    ✅ Node score: ${nodeScore}`);
@@ -5851,7 +5851,7 @@ describe(`Delegator Scoring`, function () {
           ? expectedNetNodeRewards - totalDelegatorRewards
           : totalDelegatorRewards - expectedNetNodeRewards;
       const maxRewardToleranceWei = 1000000n; // 0.000001 TRAC - accounts for precision loss
-      expect(rewardsDiff <= maxRewardToleranceWei).to.be.true;
+      expect(rewardsDiff <= maxRewardToleranceWei).to.equal(true);
 
       // **DELEGATOR SCORING ASSERTIONS**
       // Allow small tolerance for rounding differences
@@ -5859,7 +5859,7 @@ describe(`Delegator Scoring`, function () {
         expectedNetNodeRewards + operatorFeeEarned > grossRewards
           ? expectedNetNodeRewards + operatorFeeEarned - grossRewards
           : grossRewards - (expectedNetNodeRewards + operatorFeeEarned);
-      expect(grossDiff <= maxRewardToleranceWei).to.be.true;
+      expect(grossDiff <= maxRewardToleranceWei).to.equal(true);
 
       const expectedOperatorFee =
         (grossRewards * BigInt(operatorFeePercentage * 100)) / 10_000n;
@@ -5867,7 +5867,7 @@ describe(`Delegator Scoring`, function () {
         operatorFeeEarned > expectedOperatorFee
           ? operatorFeeEarned - expectedOperatorFee
           : expectedOperatorFee - operatorFeeEarned;
-      expect(operatorFeeDiff <= maxRewardToleranceWei).to.be.true;
+      expect(operatorFeeDiff <= maxRewardToleranceWei).to.equal(true);
 
       // Calculate expected rewards based on stake proportions
       const expectedDelegator1Reward =

@@ -1355,8 +1355,8 @@ describe('Claim order enforcement tests', () => {
     // With S(t) = 0, the score is: 0.86 * P(t) + 0.6 * A(t) * P(t)
     // Verify nodes without stake have lower scores than staked nodes
     // (since they're missing the 0.04 * S(t) stake component)
-    expect(node3Score < node1Score).to.be.true;
-    expect(node4Score < node1Score).to.be.true;
+    expect(node3Score < node1Score).to.equal(true);
+    expect(node4Score < node1Score).to.equal(true);
 
     // Both nodes should have positive scores
     expect(node1Score).to.be.gt(0n, 'Node-1 should have positive score');

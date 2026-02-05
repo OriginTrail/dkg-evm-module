@@ -405,7 +405,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Should be a pending duration after setting',
-      ).to.be.true;
+      ).to.equal(true);
 
       // 3. Active duration remains unchanged in the current epoch
       expect(
@@ -432,7 +432,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Should have pending duration after first set',
-      ).to.be.true;
+      ).to.equal(true);
 
       // Action: Replace the pending change
       const replaceDurationTx =
@@ -451,7 +451,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Should still have pending duration after replace',
-      ).to.be.true;
+      ).to.equal(true);
 
       // 3. Active duration remains unchanged in the current epoch
       expect(
@@ -491,7 +491,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Duration change should be pending',
-      ).to.be.true;
+      ).to.equal(true);
 
       // Ensure activeProofPeriodStartBlock is initialized if needed
       let initialStartBlockE = (
@@ -1155,7 +1155,7 @@ describe('@integration RandomSampling', () => {
 
       // Since the challenge was solved, the challenge should be marked as solved
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(challenge.solved).to.be.true;
+      expect(challenge.solved).to.equal(true);
     });
 
     it('Should submit a valid proof and successfully increment epochNodeValidProofsCount', async () => {
@@ -1517,7 +1517,7 @@ describe('@integration RandomSampling', () => {
         publishingNodeIdentityId,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(updatedChallenge.solved).to.be.true;
+      expect(updatedChallenge.solved).to.equal(true);
 
       const expectedScore = await calculateExpectedNodeScore(
         BigInt(publishingNodeIdentityId),
@@ -1824,7 +1824,7 @@ describe('@integration RandomSampling', () => {
         const isActive = currentEpoch <= endEpoch;
         if (collection.active) {
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-          expect(isActive).to.be.true;
+          expect(isActive).to.equal(true);
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           expect(isActive).to.be.false;
@@ -2543,7 +2543,7 @@ describe('@integration RandomSampling', () => {
         const deviationRatio = (deviation * SCALING_FACTOR) / networkPrice;
         // If deviation < 100% of network price, ask alignment factor > 0
         if (deviationRatio < SCALING_FACTOR) {
-          expect(actualScore > 0n).to.be.true;
+          expect(actualScore > 0n).to.equal(true);
         }
       }
     });
@@ -2586,7 +2586,7 @@ describe('@integration RandomSampling', () => {
       const score2 = await RandomSampling.calculateNodeScore(node2Id);
 
       // Higher stake should result in higher score
-      expect(score2 > score1).to.be.true;
+      expect(score2 > score1).to.equal(true);
     });
 
     it('Should demonstrate sublinear relationship in stake factor (RFC-26)', async () => {
@@ -2627,12 +2627,12 @@ describe('@integration RandomSampling', () => {
       // Verify sublinear growth: doubling stake should increase stake component by ~1.41x (sqrt(2))
       // Since stake only contributes 4% to the total score (RFC-26), the overall score increase
       // from doubling stake is modest and definitely less than 2x
-      expect(scores[1] > scores[0]).to.be.true; // Higher stake = higher score
-      expect(scores[1] < scores[0] * 2n).to.be.true; // But less than 2x (sublinear)
-      expect(scores[2] > scores[1]).to.be.true; // Higher stake = higher score
-      expect(scores[2] < scores[1] * 2n).to.be.true; // But less than 2x (sublinear)
-      expect(scores[3] > scores[2]).to.be.true; // Higher stake = higher score
-      expect(scores[3] < scores[2] * 2n).to.be.true; // But less than 2x (sublinear)
+      expect(scores[1] > scores[0]).to.equal(true); // Higher stake = higher score
+      expect(scores[1] < scores[0] * 2n).to.equal(true); // But less than 2x (sublinear)
+      expect(scores[2] > scores[1]).to.equal(true); // Higher stake = higher score
+      expect(scores[2] < scores[1] * 2n).to.equal(true); // But less than 2x (sublinear)
+      expect(scores[3] > scores[2]).to.equal(true); // Higher stake = higher score
+      expect(scores[3] < scores[2] * 2n).to.equal(true); // But less than 2x (sublinear)
     });
 
     it('Should calculate scores correctly matching RFC-26 formula', async () => {
@@ -2721,7 +2721,7 @@ describe('@integration RandomSampling', () => {
       expect(actualScore).to.be.equal(expectedScore);
 
       // Verify that score is always non-negative (ask alignment is capped at 0)
-      expect(actualScore >= 0n).to.be.true;
+      expect(actualScore >= 0n).to.equal(true);
     });
 
     it('Should demonstrate publishing factor impact on score', async () => {
@@ -2786,17 +2786,17 @@ describe('@integration RandomSampling', () => {
         await EpochStorage.getNodeCurrentEpochProducedKnowledgeValue(
           publishingNodeId,
         );
-      expect(publishingFactor > 0n).to.be.true;
+      expect(publishingFactor > 0n).to.equal(true);
 
       const nonPublishingFactor =
         await EpochStorage.getNodeCurrentEpochProducedKnowledgeValue(
           nonPublishingNodeId,
         );
       expect(nonPublishingFactor).to.equal(0n);
-      expect(publishingFactor > nonPublishingFactor).to.be.true;
+      expect(publishingFactor > nonPublishingFactor).to.equal(true);
 
       // Node with publishing activity should have higher score
-      expect(publishingScore > nonPublishingScore).to.be.true;
+      expect(publishingScore > nonPublishingScore).to.equal(true);
     });
 
     it('Should handle edge case where maximum publishing value is zero', async () => {
