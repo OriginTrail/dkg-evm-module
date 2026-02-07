@@ -74,7 +74,7 @@
   "testnet": {
     "overrides": {},
     "ParametersStorage": {
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "10000000000000000000000000",
       "minimumStake": "50000000000000000000000",
       "stakeWithdrawalDelay": "60",
       "nodeAskUpdateDelay": "60",
@@ -114,7 +114,7 @@
   "mainnet": {
     "overrides": {},
     "ParametersStorage": {
-      "maximumStake": "5000000000000000000000000",
+      "maximumStake": "10000000000000000000000000",
       "minimumStake": "50000000000000000000000",
       "stakeWithdrawalDelay": "2419200",
       "nodeAskUpdateDelay": "86400",

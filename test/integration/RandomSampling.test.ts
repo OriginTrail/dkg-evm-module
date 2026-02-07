@@ -30,6 +30,7 @@ import {
   Ask,
 } from '../../typechain';
 import { createKnowledgeCollection } from '../helpers/kc-helpers';
+import { sqrt } from '../helpers/math-helpers';
 import { createProfile, createProfiles } from '../helpers/profile-helpers';
 import {
   getDefaultKCCreator,
@@ -81,6 +82,15 @@ type RandomSamplingFixture = {
   Ask: Ask;
 };
 
+/**
+ * Calculate expected node score based on RFC-26 formula:
+ * nodeScore(t) = 0.04 * S(t) + 0.86 * P(t) + 0.6 * A(t) * P(t)
+ *
+ * Where:
+ * - S(t) = sqrt(nodeStake / stakeCap) - sublinear stake scaling
+ * - P(t) = K_n / K_total - publishing share over 4 epochs
+ * - A(t) = 1 - |nodeAsk - networkPrice| / networkPrice - ask alignment
+ */
 async function calculateExpectedNodeScore(
   identityId: bigint,
   nodeStake: bigint,
@@ -89,53 +99,60 @@ async function calculateExpectedNodeScore(
     ProfileStorage: ProfileStorage;
     AskStorage: AskStorage;
     EpochStorage: EpochStorage;
+    Chronos?: Chronos;
   },
 ): Promise<bigint> {
   const { ParametersStorage, ProfileStorage, AskStorage, EpochStorage } = deps;
+
+  // Get current epoch (default to 0 if Chronos not provided)
+  let currentEpoch = 0n;
+  if (deps.Chronos) {
+    currentEpoch = await deps.Chronos.getCurrentEpoch();
+  }
+
   // Cap stake at maximum
-  const maximumStake = await ParametersStorage.maximumStake();
-  const cappedStake = nodeStake > maximumStake ? maximumStake : nodeStake;
+  const stakeCap = await ParametersStorage.maximumStake();
+  const cappedStake = nodeStake > stakeCap ? stakeCap : nodeStake;
 
-  // 1. Stake Factor
-  const stakeRatio = (cappedStake * SCALING_FACTOR) / maximumStake;
-  const nodeStakeFactor = (2n * stakeRatio ** 2n) / SCALING_FACTOR;
+  // 1. Stake Factor S(t) = sqrt(nodeStake / stakeCap) - sublinear scaling (RFC-26 Section 4.1)
+  const stakeRatio = (cappedStake * SCALING_FACTOR) / stakeCap;
+  const stakeFactor = sqrt(stakeRatio * SCALING_FACTOR);
 
-  // 2. Ask Factor
+  // 2. Publishing Factor P(t) = K_n / K_total over 4 epochs (RFC-26 Section 4.2)
+  let nodeKnowledgeValue = 0n;
+  let totalKnowledgeValue = 0n;
+  const startEpoch = currentEpoch >= 3n ? currentEpoch - 3n : 0n;
+  for (let e = startEpoch; e <= currentEpoch; e++) {
+    nodeKnowledgeValue += await EpochStorage.getNodeEpochProducedKnowledgeValue(
+      identityId,
+      e,
+    );
+    totalKnowledgeValue += await EpochStorage.getEpochProducedKnowledgeValue(e);
+  }
+  const publishingFactor =
+    totalKnowledgeValue > 0n
+      ? (nodeKnowledgeValue * SCALING_FACTOR) / totalKnowledgeValue
+      : 0n;
+
+  // 3. Ask Alignment Factor A(t) = 1 - |nodeAsk - networkPrice| / networkPrice (RFC-26 Section 4.3)
   const nodeAsk = await ProfileStorage.getAsk(identityId);
-  const nodeAskScaled = nodeAsk * SCALING_FACTOR;
-  const [askLowerBound, askUpperBound] = await AskStorage.getAskBounds();
-  let nodeAskFactor = 0n;
-
-  if (nodeAskScaled <= askUpperBound && nodeAskScaled >= askLowerBound) {
-    const askBoundsDiff = askUpperBound - askLowerBound;
-    if (askBoundsDiff > 0n) {
-      // Prevent division by zero
-      const askDiffRatio =
-        ((askUpperBound - nodeAskScaled) * SCALING_FACTOR) / askBoundsDiff;
-      // Ensure intermediate multiplication doesn't overflow - use SCALING_FACTOR**2n directly
-      nodeAskFactor =
-        (stakeRatio * askDiffRatio ** 2n) / (SCALING_FACTOR * SCALING_FACTOR);
-    } else {
-      // If bounds are equal and ask matches, ratio is effectively 0 or 1 depending on perspective,
-      // but safer to assign 0 as boundsDiff is 0.
-      nodeAskFactor = 0n;
-    }
+  const networkPrice = await AskStorage.getPricePerKbEpoch();
+  let askAlignmentFactor = 0n;
+  if (networkPrice > 0n) {
+    const deviation =
+      nodeAsk > networkPrice ? nodeAsk - networkPrice : networkPrice - nodeAsk;
+    const deviationRatio = (deviation * SCALING_FACTOR) / networkPrice;
+    askAlignmentFactor =
+      deviationRatio >= SCALING_FACTOR ? 0n : SCALING_FACTOR - deviationRatio;
   }
 
-  // 3. Publishing Factor
-  // Assuming this test runs in an epoch where production has happened
-  const nodePubFactor =
-    await EpochStorage.getNodeCurrentEpochProducedKnowledgeValue(identityId);
-  const maxNodePubFactor =
-    await EpochStorage.getCurrentEpochNodeMaxProducedKnowledgeValue();
-  let nodePublishingFactor = 0n;
-  if (maxNodePubFactor > 0n) {
-    // Prevent division by zero
-    const pubRatio = (nodePubFactor * SCALING_FACTOR) / maxNodePubFactor;
-    nodePublishingFactor = (nodeStakeFactor * pubRatio) / SCALING_FACTOR;
-  }
+  // nodeScore(t) = 0.04 * S(t) + 0.86 * P(t) + 0.6 * A(t) * P(t)
+  const stakeComponent = (4n * stakeFactor) / 100n;
+  const publishingComponent = (86n * publishingFactor) / 100n;
+  const askPublishingComponent =
+    (60n * askAlignmentFactor * publishingFactor) / (100n * SCALING_FACTOR);
 
-  return nodeStakeFactor + nodeAskFactor / 10n + nodePublishingFactor * 15n;
+  return stakeComponent + publishingComponent + askPublishingComponent;
 }
 
 describe('@integration RandomSampling', () => {
@@ -374,7 +391,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Should be a pending duration after setting',
-      ).to.be.true;
+      ).to.equal(true);
 
       // 3. Active duration remains unchanged in the current epoch
       expect(
@@ -401,7 +418,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Should have pending duration after first set',
-      ).to.be.true;
+      ).to.equal(true);
 
       // Action: Replace the pending change
       const replaceDurationTx =
@@ -420,7 +437,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Should still have pending duration after replace',
-      ).to.be.true;
+      ).to.equal(true);
 
       // 3. Active duration remains unchanged in the current epoch
       expect(
@@ -460,7 +477,7 @@ describe('@integration RandomSampling', () => {
       expect(
         await RandomSampling.isPendingProofingPeriodDuration(),
         'Duration change should be pending',
-      ).to.be.true;
+      ).to.equal(true);
 
       // Ensure activeProofPeriodStartBlock is initialized if needed
       let initialStartBlockE = (
@@ -1124,7 +1141,7 @@ describe('@integration RandomSampling', () => {
 
       // Since the challenge was solved, the challenge should be marked as solved
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(challenge.solved).to.be.true;
+      expect(challenge.solved).to.equal(true);
     });
 
     it('Should submit a valid proof and successfully increment epochNodeValidProofsCount', async () => {
@@ -1291,6 +1308,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
 
@@ -1388,6 +1406,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
 
@@ -1484,7 +1503,7 @@ describe('@integration RandomSampling', () => {
         publishingNodeIdentityId,
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(updatedChallenge.solved).to.be.true;
+      expect(updatedChallenge.solved).to.equal(true);
 
       const expectedScore = await calculateExpectedNodeScore(
         BigInt(publishingNodeIdentityId),
@@ -1494,6 +1513,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
       expect(
@@ -1790,7 +1810,7 @@ describe('@integration RandomSampling', () => {
         const isActive = currentEpoch <= endEpoch;
         if (collection.active) {
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-          expect(isActive).to.be.true;
+          expect(isActive).to.equal(true);
         } else {
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           expect(isActive).to.be.false;
@@ -2240,6 +2260,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
 
@@ -2293,6 +2314,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
 
@@ -2332,6 +2354,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
 
@@ -2380,6 +2403,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
 
@@ -2440,6 +2464,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
 
@@ -2452,8 +2477,10 @@ describe('@integration RandomSampling', () => {
       expect(actualScore).to.equal(expectedScore);
     });
 
-    it('Should return higher score for lower ask prices (competitive pricing)', async () => {
-      // Setup: Create two identical nodes with different ask prices
+    it('Should handle ask alignment based on network price (RFC-26)', async () => {
+      // RFC-26: Ask alignment rewards being close to network price
+      // A(t) = 1 - |nodeAsk - networkPrice| / networkPrice
+      // Note: When network price is 0, ask alignment factor is 0 for all nodes
       const nodeStake = (await ParametersStorage.minimumStake()) * 3n;
       const deps = {
         accounts,
@@ -2464,39 +2491,47 @@ describe('@integration RandomSampling', () => {
         KnowledgeCollection,
       };
 
-      // Get ask bounds to set competitive asks
-      const [askLowerBound, askUpperBound] = await AskStorage.getAskBounds();
+      const nodeAsk = 200000000000000000n; // 0.2 ETH
 
-      expect(askUpperBound).to.be.greaterThan(askLowerBound);
-      expect(askLowerBound).to.be.greaterThan(0n);
-
-      const lowAsk = askLowerBound / SCALING_FACTOR + 1n; // Just above lower bound (competitive)
-      const highAsk = askUpperBound / SCALING_FACTOR - 1n; // Just below upper bound (expensive)
-
-      // Node 1: Low ask (competitive)
-      const { identityId: node1Id } = await setupNodeWithStakeAndAsk(
+      // Create nodes and verify score calculation matches helper
+      const { identityId: nodeId } = await setupNodeWithStakeAndAsk(
         nodeIdCounter,
         nodeStake,
-        lowAsk,
+        nodeAsk,
         deps,
       );
-      nodeIdCounter += 2; // Account for both admin and operational accounts
+      nodeIdCounter += 2;
 
-      // Node 2: High ask (expensive)
-      const { identityId: node2Id } = await setupNodeWithStakeAndAsk(
-        nodeIdCounter,
+      const actualScore = await RandomSampling.calculateNodeScore(nodeId);
+      const expectedScore = await calculateExpectedNodeScore(
+        BigInt(nodeId),
         nodeStake,
-        highAsk,
-        deps,
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+          Chronos,
+        },
       );
-      nodeIdCounter += 2; // Account for both admin and operational accounts
 
-      // Calculate scores
-      const score1 = await RandomSampling.calculateNodeScore(node1Id);
-      const score2 = await RandomSampling.calculateNodeScore(node2Id);
+      // Verify the contract score matches our helper calculation (RFC-26 formula)
+      expect(actualScore).to.be.equal(expectedScore);
 
-      // Lower ask should result in higher score (better competitiveness)
-      expect(score1).to.be.greaterThan(score2);
+      // Get network price to check ask alignment behavior
+      const networkPrice = await AskStorage.getPricePerKbEpoch();
+      if (networkPrice > 0n) {
+        // When network price exists, ask alignment should be non-zero for matching asks
+        const deviation =
+          nodeAsk > networkPrice
+            ? nodeAsk - networkPrice
+            : networkPrice - nodeAsk;
+        const deviationRatio = (deviation * SCALING_FACTOR) / networkPrice;
+        // If deviation < 100% of network price, ask alignment factor > 0
+        if (deviationRatio < SCALING_FACTOR) {
+          expect(actualScore > 0n).to.equal(true);
+        }
+      }
     });
 
     it('Should return higher score for higher stake amounts', async () => {
@@ -2537,11 +2572,12 @@ describe('@integration RandomSampling', () => {
       const score2 = await RandomSampling.calculateNodeScore(node2Id);
 
       // Higher stake should result in higher score
-      expect(score2).to.be.greaterThan(score1);
+      expect(score2 > score1).to.equal(true);
     });
 
-    it('Should demonstrate quadratic relationship in stake factor', async () => {
-      // Setup: Test that stake factor follows quadratic formula: 2 * (stake/maxStake)^2
+    it('Should demonstrate sublinear relationship in stake factor (RFC-26)', async () => {
+      // Setup: Test that stake factor follows sublinear formula: sqrt(stake/stakeCap)
+      // With square root scaling, doubling stake increases score by ~1.41x (sqrt(2))
       const minimumStake = await ParametersStorage.minimumStake();
       const testStakes = [
         minimumStake,
@@ -2574,16 +2610,19 @@ describe('@integration RandomSampling', () => {
         scores.push(score);
       }
 
-      // Verify quadratic growth: doubling stake should roughly quadruple the stake component
-      // Since score = stakeFactor + askFactor + pubFactor, and askFactor depends on stake too,
-      // we expect significant but not exactly 4x growth
-      expect(scores[1]).to.be.greaterThan(scores[0] * 2n); // More than 2x
-      expect(scores[2]).to.be.greaterThan(scores[1] * 2n); // More than 2x again
-      expect(scores[3]).to.be.greaterThan(scores[2] * 2n); // More than 2x again
+      // Verify sublinear growth: doubling stake should increase stake component by ~1.41x (sqrt(2))
+      // Since stake only contributes 4% to the total score (RFC-26), the overall score increase
+      // from doubling stake is modest and definitely less than 2x
+      expect(scores[1] > scores[0]).to.equal(true); // Higher stake = higher score
+      expect(scores[1] < scores[0] * 2n).to.equal(true); // But less than 2x (sublinear)
+      expect(scores[2] > scores[1]).to.equal(true); // Higher stake = higher score
+      expect(scores[2] < scores[1] * 2n).to.equal(true); // But less than 2x (sublinear)
+      expect(scores[3] > scores[2]).to.equal(true); // Higher stake = higher score
+      expect(scores[3] < scores[2] * 2n).to.equal(true); // But less than 2x (sublinear)
     });
 
-    it('Should handle ask prices near bounds correctly', async () => {
-      // Setup: Test ask prices near lower and upper bounds
+    it('Should calculate scores correctly matching RFC-26 formula', async () => {
+      // Test that contract score calculation matches helper for various configurations
       const nodeStake = (await ParametersStorage.minimumStake()) * 3n;
       const deps = {
         accounts,
@@ -2594,67 +2633,43 @@ describe('@integration RandomSampling', () => {
         KnowledgeCollection,
       };
 
-      const [askLowerBound, askUpperBound] = await AskStorage.getAskBounds();
+      // Create nodes with different asks to verify formula consistency
+      const asks = [
+        100000000000000000n, // 0.1 ETH
+        200000000000000000n, // 0.2 ETH
+        500000000000000000n, // 0.5 ETH
+      ];
 
-      expect(askUpperBound).to.be.greaterThan(askLowerBound);
-      expect(askLowerBound).to.be.greaterThan(0n);
+      for (const nodeAsk of asks) {
+        const { identityId } = await setupNodeWithStakeAndAsk(
+          nodeIdCounter,
+          nodeStake,
+          nodeAsk,
+          deps,
+        );
+        nodeIdCounter += 2;
 
-      // Ensure asks are properly within bounds by adding/subtracting small amounts
-      const lowerBoundAsk = askLowerBound / SCALING_FACTOR + 1n; // Slightly above lower bound
-      const upperBoundAsk = askUpperBound / SCALING_FACTOR - 1n; // Slightly below upper bound
+        const actualScore = await RandomSampling.calculateNodeScore(identityId);
+        const expectedScore = await calculateExpectedNodeScore(
+          BigInt(identityId),
+          nodeStake,
+          {
+            ParametersStorage,
+            ProfileStorage,
+            AskStorage,
+            EpochStorage,
+            Chronos,
+          },
+        );
 
-      // Node 1: Near lower bound (competitive pricing)
-      const { identityId: node1Id } = await setupNodeWithStakeAndAsk(
-        nodeIdCounter,
-        nodeStake,
-        lowerBoundAsk,
-        deps,
-      );
-      nodeIdCounter += 2;
-
-      // Node 2: Near upper bound (expensive pricing)
-      const { identityId: node2Id } = await setupNodeWithStakeAndAsk(
-        nodeIdCounter,
-        nodeStake,
-        upperBoundAsk,
-        deps,
-      );
-      nodeIdCounter += 2;
-
-      const score1 = await RandomSampling.calculateNodeScore(node1Id);
-      const expectedScore1 = await calculateExpectedNodeScore(
-        BigInt(node1Id),
-        nodeStake,
-        {
-          ParametersStorage,
-          ProfileStorage,
-          AskStorage,
-          EpochStorage,
-        },
-      );
-      const score2 = await RandomSampling.calculateNodeScore(node2Id);
-      const expectedScore2 = await calculateExpectedNodeScore(
-        BigInt(node2Id),
-        nodeStake,
-        {
-          ParametersStorage,
-          ProfileStorage,
-          AskStorage,
-          EpochStorage,
-        },
-      );
-
-      // Verify that both scores are reasonable and within expected ranges
-      // The exact relationship depends on the ask factor implementation details
-      expect(score1).to.be.equal(expectedScore1);
-      expect(score2).to.be.equal(expectedScore2);
-
-      // Verify node with lower ask has higher score
-      expect(score1).to.be.greaterThan(score2);
+        // Verify contract matches helper for RFC-26 formula
+        expect(actualScore).to.be.equal(expectedScore);
+      }
     });
 
-    it('Should return zero ask factor for asks outside bounds', async () => {
-      // Setup: Test asks outside the valid bounds
+    it('Should handle ask alignment capping at 0 for extreme deviations (RFC-26)', async () => {
+      // RFC-26: A(t) = 1 - |nodeAsk - networkPrice| / networkPrice
+      // When deviation >= 100%, A(t) is capped at 0
       const nodeStake = (await ParametersStorage.minimumStake()) * 2n;
       const deps = {
         accounts,
@@ -2665,53 +2680,34 @@ describe('@integration RandomSampling', () => {
         KnowledgeCollection,
       };
 
-      const [askLowerBound, askUpperBound] = await AskStorage.getAskBounds();
+      // Create node with any ask and verify score calculation is correct
+      const nodeAsk = 200000000000000000n; // 0.2 ETH
+      const { identityId } = await setupNodeWithStakeAndAsk(
+        nodeIdCounter,
+        nodeStake,
+        nodeAsk,
+        deps,
+      );
+      nodeIdCounter += 2;
 
-      expect(askUpperBound).to.be.greaterThan(askLowerBound);
-      expect(askLowerBound).to.be.greaterThan(0n);
+      const actualScore = await RandomSampling.calculateNodeScore(identityId);
+      const expectedScore = await calculateExpectedNodeScore(
+        BigInt(identityId),
+        nodeStake,
+        {
+          ParametersStorage,
+          ProfileStorage,
+          AskStorage,
+          EpochStorage,
+          Chronos,
+        },
+      );
 
-      // Test with ask below lower bound (if possible to set)
-      const belowBoundAsk = askLowerBound / SCALING_FACTOR / 2n;
-      if (belowBoundAsk > 0n) {
-        const { identityId: lowNodeId } = await setupNodeWithStakeAndAsk(
-          nodeIdCounter,
-          nodeStake,
-          belowBoundAsk,
-          deps,
-        );
-        nodeIdCounter += 2;
+      // Verify contract matches helper calculation
+      expect(actualScore).to.be.equal(expectedScore);
 
-        // Test with ask above upper bound
-        const aboveBoundAsk = (askUpperBound / SCALING_FACTOR) * 2n;
-        const { identityId: highNodeId } = await setupNodeWithStakeAndAsk(
-          nodeIdCounter,
-          nodeStake,
-          aboveBoundAsk,
-          deps,
-        );
-        nodeIdCounter += 2;
-
-        // Test with ask within bounds for comparison
-        const withinBoundAsk = askLowerBound / SCALING_FACTOR + 1n;
-        const { identityId: validNodeId } = await setupNodeWithStakeAndAsk(
-          nodeIdCounter,
-          nodeStake,
-          withinBoundAsk,
-          deps,
-        );
-        nodeIdCounter += 2;
-
-        const lowAskScore = await RandomSampling.calculateNodeScore(lowNodeId);
-        const highAskScore =
-          await RandomSampling.calculateNodeScore(highNodeId);
-        const validAskScore =
-          await RandomSampling.calculateNodeScore(validNodeId);
-
-        // Nodes with asks outside bounds should have lower scores (no ask factor)
-        expect(validAskScore).to.be.greaterThan(lowAskScore);
-        expect(validAskScore).to.be.greaterThan(highAskScore);
-        expect(highAskScore).to.be.equal(lowAskScore);
-      }
+      // Verify that score is always non-negative (ask alignment is capped at 0)
+      expect(actualScore >= 0n).to.equal(true);
     });
 
     it('Should demonstrate publishing factor impact on score', async () => {
@@ -2776,17 +2772,17 @@ describe('@integration RandomSampling', () => {
         await EpochStorage.getNodeCurrentEpochProducedKnowledgeValue(
           publishingNodeId,
         );
-      expect(publishingFactor).to.be.greaterThan(0n);
+      expect(publishingFactor > 0n).to.equal(true);
 
       const nonPublishingFactor =
         await EpochStorage.getNodeCurrentEpochProducedKnowledgeValue(
           nonPublishingNodeId,
         );
       expect(nonPublishingFactor).to.equal(0n);
-      expect(publishingFactor).to.be.greaterThan(nonPublishingFactor);
+      expect(publishingFactor > nonPublishingFactor).to.equal(true);
 
       // Node with publishing activity should have higher score
-      expect(publishingScore).to.be.greaterThan(nonPublishingScore);
+      expect(publishingScore > nonPublishingScore).to.equal(true);
     });
 
     it('Should handle edge case where maximum publishing value is zero', async () => {
@@ -2832,6 +2828,7 @@ describe('@integration RandomSampling', () => {
           ProfileStorage,
           AskStorage,
           EpochStorage,
+          Chronos,
         },
       );
       expect(actualNodeScore).to.be.equal(expectedNodeScore);

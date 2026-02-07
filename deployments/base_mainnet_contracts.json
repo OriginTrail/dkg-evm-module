@@ -24,12 +24,12 @@
       "deployed": true
     },
     "ParametersStorage": {
-      "evmAddress": "0x806A3376666D75b01B076DA85617f19b57e583F8",
+      "evmAddress": "0x5a8263F9f65dB112e16243698DEF36ab744e19fe",
       "version": "1.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "2758c75e77dff9d160e30aa80bc5f383b8e4c5e0",
-      "deploymentBlock": 35664091,
-      "deploymentTimestamp": 1758117531764,
+      "gitBranch": "RFC-26-update",
+      "gitCommitHash": "90b2d522e4cc50b106487462ded7fa9e6a767c4b",
+      "deploymentBlock": 41853387,
+      "deploymentTimestamp": 1770496121800,
       "deployed": true
     },
     "WhitelistStorage": {
@@ -312,12 +312,12 @@
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0x46219162DFB560fb3B56d64D8cc01C550079eA7B",
+      "evmAddress": "0x4B20D581695fb96db8FE78D8b12994fa43946eFA",
       "version": "1.0.0",
-      "gitBranch": "main",
-      "gitCommitHash": "2758c75e77dff9d160e30aa80bc5f383b8e4c5e0",
-      "deploymentBlock": 35664094,
-      "deploymentTimestamp": 1758117538445,
+      "gitBranch": "RFC-26-update",
+      "gitCommitHash": "90b2d522e4cc50b106487462ded7fa9e6a767c4b",
+      "deploymentBlock": 41853400,
+      "deploymentTimestamp": 1770496150937,
       "deployed": true
     },
     "MigratorV8TuningPeriodRewards": {
