@@ -20,12 +20,12 @@
       "deployed": true
     },
     "ParametersStorage": {
-      "evmAddress": "0x4a652D864148f0e533247Fcfb7B7dC92c7B55e6e",
+      "evmAddress": "0x30F5380BcC9443DCd219BE99906b04Fea23CA918",
       "version": "1.0.0",
-      "gitBranch": "improvement/parameters-storage-access-policy",
-      "gitCommitHash": "88b220af8f4ff70118a7eb1574d60458cf318b0f",
-      "deploymentBlock": 17817446,
-      "deploymentTimestamp": 1758033679341,
+      "gitBranch": "RFC-26-update",
+      "gitCommitHash": "90b2d522e4cc50b106487462ded7fa9e6a767c4b",
+      "deploymentBlock": 19690390,
+      "deploymentTimestamp": 1770306175937,
       "deployed": true
     },
     "WhitelistStorage": {
@@ -281,12 +281,12 @@
       "deployed": true
     },
     "RandomSampling": {
-      "evmAddress": "0x3B39e292c3EC9088ceEf6629663857a679249ac4",
+      "evmAddress": "0xe772349234f405147875a5bc28D12D56375441BE",
       "version": "1.0.0",
-      "gitBranch": "improvement/parameters-storage-access-policy",
-      "gitCommitHash": "88b220af8f4ff70118a7eb1574d60458cf318b0f",
-      "deploymentBlock": 17817448,
-      "deploymentTimestamp": 1758033688668,
+      "gitBranch": "RFC-26-update",
+      "gitCommitHash": "90b2d522e4cc50b106487462ded7fa9e6a767c4b",
+      "deploymentBlock": 19690391,
+      "deploymentTimestamp": 1770306185640,
       "deployed": true
     },
     "StakingKPI": {
@@ -305,6 +305,24 @@
       "gitCommitHash": "e65e131489c038790ca6117c757dce4783d6dfc5",
       "deploymentBlock": 16357950,
       "deploymentTimestamp": 1750427976240,
+      "deployed": true
+    },
+    "MigratorV8TuningPeriodRewards": {
+      "evmAddress": "0x1ec0510C3b001396A275FeF00edcA96815B6F737",
+      "version": "1.0.0",
+      "gitBranch": "RFC-26-update",
+      "gitCommitHash": "90b2d522e4cc50b106487462ded7fa9e6a767c4b",
+      "deploymentBlock": 19690368,
+      "deploymentTimestamp": 1770306011091,
+      "deployed": true
+    },
+    "MigratorV6TuningPeriodRewards": {
+      "evmAddress": "0x87Ffd0f8f2739644483A8B91b92A225CC555c852",
+      "version": "1.0.0",
+      "gitBranch": "RFC-26-update",
+      "gitCommitHash": "90b2d522e4cc50b106487462ded7fa9e6a767c4b",
+      "deploymentBlock": 19690369,
+      "deploymentTimestamp": 1770306024120,
       "deployed": true
     }
   }
