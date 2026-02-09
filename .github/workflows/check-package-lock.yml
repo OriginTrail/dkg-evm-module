@@ -71,10 +71,25 @@ jobs:
             echo "INFO: package-lock.json was not modified in this PR"
           fi
 
-      - name: Verify package-lock.json is updated when package.json changes
-        if: github.event_name == 'pull_request' && steps.check-changes.outputs.package_json_changed != '0' && steps.check-changes.outputs.package_lock_changed == '0'
+          # Check if dependency-related fields actually changed
+          DEPS_CHANGED="0"
+          if [ "$PACKAGE_JSON_CHANGED" -gt 0 ]; then
+            DEP_FIELDS='{dependencies, devDependencies, peerDependencies, optionalDependencies, overrides}'
+            BASE_DEPS=$(git show "$BASE_SHA:package.json" | jq -S "$DEP_FIELDS" 2>/dev/null || echo "{}")
+            HEAD_DEPS=$(git show "$HEAD_SHA:package.json" | jq -S "$DEP_FIELDS" 2>/dev/null || echo "{}")
+            if [ "$BASE_DEPS" != "$HEAD_DEPS" ]; then
+              DEPS_CHANGED="1"
+              echo "INFO: Dependency-related fields in package.json were modified"
+            else
+              echo "INFO: Only non-dependency fields in package.json were modified (e.g., scripts, description)"
+            fi
+          fi
+          echo "deps_changed=$DEPS_CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Verify package-lock.json is updated when dependencies change
+        if: github.event_name == 'pull_request' && steps.check-changes.outputs.deps_changed != '0' && steps.check-changes.outputs.package_lock_changed == '0'
         run: |
-          echo "ERROR: package.json was modified but package-lock.json was not updated"
+          echo "ERROR: Dependency fields in package.json were modified but package-lock.json was not updated"
           echo "Please run 'npm install' to update the lock file and commit the changes"
           exit 1
 
