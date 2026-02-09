@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history to compare changes
 
       - name: Check if package-lock.json exists
         run: |
@@ -44,10 +46,44 @@ jobs:
           fi
           echo "SUCCESS: package-lock.json file is valid and not empty"
 
+      - name: Check if package.json was modified (PR only)
+        if: github.event_name == 'pull_request'
+        id: check-changes
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          PACKAGE_JSON_CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -c '^package\.json$' || true)
+          PACKAGE_LOCK_CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -c '^package-lock\.json$' || true)
+
+          echo "package_json_changed=$PACKAGE_JSON_CHANGED" >> $GITHUB_OUTPUT
+          echo "package_lock_changed=$PACKAGE_LOCK_CHANGED" >> $GITHUB_OUTPUT
+
+          if [ "$PACKAGE_JSON_CHANGED" -gt 0 ]; then
+            echo "INFO: package.json was modified in this PR"
+          else
+            echo "INFO: package.json was not modified in this PR"
+          fi
+
+          if [ "$PACKAGE_LOCK_CHANGED" -gt 0 ]; then
+            echo "INFO: package-lock.json was modified in this PR"
+          else
+            echo "INFO: package-lock.json was not modified in this PR"
+          fi
+
+      - name: Verify package-lock.json is updated when package.json changes
+        if: github.event_name == 'pull_request' && steps.check-changes.outputs.package_json_changed != '0' && steps.check-changes.outputs.package_lock_changed == '0'
+        run: |
+          echo "ERROR: package.json was modified but package-lock.json was not updated"
+          echo "Please run 'npm install' to update the lock file and commit the changes"
+          exit 1
+
       - name: Setup Node.js
+        if: github.event_name == 'push' || steps.check-changes.outputs.package_json_changed != '0' || steps.check-changes.outputs.package_lock_changed != '0'
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
 
       - name: Validate package-lock.json is valid and in sync
+        if: github.event_name == 'push' || steps.check-changes.outputs.package_json_changed != '0' || steps.check-changes.outputs.package_lock_changed != '0'
         run: npm ci --dry-run --ignore-scripts
