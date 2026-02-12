@@ -350,6 +350,16 @@
       "deploymentBlock": 10492663,
       "deploymentTimestamp": 1770307855920,
       "deployed": true
+    },
+    "MigratorV6Epochs9to12Rewards": {
+      "evmAddress": "0x7388F16BeBC5fc790bC7294E6ee9D6Da5d45Ab79",
+      "substrateAddress": "5EMjsczjKqNXr9ohkphd1ZwwUdmbjQg9oXewaATnukBKzdE5",
+      "version": "1.0.0",
+      "gitBranch": "migrator-v6-epoch-9-to-12",
+      "gitCommitHash": "82a95af5a4e7f53b9e3fab5f227fccde8c5a6ec3",
+      "deploymentBlock": 10567578,
+      "deploymentTimestamp": 1770900734826,
+      "deployed": true
     }
   }
 }

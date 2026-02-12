@@ -38,7 +38,7 @@ config.networks = {
     chainId: 20430,
     url: rpc('neuroweb_testnet'),
     gas: 10_000_000, // Gas limit used for deploys
-    gasPrice: 20,
+    gasPrice: 1_000_000,
     accounts: accounts('neuroweb_testnet'),
     saveDeployments: false,
   },
